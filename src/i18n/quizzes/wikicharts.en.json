@@ -1,0 +1,365 @@
+{
+  "name": "WikiCharts — your wiki views",
+  "credit": "This test is adapted from the open-source WikiCharts project: https://github.com/WikiCharts/wikicharts.github.io/tree/main",
+  "axes": {
+    "gov": "Political Regime",
+    "speech": "Communication",
+    "legal": "Security",
+    "for": "Foreign Policy"
+  },
+  "special": {
+    "nota_opt": "I completely disagree with all of these opinions",
+    "idc_opt": "I don't care about this issue",
+    "prev_opt": "Previous question"
+  },
+  "labels": {
+    "auth": "Autocracy",
+    "olig": "Oligarchy",
+    "strato": "Meritocracy",
+    "dir": "Direct Democracy",
+    "rep": "Representative Democracy",
+    "min": "Self-Governance",
+    "cons": "Consensus Democracy",
+    "dir*": "Direct Democracy*",
+    "rep*": "Representative Democracy*",
+    "free": "Freedom",
+    "cont": "Control",
+    "moder": "Moderation",
+    "obs": "Obscenism",
+    "just": "Justice",
+    "cont*": "Total Ban",
+    "decn": "Decentralization",
+    "retrib": "Retributive Justice",
+    "det": "Deterrence",
+    "warn": "Penalties",
+    "rehab": "Rehabilitation",
+    "retrib*": "Administrative Submission",
+    "friend": "Wiki-Friendship",
+    "pop": "Wiki-Populism",
+    "iso": "Isolationism",
+    "sov": "Sovereignty",
+    "pop*": "Expansionism",
+    "friend*": "Wiki-Union",
+    "nota": "Other",
+    "idc": "Apathy",
+    "cent": "Mixed Views"
+  },
+  "descriptions": {
+    "auth": "All power belongs to one person — a permanent administrator who runs the community personally. Any decisions are made single-handedly, without regard for the opinions of other users.",
+    "olig": "All power belongs to a narrow group — the administration that runs the community. Decisions are usually made jointly by all the administrators, but still without regard for the opinions of ordinary users.",
+    "strato": "Power belongs mainly to the most influential and active participants, those with status and merit. Ordinary users' opinions may be taken into account, but not as much as those of privileged participants, whose voice carries more weight on various issues.",
+    "dir": "Power belongs to the people: every member of the community, regardless of technical status, can actively influence what happens. All decisions initiated by the people are made regularly through referendums and are direct in nature.",
+    "rep": "The people are recognized as the source of power, but running the community is delegated to expert members who are elected by the people, represent their interests, and make all important decisions collectively.",
+    "min": "The people hold maximum power: all members independently make key decisions on community matters without the influence of the administration, which in turn has minimal authority and regulates almost nothing.",
+    "cons": "Power is shared between the people and the administration, with a balance of forces. Decisions are usually made by members and administrators not through voting but through community discussions based on general agreement, aiming to satisfy everyone's wishes.",
+    "dir*": "An improved form of direct democracy — using new voting methods in referendums, such as Score Voting (STAR Voting), to better capture the will of the majority.",
+    "rep*": "An improved form of representative democracy — using new voting methods in referendums, such as Score Voting (STAR Voting), to better capture the will of the majority.",
+    "free": "Every member's right to communicate and express themselves however they wish, without regulation, control, or censorship from the administration. No bans whatsoever on swearing, slang, vulgar words, or other content.",
+    "cont": "Control and regulation of how users communicate. Strong limits on which words may be used, adherence to etiquette, and the cleanup and censorship of swearing, rude words, and other indecent or unacceptable content.",
+    "moder": "Moderate limits on how users communicate — partial legalization of swearing, censorship of overly rude and unacceptable expressions, and encouragement of literacy and etiquette.",
+    "obs": "No ban on obscene language, including swearing and rude or vulgar words; free communication is encouraged, but there are still minimal limits on how users may express themselves.",
+    "just": "The main goal of communication is to keep a friendly atmosphere so members feel comfortable. Provocations and offensive phrases expressing hatred or oppression toward people are banned, and support is given to the victims of such actions.",
+    "cont*": "No freedom of speech; a maximum ban on obscene and vulgar language, swearing, and other indecent or unacceptable content. Only the administration decides what may and may not be said.",
+    "decn": "No single system of justice and punishment for offenders. Members can handle violations themselves on a case-by-case basis: forgive the offender entirely and rehabilitate them, or punish them harshly with a permanent ban.",
+    "retrib": "The best response to breaking the rules is punishment. Preventing future violations or rehabilitating the offender doesn't matter. The point is to punish the guilty in full, because someone who commits an offense deserves to be treated accordingly.",
+    "det": "The role of justice should be to deter both offenders and everyone else: the threat of punishment keeps people from committing offenses and lowers the rate of rule-breaking in the community; the blocking system should be cumulative.",
+    "warn": "The role of justice is not to deter members from violations but simply to temporarily limit their options when they go too far. Maintaining moderate order and issuing warnings or temporary blocks proportional to the severity of the offense is enough.",
+    "rehab": "Offenders should be treated more leniently, using soft punishments; the role of justice should be to correct, re-educate, and reintegrate offenders into society and set them on the right path.",
+    "retrib*": "Justice serves the interests of the administration, which can block members as it wishes, regardless of the rules of conduct. This usually means strict order and discipline, along with harsh punishments.",
+    "friend": "Openness and friendliness of a wiki project toward other wikis, caring not only about its own interests but also about those of other users. Wiki projects should be friends and help one another, and aid projects in need when necessary.",
+    "pop": "In foreign policy, the interests of one wiki project come first. To advance its own interests, a wiki may make friends with others and help them, but only to gain fame and win popularity.",
+    "iso": "Complete isolation of the wiki project's community, ignoring the outside world, with no contacts or ties to members of other wikis, refusing friendship and, all the more, joining a wiki union.",
+    "sov": "A wiki project should have the absolute right to control its own rules and policy and keep its independent, self-governing status. Moderate openness and minimal ties with other wiki projects are possible, but no more.",
+    "pop*": "A wiki project's readiness to do everything in its power to expand its influence and improve itself. This may include intervening in independent wiki projects to install a controlled regime there.",
+    "friend*": "The highest form of wiki-friendship, which means uniting several friendly projects into a single union. This includes organizing joint work, active cooperation between users, sharing experience, collective decision-making, and following common rules.",
+    "nota": "If you got “Other”, your view on certain issues doesn't line up with the main opinions offered by this test, which simplifies things for the vast majority of people. You probably already have a specific label for your own views.",
+    "idc": "“Apathy” is a lack of interest in certain issues. They may not affect you, or you may simply not think any one option is better than another. Some apathetic people simply care more about a few other issues and are apathetic about the rest.",
+    "cent": "“Mixed Views” is a combination of elements from several very different opinions on various issues — the absence of a strong preference between different views."
+  },
+  "questions": {
+    "voting": {
+      "topic": "Voting",
+      "options": [
+        "Voting is a truly unnecessary process; the whims of the masses don't matter.",
+        "Votes may be held, but only among a narrow circle of the administration, no more.",
+        "Those who contribute more to the community deserve extra status and more weight for their vote.",
+        "Voting is an important part of democracy. Every member should have a vote, and all votes should count equally.",
+        "We should make decisions democratically, based on the general agreement of members, without holding votes. We need reasoned opinions, not simple “for” or “against” votes."
+      ]
+    },
+    "votingreform": {
+      "topic": "Referendum reform",
+      "options": [
+        "We should reform referendums by introducing a competence or other coefficient, so an active or higher-status member's vote weighs more than an ordinary user's.",
+        "We should make referendums open to everyone, so members can freely gather at any time and decide any matters they want, without restrictions.",
+        "We should hold referendums more often and create a plan or schedule of all upcoming votes so members are aware of them, drawing larger numbers of people into participation.",
+        "We should create a system in referendums where a member can delegate their vote to another, more expert user and be sure that user represents their interests.",
+        "We should use advanced voting methods, such as Score Voting (STAR Voting), to better capture the will of the majority.",
+        "We should reform referendums to be more like discussions than votes, so public opinion forms through reasoned public discourse aimed at reaching consensus.",
+        "Referendums should be abolished, because the law should not be determined by the opinion of the people."
+      ]
+    },
+    "concentration": {
+      "topic": "Concentration of power",
+      "options": [
+        "Power should be decentralized to everyone, and important decisions should ultimately be made in frequent referendums. People usually know what they want and can figure out issues with a little explanation.",
+        "Power should be concentrated according to a user's merit. Active members should have higher status and more influence, unlike those who aren't active.",
+        "No one at the top should command us; we should be free to decide for ourselves what is right and wrong.",
+        "Above all we need a single leader who can rule for as long as necessary and is able to grasp the whole picture. Without worrying about what the people think, a leader can make better decisions alone.",
+        "Power should be concentrated in the hands of the administration, all of whose members can make the right decisions together within a narrow circle.",
+        "Power should be distributed among a body of administrators elected by the people, who should understand the issues, listen to experts, and weigh the big picture.",
+        "Power should be split roughly evenly between members and the administration, so both can reconcile their interests and make decisions in community discussions."
+      ]
+    },
+    "traits": {
+      "topic": "The most important traits of a leader",
+      "options": [
+        "We should make decisions ourselves; we don't need a leader over us.",
+        "In most cases the people should make decisions themselves; a leader's only purpose is to encourage members' joint work and initiative.",
+        "The most important qualities of a leader are courage and strength. We need someone who will make the necessary decisions, even unpopular ones.",
+        "The most important qualities of a leader are empathy and responsiveness. We need someone able to listen to the people and carry out their wishes, expressing the will of the majority.",
+        "The most important qualities of a leader are rank and experience. We need someone who knows the administrative functions and has better community-management skills than others.",
+        "The most important qualities of a leader are intelligence and wisdom. We need someone able to understand problems and find ways to solve them."
+      ]
+    },
+    "leaderselect": {
+      "topic": "Choosing a leader",
+      "options": [
+        "Leaders shouldn't change, because we should have only a single administrator with an indefinite term who makes all the decisions himself.",
+        "Leaders should be appointed by the current administration at its discretion, so we always have competent leadership.",
+        "Leaders should be elected, but not directly by a community-wide vote. It should be weighted, so that the opinion of more active and higher-status members carries a larger share.",
+        "Leaders may be chosen in democratic elections, but leadership should be distributed, with the whole community taking part in most decisions.",
+        "Leaders should be elected in democratic elections by the members of the community they will lead.",
+        "Leaders should be chosen democratically through discussion rather than voting, which is aimed more at competition than cooperation.",
+        "We shouldn't have a single leader chosen by any means at all."
+      ]
+    },
+    "policysetting": {
+      "topic": "Authority to set policy",
+      "options": [
+        "The community's administration should hold most of the decision-making power and generally create policy.",
+        "An administrative authority elected in a referendum should set the policy of the whole community in the interests of the majority, with moderate powers that the people can regulate.",
+        "An administrative authority chosen in community discussion should largely set policy, guided first of all by the desire to satisfy everyone's wishes rather than imposing the majority's opinion on all.",
+        "Power should belong directly to the people, who should initiate decisions by voting on members' initiatives.",
+        "Power should belong mainly to the most active and high-status members, since they are usually the most capable and contribute the most to the community.",
+        "The administration's powers should be minimal; we should be free in our decisions and actions."
+      ]
+    },
+    "peoplepolicy": {
+      "topic": "The role of members in governing the community",
+      "options": [
+        "Members, as a collective, can usually understand and make good policy decisions with a little explanation, so they can decide directly what they want.",
+        "Active members with status usually know what they want and have good opinions, but ordinary users rarely know what's good for them.",
+        "Most members generally have poor opinions, and the administration would be better off without them.",
+        "Members should have rights and levers to run the community, but the administration should try to avoid the tyranny of the majority by offering solutions that satisfy the greatest number of preferences.",
+        "Self-governance should be highly developed in the community. Members don't need anyone's opinion imposed on them; they know perfectly well what they want and can make good decisions on their own.",
+        "Members usually know what they want, but they can't be expected to have time to study and vote on every issue, so it should be delegated to more expert users."
+      ]
+    },
+    "representation": {
+      "topic": "The people's interests and the role of leaders",
+      "options": [
+        "I don't need leaders; I want every member to be able to represent their own interests, without the administration's influence.",
+        "I want leaders who will express the people's interests and act on them, to guarantee that the opinion of the majority is heard and carried out.",
+        "I want leaders who will strive for a solution acceptable to all, using compromise and other methods, rather than defending the majority's opinion, which often harms the minority.",
+        "We should have a single unelected ruler who acts according to his own interests.",
+        "I want to be able to vote directly on most issues in referendums. Leaders shouldn't take this initiative away from members and decide matters for them.",
+        "The people's interests shouldn't be represented as strongly as those of the administration or a small group of high-status members."
+      ]
+    },
+    "equality": {
+      "topic": "Equality of users",
+      "options": [
+        "Certain statuses grant a member various privileges compared to other users. Though this doesn't make him far superior to the rest, a member with status should have more rights and capabilities.",
+        "The community's chief administrator should hold the highest position and have unlimited rights.",
+        "No administrative status makes a member higher or more important than the rest. It's only a tool granting access to certain functions. An administrator's job is to think not about his rights but about his duties to members.",
+        "No user should have power over another user, whether with status or without."
+      ]
+    },
+    "openness": {
+      "topic": "Openness and transparency",
+      "options": [
+        "Members should have access to the information the administration holds. Public transparency lets users be better informed and encourages the administration to disclose information, acting as a regulatory mechanism.",
+        "The administration has the right to hide any information from all users. Ordinary members shouldn't know what they aren't supposed to know.",
+        "Higher-status members may have access to secret administrative information, but ordinary users generally shouldn't.",
+        "Ordinary users don't need absolutely all information about the administration, but administrators should be open and communicative with the people and should share the results of their work with members.",
+        "There should be no secret information and, as a result, no problems with its transparency. Any user should have access to all logs and statistics and be able to see what administrators discuss among themselves in chat about decisions."
+      ]
+    },
+    "freespeech": {
+      "topic": "Freedom of speech",
+      "options": [
+        "Freedom of speech is the most important concept. Every member should have the right to say anything, even if others might consider it offensive.",
+        "Freedom of speech should be limited — unacceptable messages, such as very rude words or inappropriate jokes, should be cleaned up and censored.",
+        "There should be certain boundaries within which members can freely express themselves without mentioning some undesirable words or topics.",
+        "Freedom of speech is important; members should have the right to express their opinion in any form, but minimal limits are also needed.",
+        "We should ban and punish very offensive expressions (hate speech) that express hatred toward certain groups of people and cause discrimination, sexism, or homophobia.",
+        "Members shouldn't have freedom of speech. The administration should decide what is acceptable to say."
+      ]
+    },
+    "profanity": {
+      "topic": "Swearing in chat",
+      "options": [
+        "Obscene language, including swearing, can provoke conflict between members because of offensive content or phrases expressing hatred toward people. We should limit the use of swearing.",
+        "Swearing is categorically unacceptable in the community; its use must be banned entirely.",
+        "Members should have the right to use swearing in their speech without any restrictions.",
+        "People should be able to write swear words, but there should still be limits, so messages don't consist of swearing alone.",
+        "We can allow certain swear words in limited amounts, provided members veil them."
+      ]
+    },
+    "etiquette": {
+      "topic": "Etiquette",
+      "options": [
+        "We should regulate communication and make sure all users strictly follow etiquette, communicate politely, and express themselves correctly and clearly.",
+        "In general etiquette is needed, but it doesn't always have to be followed. There's nothing wrong with a member using a lot of slang or vulgar words while chatting.",
+        "It's usually desirable to follow etiquette, first of all to keep a friendly atmosphere so members can feel comfortable and not be offended by someone's rude words.",
+        "We shouldn't tell members how to communicate. If a member wants to write a message in a frank, familiar, or crude tone, that's his right."
+      ]
+    },
+    "literacy": {
+      "topic": "Literacy and mistakes in communication",
+      "options": [
+        "It's preferable that users don't distort words too often, otherwise mistakes in the text may cause someone to misunderstand them, which can lead to conflict and offend members.",
+        "If people like deliberate misspellings and want to distort words or write them with mistakes on purpose, there's nothing wrong with that.",
+        "Literacy is important and should be watched, but in rare cases, if members want to deliberately misspell words, they can be allowed to do so temporarily.",
+        "We should introduce standards requiring all members in chat to write correctly and without mistakes, so the text of messages is clear and conforms to literary norms."
+      ]
+    },
+    "vulgarity": {
+      "topic": "Indecency and lewdness",
+      "options": [
+        "We should regulate the spread of erotic and indecent material, but not ban it. Members should have the right to share it.",
+        "Indecent content should be very strongly limited. In most cases it's unacceptable, but in extremely rare situations we may allow it to be posted in small amounts.",
+        "Indecency, lewdness, and erotic content are categorically unacceptable. Such content must be strictly watched and, if it appears, removed immediately.",
+        "People should have the freedom to share content of any kind, including erotica and lewdness.",
+        "Harshly suppressing indecent material usually only helps spread what's being censored. Members should be allowed to share erotic and lewd content, provided it's censored."
+      ]
+    },
+    "banter": {
+      "topic": "Mockery, trolling, and jokes",
+      "options": [
+        "Trolling should be limited, but banter and jokes can be allowed if they're appropriate and don't annoy those around.",
+        "If members enjoy joking with each other and friendly banter, there's nothing wrong with it; people are free to communicate however they like.",
+        "Any trolling, banter, and inappropriate jokes should be strictly banned. We don't need needless conflicts out of nowhere, so we must control what members write.",
+        "Trolling and inappropriate banter can offend members, make them feel worthless, and spark conflict. We should punish trolls and support the victims of trolling to protect them from victim-blaming."
+      ]
+    },
+    "rules": {
+      "topic": "The list of rules",
+      "options": [
+        "We're a free community; we don't need rules of conduct. Members can behave however they like as long as their behavior suits everyone else.",
+        "The rules should be strict, and the list itself should be as detailed as possible, without vague wording, so members know exactly what's forbidden and can't find any loopholes in the rules.",
+        "The list of rules should be not too strict, moderate in size. It should contain the main provisions about principles of conduct, with a few details where needed.",
+        "It's better not to make the list of rules excessively long and detailed — that only scares members off and puts them off reading the rules. Better a short but friendly, clear, and accessible list without bureaucratese.",
+        "Instead of a list of rules, we should simply state that our chat follows the rules of moral principle. Members themselves understand how not to behave in public places and in normal society; there's no need to explain the obvious.",
+        "The administration should be able to block and mute members at will, regardless of the rules of conduct."
+      ]
+    },
+    "blocking": {
+      "topic": "Length of bans",
+      "options": [
+        "Soft punishments are enough to keep order; we should treat offenders more leniently. A block of a few hours to a few days is the optimal length in most cases.",
+        "To deter users from future violations, we should keep a proper level of order. We should start with short terms for offenders, but increase the block's length with each further violation.",
+        "We shouldn't pity offenders. If a member broke the rules, he deserves a harsh punishment. On average a block of a few days is enough, but for special cases — from a few weeks to a month or more.",
+        "There shouldn't be uniform measures for blocks; members can decide together what term to give an offender in a specific case, for example by voting or discussion.",
+        "The length of a ban depends first of all on the severity of the violation, and in each specific case can vary greatly: from a few hours or days to several weeks or a month."
+      ]
+    },
+    "permanent": {
+      "topic": "Permanent ban",
+      "options": [
+        "Don't shy away from a permanent ban. If a member got one, he earned it. We shouldn't deal with him anymore, and certainly shouldn't unblock him — ever.",
+        "In most cases, instead of a permanent ban it's better to give warnings or temporary blocks — we shouldn't get rid of members forever, even if they don't behave very well.",
+        "Members should decide for themselves in specific cases whether to use a permanent block on an offender or not. The same goes for unbanning.",
+        "A permanent block shouldn't be used too often, but it can serve as a good tool to deter users from further violations.",
+        "We should use permanent blocks very rarely, and be able to forgive permanently banned members by unbanning them and reintegrating them into society some time after the block."
+      ]
+    },
+    "recidivism": {
+      "topic": "Repeat offenses",
+      "options": [
+        "Repeat offenders need stricter oversight and control to prevent further violations. The more times a member has broken the rules, the harsher the terms of the block for him should be.",
+        "If a member repeatedly misbehaves but generally doesn't cause dislike among the rest, there's no problem. But if his behavior has thoroughly annoyed everyone around, users can complain about him.",
+        "Any member, whatever offense he has committed, deserves forgiveness and a second chance. We should give repeat offenders the chance to apologize for their offenses and reform.",
+        "It's useless to try to find common ground with those who have broken the rules repeatedly. Repeat offenders get a permanent block.",
+        "It doesn't matter how many times a member broke the rules; what matters is the severity of his violation in each specific case. If violations recur, it's enough to simply give a temporary ban or mute again."
+      ]
+    },
+    "offender": {
+      "topic": "What to do with an offender",
+      "options": [
+        "If a member is banned, the administration must talk with him, discuss what happened, and try to make the offender understand why he shouldn't have done what he did and why he was punished.",
+        "If a member was blocked, the offender should be able to talk with the administration about it. But administrators shouldn't be the ones to start the conversation with the offender.",
+        "If members wish, they can give the offender the floor so he can talk with them during the block.",
+        "The offender should be stripped of extra capabilities and, if needed, of the ability to contact the administration. Administrators shouldn't waste their time on those who misbehave. There's nothing to talk about with such people.",
+        "The offender should be expected to wait out the ban and rethink his behavior. Public knowledge of a member's block will also have a deterrent effect — it serves as an example to others of what not to follow."
+      ]
+    },
+    "warnings": {
+      "topic": "Warnings",
+      "options": [
+        "Often offenders can be banned even without prior warnings. Members should know the rules of conduct in advance and be ready for the fact that if they don't follow them, harsh consequences await.",
+        "We have no right to block a member until other ways of convincing him of the unacceptability of bad behavior are exhausted. We can give him warnings, but it's better to try to persuade him with words.",
+        "A warning is a good way to notify a member that he's misbehaving. In many cases you can give a member several warnings, and only if he doesn't understand that he shouldn't behave that way do you then issue a block.",
+        "On a first violation you can give a member a warning, and in all subsequent cases — only blocks."
+      ]
+    },
+    "ambiguity": {
+      "topic": "Ambiguity of a violation",
+      "options": [
+        "If a member is walking on thin ice, you should watch him more closely, waiting for the slightest excuse when he crosses the line, in order to block him and prevent potential further violations.",
+        "A member whose behavior shows he is potentially dangerous and could cause a lot of harm to the community is better off preemptively blocked than risking his committing offenses.",
+        "If a member behaves strangely, you should talk with him and try to understand what's wrong. This makes a positive outcome more likely, without blocks.",
+        "A member can be blocked only if it's proven he broke the rules. Until there's direct proof of his guilt, the member can be considered innocent.",
+        "If a member's behavior looks inadequate to most other users, they can complain about him so he gets a block. But if his behavior doesn't cause dislike among the majority, there's no problem."
+      ]
+    },
+    "friendship": {
+      "topic": "Wiki-friendship",
+      "options": [
+        "Cooperating with members for shared interests is the most important component of developing relationships and of a wiki's existence. I fully support friendship.",
+        "We need fame and renown among users, so for those goals we can make friends with other wikis.",
+        "We should close ourselves off from the outside world and focus entirely on our own problems.",
+        "I see no reason to form friendly relations; they're unlikely to help us much. We can work on our own problems and issues by ourselves."
+      ]
+    },
+    "uniformrules": {
+      "topic": "Cross-wiki rules",
+      "options": [
+        "Sharing rules with other wikis raises our wiki project's popularity and gives it more weight on the Fandom platform in various matters, so I support this idea.",
+        "I support sharing common rules with our friendly wikis, since it makes life easier for all members and eases coordination on various issues.",
+        "I'm against sharing rules with other wiki projects. We should be able to decide about our own rules ourselves, and other wiki projects shouldn't have the right to.",
+        "The ability to use our wiki project's rules when we need to advance our own interests is more valuable to our wiki than the benefits of common rules."
+      ]
+    },
+    "wikihelp": {
+      "topic": "Helping wiki projects",
+      "options": [
+        "We should earn our reputation in foreign policy, and helping wiki projects is a good way to win favor and popularity.",
+        "We should intervene in other wiki projects' affairs in order to install a controlled regime there and expand our influence.",
+        "Our help to wiki projects can significantly improve their quality and help a community develop with relatively little effort on our part, so we should help them.",
+        "We shouldn't spend our time and energy on other wiki projects.",
+        "Other wiki projects' affairs don't matter to us, so there's no reason to help them."
+      ]
+    },
+    "instructions": {
+      "topic": "Instructions from other wiki projects",
+      "options": [
+        "We shouldn't change our rules just because other wiki projects say so.",
+        "We should take into account the instructions and advice of other wiki projects and account for our mistakes. If we're asked for something, we should heed other people's requests.",
+        "Our wiki project's rules shouldn't be determined by members of other wikis. We can consider their instructions, but should accept them only if they match our interests.",
+        "We should try to use these instructions to our advantage: support the ones that benefit us and encourage others to follow them, while following only those instructions that benefit us."
+      ]
+    },
+    "wikiunion": {
+      "topic": "An offer to join a wiki union",
+      "options": [
+        "I'm for joining a wiki union. Cooperating with wiki projects will help us organize joint work and mutual aid, which will unite our audiences and ultimately benefit all members of our wikis.",
+        "I support cooperating with members of other wiki projects and value their wiki-union offer, but I don't think this union would be all that useful. Simple friendly relations are enough for us.",
+        "I'm against being part of any union. I'm not interested in other wiki projects' rules, but I'm categorically against giving them a say in our affairs.",
+        "Our matters should be decided by us, not by members of other wiki projects. I'm against taking part in this union.",
+        "Taking part in a wiki union gives our wiki project much greater influence in cross-wiki affairs, which can help us advance our own interests and establish the rules we personally want. That's why I support membership in this union."
+      ]
+    }
+  }
+}

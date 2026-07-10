@@ -1,0 +1,406 @@
+{
+  "axes": [
+    "gov",
+    "speech",
+    "legal",
+    "for"
+  ],
+  "questions": [
+    {
+      "key": "voting",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "auth/olig",
+        "olig",
+        "strato",
+        "dir/rep/min",
+        "cons/min"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "votingreform",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "strato",
+        "dir/min",
+        "dir",
+        "rep",
+        "dir*/rep*",
+        "cons",
+        "auth/olig"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "concentration",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "dir",
+        "strato",
+        "min",
+        "auth",
+        "olig",
+        "rep",
+        "cons"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "traits",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "min",
+        "dir",
+        "auth/olig",
+        "rep",
+        "strato/olig",
+        "cons/rep"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "leaderselect",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "auth",
+        "olig",
+        "strato",
+        "dir",
+        "rep",
+        "cons",
+        "min"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "policysetting",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "auth/olig",
+        "rep",
+        "cons",
+        "dir",
+        "strato",
+        "min"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "peoplepolicy",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "dir",
+        "strato",
+        "auth/olig",
+        "cons",
+        "min",
+        "rep"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "representation",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "min",
+        "rep",
+        "cons",
+        "auth",
+        "dir",
+        "strato/olig"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "equality",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "strato/olig",
+        "auth",
+        "dir/rep/cons",
+        "min"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "openness",
+      "category": "gov",
+      "weight": "",
+      "options": [
+        "dir/cons",
+        "auth/olig",
+        "strato",
+        "rep/cons",
+        "min"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "freespeech",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "free",
+        "cont",
+        "moder",
+        "obs",
+        "just",
+        "cont*"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "profanity",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "just",
+        "cont",
+        "free",
+        "obs",
+        "moder"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "etiquette",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "cont",
+        "obs",
+        "moder/just",
+        "free"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "literacy",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "just",
+        "obs/free",
+        "moder",
+        "cont"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "vulgarity",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "obs",
+        "moder/just",
+        "cont",
+        "free",
+        "obs/just"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "banter",
+      "category": "speech",
+      "weight": "",
+      "options": [
+        "moder",
+        "obs/free",
+        "cont",
+        "just"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "rules",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "decn",
+        "retrib/det",
+        "warn/det",
+        "warn/rehab",
+        "warn/rehab/decn",
+        "retrib*"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "blocking",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "rehab",
+        "det",
+        "retrib",
+        "decn",
+        "warn"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "permanent",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "retrib",
+        "warn",
+        "decn",
+        "det",
+        "rehab"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "recidivism",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "det",
+        "decn",
+        "rehab",
+        "retrib",
+        "warn"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "offender",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "rehab",
+        "warn",
+        "decn",
+        "retrib",
+        "det"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "warnings",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "retrib",
+        "rehab/decn",
+        "warn/decn",
+        "det"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "ambiguity",
+      "category": "legal",
+      "weight": "",
+      "options": [
+        "det",
+        "retrib",
+        "rehab",
+        "warn",
+        "decn"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "friendship",
+      "category": "for",
+      "weight": "",
+      "options": [
+        "friend",
+        "pop",
+        "iso",
+        "sov"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "uniformrules",
+      "category": "for",
+      "weight": "",
+      "options": [
+        "pop",
+        "friend",
+        "iso/sov",
+        "pop"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "wikihelp",
+      "category": "for",
+      "weight": "",
+      "options": [
+        "pop",
+        "pop*",
+        "friend",
+        "sov",
+        "iso"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "instructions",
+      "category": "for",
+      "weight": "",
+      "options": [
+        "iso",
+        "friend",
+        "sov",
+        "pop"
+      ],
+      "nota": "",
+      "idc": ""
+    },
+    {
+      "key": "wikiunion",
+      "category": "for",
+      "weight": "",
+      "options": [
+        "friend*",
+        "friend",
+        "iso",
+        "sov",
+        "pop"
+      ],
+      "nota": "",
+      "idc": ""
+    }
+  ]
+}

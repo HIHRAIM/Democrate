@@ -1,0 +1,1362 @@
+{
+  "action_cancelled": {
+    "status": "verified",
+    "text": "Действие отменено."
+  },
+  "add_govt_created": {
+    "status": "verified",
+    "text": "✅ Правительственный орган «{name}» создан в союзе {union} (член: {singular}; члены: {plural})."
+  },
+  "add_govt_exists": {
+    "status": "verified",
+    "text": "Правительственный орган с таким названием уже существует в союзе."
+  },
+  "add_govt_usage": {
+    "status": "verified",
+    "text": "Использование: /add_govt <СОЮЗ> <название> | <член в ед. числе> | <члены во мн. числе>"
+  },
+  "add_party_ask_code": {
+    "status": "verified",
+    "text": "Теперь отправьте кодовое название партии из 4 символов (только латиница и цифры)."
+  },
+  "add_party_ask_logo": {
+    "status": "verified",
+    "text": "Теперь отправьте логотип партии картинкой."
+  },
+  "add_party_ask_name": {
+    "status": "verified",
+    "text": "🏛️ Основываем партию! Как она будет называться? (На каждый ответ у вас 30 минут.)"
+  },
+  "add_party_created": {
+    "status": "verified",
+    "text": "✅ Партия {name} [{code}] основана в союзе {union}! Основатель: {founder}."
+  },
+  "add_party_discord_only": {
+    "status": "verified",
+    "text": "Партии основываются в Discord (требуемые роли можно проверить только там). Остальные партийные команды работают и здесь."
+  },
+  "add_party_founder_admin_only": {
+    "status": "verified",
+    "text": "Указывать основателя могут только админы бота."
+  },
+  "add_party_invalid_code": {
+    "status": "verified",
+    "text": "Код должен состоять ровно из 4 латинских букв/цифр и не совпадать с кодами союзов и партий. Попробуйте ещё раз."
+  },
+  "add_party_invalid_logo": {
+    "status": "verified",
+    "text": "Это не изображение. Отправьте логотип в виде картинки или файла."
+  },
+  "add_party_no_role": {
+    "status": "verified",
+    "text": "Для основания партии нужна одна из ролей, заданных командой /allow-parties."
+  },
+  "add_unia_created": {
+    "status": "verified",
+    "text": "✅ Союз {code} создан:\n{names}"
+  },
+  "add_unia_exists": {
+    "status": "verified",
+    "text": "Союз {code} уже существует."
+  },
+  "add_unia_invalid_code": {
+    "status": "verified",
+    "text": "Некорректный код союза. Используйте 2–12 латинских букв или цифр."
+  },
+  "add_unia_need_name": {
+    "status": "verified",
+    "text": "Укажите название союза хотя бы на одном языке."
+  },
+  "add_unia_usage": {
+    "status": "verified",
+    "text": "Использование: /add_unia <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
+  },
+  "allow_parties_disabled": {
+    "status": "verified",
+    "text": "✅ Партии выключены в союзе {code}."
+  },
+  "allow_parties_enabled": {
+    "status": "verified",
+    "text": "✅ Партии включены в союзе {code}. Роли с доступом к /add-party: {roles}."
+  },
+  "allow_parties_invalid_roles": {
+    "status": "verified",
+    "text": "Некорректный список ID ролей."
+  },
+  "allow_parties_need_roles": {
+    "status": "verified",
+    "text": "Укажите хотя бы один ID роли, чтобы включить партии."
+  },
+  "allow_parties_usage": {
+    "status": "verified",
+    "text": "Использование: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
+  },
+  "backup_failed": {
+    "status": "verified",
+    "text": "Не удалось создать резервную копию: {error}"
+  },
+  "backup_private_only": {
+    "status": "verified",
+    "text": "Используйте эту команду в личном чате с ботом."
+  },
+  "chat_not_setup": {
+    "status": "verified",
+    "text": "Этот чат ещё не настроен. Сначала админ бота должен привязать его к союзу командой /setup."
+  },
+  "choice_invalid": {
+    "status": "verified",
+    "text": "Это не номер из списка — отменено."
+  },
+  "consent_accept": {
+    "status": "verified",
+    "text": "Принимаю"
+  },
+  "consent_decline": {
+    "status": "verified",
+    "text": "Не принимаю"
+  },
+  "consent_leader_offer": {
+    "status": "verified",
+    "text": "{mention}, вам предлагают взять на себя соуправление партией {name} [{code}]!"
+  },
+  "consent_not_yours": {
+    "status": "verified",
+    "text": "Эта кнопка не для вас."
+  },
+  "consent_transfer_offer": {
+    "status": "verified",
+    "text": "{mention}, вам предлагают взять на себя управление партией {name} [{code}]!"
+  },
+  "delete_party_confirm": {
+    "status": "unverified",
+    "text": "Удалить партию {name} [{code}]? Все её данные, лидеры, участники и заявки будут стёрты безвозвратно."
+  },
+  "delete_party_done": {
+    "status": "unverified",
+    "text": "🗑️ Партия {name} [{code}] удалена."
+  },
+  "dialog_timeout": {
+    "status": "verified",
+    "text": "⏳ Время вышло — диалог отменён."
+  },
+  "edit_admin_choose": {
+    "status": "unverified",
+    "text": "Отправьте номер пункта в течение 30 минут."
+  },
+  "edit_admin_menu_11": {
+    "status": "unverified",
+    "text": "11 — разрешить участникам партии приглашать новых участников (сейчас: {state})"
+  },
+  "edit_admin_menu_12": {
+    "status": "unverified",
+    "text": "12 — перенести партию в другой союз"
+  },
+  "edit_admin_menu_13": {
+    "status": "unverified",
+    "text": "13 — удалить партию"
+  },
+  "edit_admin_menu_title": {
+    "status": "unverified",
+    "text": "Настройки партии (админ) — {name} [{code}]"
+  },
+  "edit_admin_not_found": {
+    "status": "unverified",
+    "text": "Партия «{query}» не найдена. Укажите код партии или её полное название один-в-один."
+  },
+  "edit_admin_usage": {
+    "status": "unverified",
+    "text": "Использование: /edit_party_admin <код партии или её полное название>"
+  },
+  "edit_ask_article": {
+    "status": "verified",
+    "text": "Отправьте ссылку на статью о партии."
+  },
+  "edit_ask_code": {
+    "status": "verified",
+    "text": "Отправьте новый код партии из 4 символов (латиница и цифры)."
+  },
+  "edit_ask_color": {
+    "status": "verified",
+    "text": "Отправьте новый цвет в hex-формате, например #245590."
+  },
+  "edit_ask_description": {
+    "status": "verified",
+    "text": "Отправьте описание партии."
+  },
+  "edit_ask_ideologies": {
+    "status": "verified",
+    "text": "Отправьте идеологии партии (ссылки сохранятся)."
+  },
+  "edit_ask_leader": {
+    "status": "verified",
+    "text": "Отправьте ID или упоминание пользователя, которого хотите сделать соуправителем."
+  },
+  "edit_ask_logo": {
+    "status": "verified",
+    "text": "Отправьте новый логотип картинкой."
+  },
+  "edit_ask_name": {
+    "status": "verified",
+    "text": "Отправьте новое название партии."
+  },
+  "edit_ask_transfer": {
+    "status": "verified",
+    "text": "Отправьте ID или упоминание пользователя, которому передаёте партию."
+  },
+  "edit_ask_union": {
+    "status": "unverified",
+    "text": "Отправьте код союза, в который переносится партия."
+  },
+  "edit_invalid_article": {
+    "status": "verified",
+    "text": "Это не похоже на ссылку. Отправьте URL, начинающийся с http(s)://."
+  },
+  "edit_invalid_color": {
+    "status": "verified",
+    "text": "Некорректный цвет. Используйте hex, например #245590."
+  },
+  "edit_invalid_option": {
+    "status": "verified",
+    "text": "Неизвестный номер пункта. Вызовите команду без параметров, чтобы увидеть меню."
+  },
+  "edit_invalid_union": {
+    "status": "unverified",
+    "text": "Такого союза нет. Отправьте существующий код союза."
+  },
+  "edit_invalid_user": {
+    "status": "verified",
+    "text": "Не удалось распознать пользователя. Отправьте ID или упоминание."
+  },
+  "edit_menu_1": {
+    "status": "verified",
+    "text": "1 — изменить название"
+  },
+  "edit_menu_10": {
+    "status": "verified",
+    "text": "10 — задать ссылку на статью для кнопки «Подробнее»"
+  },
+  "edit_menu_2": {
+    "status": "verified",
+    "text": "2 — изменить код"
+  },
+  "edit_menu_3": {
+    "status": "verified",
+    "text": "3 — изменить логотип"
+  },
+  "edit_menu_4": {
+    "status": "verified",
+    "text": "4 — изменить цвет (цвет embed-сообщений в Discord, связанных с партией)"
+  },
+  "edit_menu_5": {
+    "status": "verified",
+    "text": "5 — задать описание партии"
+  },
+  "edit_menu_6": {
+    "status": "verified",
+    "text": "6 — задать идеологии партии"
+  },
+  "edit_menu_7": {
+    "status": "verified",
+    "text": "7 — добавить лидера партии"
+  },
+  "edit_menu_8": {
+    "status": "verified",
+    "text": "8 — передать партию другому участнику"
+  },
+  "edit_menu_9": {
+    "status": "verified",
+    "text": "9 — приостановить партию"
+  },
+  "edit_menu_9_resume": {
+    "status": "verified",
+    "text": "9 — возобновить партию"
+  },
+  "edit_menu_title": {
+    "status": "verified",
+    "text": "Настройки партии — {name} [{code}]"
+  },
+  "edit_saved": {
+    "status": "verified",
+    "text": "✅ Сохранено."
+  },
+  "edit_union_changed": {
+    "status": "unverified",
+    "text": "✅ Партия {name} перенесена в союз {union}."
+  },
+  "find_channel_not_found": {
+    "status": "verified",
+    "text": "Канал не найден или недоступен."
+  },
+  "find_channel_other_guild": {
+    "status": "verified",
+    "text": "Этот канал принадлежит другому серверу."
+  },
+  "find_done": {
+    "status": "verified",
+    "text": "✅ Анализ завершён: проверено сообщений — {checked}, найдено — {found}."
+  },
+  "find_history_error": {
+    "status": "verified",
+    "text": "Не удалось прочитать историю канала: {error}"
+  },
+  "find_invalid_channel": {
+    "status": "verified",
+    "text": "Некорректный ID канала."
+  },
+  "find_invalid_date": {
+    "status": "verified",
+    "text": "Некорректная дата. Используйте MM-DD-YYYY или MM-DD-YYYY + 7D."
+  },
+  "find_no_keywords": {
+    "status": "verified",
+    "text": "Укажите хотя бы одно ключевое слово (разделяйте точкой с запятой)."
+  },
+  "find_started": {
+    "status": "verified",
+    "text": "🔎 Анализирую {channel} с {start} по {end} ({count} ключ. слов)…"
+  },
+  "force_leave_failed": {
+    "status": "verified",
+    "text": "Не удалось выйти: {error}"
+  },
+  "force_leave_invalid_id": {
+    "status": "verified",
+    "text": "Неверный ID."
+  },
+  "force_leave_not_member": {
+    "status": "verified",
+    "text": "Бот не находится на этом сервере."
+  },
+  "force_leave_success_discord": {
+    "status": "verified",
+    "text": "Бот покинул сервер {guild_id}, данные сервера удалены из базы."
+  },
+  "force_leave_success_telegram": {
+    "status": "verified",
+    "text": "Бот покинул Telegram-чат {chat_id} (или данные удалены из базы)."
+  },
+  "force_leave_unsupported_platform": {
+    "status": "verified",
+    "text": "Неподдерживаемая платформа. Используйте 'discord' или 'telegram'."
+  },
+  "force_leave_usage": {
+    "status": "verified",
+    "text": "Использование: /force_leave <discord|telegram> <id>"
+  },
+  "founday_added": {
+    "status": "unverified",
+    "text": "✅ Буду ежегодно поздравлять {name} в {channel} в {time} UTC. Дата основания: {date} UTC. Язык вики: {lang_name}."
+  },
+  "founday_future_date": {
+    "status": "unverified",
+    "text": "Дата основания ещё не наступила."
+  },
+  "founday_future_few": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнится {n} года!"
+  },
+  "founday_future_many": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнится {n} лет!"
+  },
+  "founday_future_one": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнится {n} год!"
+  },
+  "founday_future_other": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнится {n} лет!"
+  },
+  "founday_invalid_channel": {
+    "status": "unverified",
+    "text": "Канал не найден или не принадлежит этому серверу."
+  },
+  "founday_invalid_date": {
+    "status": "unverified",
+    "text": "Некорректная дата основания. Используйте MM-DD-YYYY или MM-DD-YYYY HH:MM по UTC."
+  },
+  "founday_invalid_time": {
+    "status": "unverified",
+    "text": "Некорректное время отправки. Используйте HH:MM или HH по UTC."
+  },
+  "founday_invalid_url": {
+    "status": "unverified",
+    "text": "Некорректная ссылка на вики. Например: amongus.fandom.com/ru или https://amongus.fandom.com/ru"
+  },
+  "founday_list_empty": {
+    "status": "unverified",
+    "text": "На этом сервере не задано ни одного дня рождения вики."
+  },
+  "founday_list_header": {
+    "status": "unverified",
+    "text": "Дни рождения вики этого сервера:"
+  },
+  "founday_list_title": {
+    "status": "unverified",
+    "text": "Дни рождения вики"
+  },
+  "founday_no_webhook_perm": {
+    "status": "unverified",
+    "text": "⚠️ У бота нет права «Управлять вебхуками» в {channel} — поздравление будет отправлено обычным сообщением."
+  },
+  "founday_not_found": {
+    "status": "unverified",
+    "text": "На этом сервере нет дня рождения вики с такой ссылкой."
+  },
+  "founday_past_few": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнилось {n} года!"
+  },
+  "founday_past_many": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнилось {n} лет!"
+  },
+  "founday_past_one": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнился {n} год!"
+  },
+  "founday_past_other": {
+    "status": "unverified",
+    "text": "Сегодня {name} исполнилось {n} лет!"
+  },
+  "founday_removed": {
+    "status": "unverified",
+    "text": "🗑️ Больше не буду поздравлять вики {url}."
+  },
+  "founday_webhook_name": {
+    "status": "unverified",
+    "text": "Дни рождения"
+  },
+  "govt_no_members": {
+    "status": "verified",
+    "text": "Членов пока нет."
+  },
+  "govt_not_found": {
+    "status": "verified",
+    "text": "Правительство не найдено."
+  },
+  "govt_not_found_suggest": {
+    "status": "verified",
+    "text": "Правительство не найдено. Возможно, вы искали какое-то из этих? Отправьте номер в течение 30 минут:"
+  },
+  "govt_other_union_mark": {
+    "status": "verified",
+    "text": "(союз {code})"
+  },
+  "govt_usage": {
+    "status": "verified",
+    "text": "Использование: /govt <название>"
+  },
+  "group_only": {
+    "status": "verified",
+    "text": "Эта команда доступна только в группе."
+  },
+  "guild_only": {
+    "status": "verified",
+    "text": "Эта команда доступна только на сервере."
+  },
+  "help.cmd_add_discord": {
+    "status": "verified",
+    "text": "/add_discord <ник_discord> — связать ваш аккаунт Discord (завершите через /add-telegram в Discord)"
+  },
+  "help.cmd_add_govt": {
+    "status": "verified",
+    "text": "/add-govt <союз> <название> <член> <члены> — создать правительственный орган (админы бота)"
+  },
+  "help.cmd_add_govt_tg": {
+    "status": "verified",
+    "text": "/add_govt <союз> <название> <член> <члены> — создать правительственный орган (админы бота)"
+  },
+  "help.cmd_add_party": {
+    "status": "verified",
+    "text": "/add-party [id_основателя] — основать партию (диалог; нужна роль, заданная /allow-parties)"
+  },
+  "help.cmd_add_telegram": {
+    "status": "verified",
+    "text": "/add-telegram <@username> — связать ваш аккаунт Telegram (завершите через /add-discord в Telegram)"
+  },
+  "help.cmd_add_unia": {
+    "status": "verified",
+    "text": "/add-unia <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /setup (админы бота)"
+  },
+  "help.cmd_add_unia_tg": {
+    "status": "verified",
+    "text": "/add_unia <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /setup (админы бота)"
+  },
+  "help.cmd_allow_parties": {
+    "status": "verified",
+    "text": "/allow-parties <союз> <enable|disable> [id_ролей] — включить или выключить партии в союзе (админы бота)"
+  },
+  "help.cmd_allow_parties_tg": {
+    "status": "verified",
+    "text": "/allow_parties <союз> <enable|disable> [id_ролей] — включить или выключить партии в союзе (админы бота)"
+  },
+  "help.cmd_backup": {
+    "status": "verified",
+    "text": "/backup — получить резервную копию базы данных (админы бота)"
+  },
+  "help.cmd_edit_party": {
+    "status": "verified",
+    "text": "/edit-party [пункт] — управление партией (основатели и лидеры)"
+  },
+  "help.cmd_edit_party_admin": {
+    "status": "unverified",
+    "text": "/edit-party-admin <код|название> — изменить любые параметры любой партии (админы бота)"
+  },
+  "help.cmd_edit_party_admin_tg": {
+    "status": "unverified",
+    "text": "/edit_party_admin <код|название> — изменить любые параметры любой партии (админы бота)"
+  },
+  "help.cmd_edit_party_tg": {
+    "status": "verified",
+    "text": "/edit_party [пункт] — управление партией (основатели и лидеры)"
+  },
+  "help.cmd_edit_rules": {
+    "status": "verified",
+    "text": "/edit-rules [пункт] — правила партии (основатели и лидеры)"
+  },
+  "help.cmd_edit_rules_tg": {
+    "status": "verified",
+    "text": "/edit_rules [пункт] — правила партии (основатели и лидеры)"
+  },
+  "help.cmd_find_with": {
+    "status": "verified",
+    "text": "/find-with <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, содержащие ключевые слова (админы сервера)"
+  },
+  "help.cmd_find_without": {
+    "status": "verified",
+    "text": "/find-without <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, не содержащие ключевые слова (админы сервера)"
+  },
+  "help.cmd_force_leave": {
+    "status": "verified",
+    "text": "/force_leave <платформа> <id> — вывести бота из чата (админы бота)"
+  },
+  "help.cmd_govt": {
+    "status": "verified",
+    "text": "/govt <название> — информация о правительственном органе союза"
+  },
+  "help.cmd_help": {
+    "status": "verified",
+    "text": "/help — показать список команд"
+  },
+  "help.cmd_lang": {
+    "status": "verified",
+    "text": "/lang <код> — установить язык бота по умолчанию для всего сервера/группы (админы сервера)"
+  },
+  "help.cmd_list_chats": {
+    "status": "verified",
+    "text": "/list_chats — список всех чатов бота (админы бота)"
+  },
+  "help.cmd_loc_compare": {
+    "status": "verified",
+    "text": "/loc-compare <код> — сравнение реплики по языкам"
+  },
+  "help.cmd_loc_compare_tg": {
+    "status": "verified",
+    "text": "/loc_compare <код> — сравнение реплики по языкам"
+  },
+  "help.cmd_loc_reply": {
+    "status": "verified",
+    "text": "/loc-reply <код> <текст> — ответить на предложение локализации (админы бота)"
+  },
+  "help.cmd_loc_reply_tg": {
+    "status": "verified",
+    "text": "/loc_reply <код> <текст> — ответить на предложение локализации (админы бота)"
+  },
+  "help.cmd_loc_suggest": {
+    "status": "verified",
+    "text": "/loc-suggest <язык> <код> <текст> — предложить вариант локализации"
+  },
+  "help.cmd_loc_suggest_tg": {
+    "status": "verified",
+    "text": "/loc_suggest <язык> <код> <текст> — предложить вариант локализации"
+  },
+  "help.cmd_locale": {
+    "status": "verified",
+    "text": "/locale [код] — статус локализации или файл выбранного языка"
+  },
+  "help.cmd_locallang": {
+    "status": "verified",
+    "text": "/locallang <код> — установить язык бота для этого канала/темы (ru, uk, pl, en, es, pt)"
+  },
+  "help.cmd_party": {
+    "status": "verified",
+    "text": "/party <код|название> — информация о партии союза"
+  },
+  "help.cmd_party_join": {
+    "status": "verified",
+    "text": "/party-join <код|название> — подать заявку на вступление в партию союза"
+  },
+  "help.cmd_party_join_tg": {
+    "status": "verified",
+    "text": "/party_join <код|название> — подать заявку на вступление в партию союза"
+  },
+  "help.cmd_party_kick": {
+    "status": "verified",
+    "text": "/party-kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
+  },
+  "help.cmd_party_kick_tg": {
+    "status": "verified",
+    "text": "/party_kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
+  },
+  "help.cmd_party_leave": {
+    "status": "verified",
+    "text": "/party-leave — выйти из своей партии в этом союзе"
+  },
+  "help.cmd_party_leave_tg": {
+    "status": "verified",
+    "text": "/party_leave — выйти из своей партии в этом союзе"
+  },
+  "help.cmd_privacy": {
+    "status": "unverified",
+    "text": "/privacy — настроить конфиденциальность своих данных"
+  },
+  "help.cmd_quizzes": {
+    "status": "verified",
+    "text": "/quizzes — пройти викторину (работает и в личных сообщениях)"
+  },
+  "help.cmd_quizzes_clear": {
+    "status": "verified",
+    "text": "/quizzes-clear — удалить свои сохранённые результаты викторин"
+  },
+  "help.cmd_quizzes_clear_tg": {
+    "status": "verified",
+    "text": "/quizzes_clear — удалить свои сохранённые результаты викторин"
+  },
+  "help.cmd_quizzes_compare": {
+    "status": "verified",
+    "text": "/quizzes-compare <пользователь> — сравнить результаты викторин"
+  },
+  "help.cmd_quizzes_compare_tg": {
+    "status": "verified",
+    "text": "/quizzes_compare <пользователь> — сравнить результаты викторин"
+  },
+  "help.cmd_quizzes_previous": {
+    "status": "unverified",
+    "text": "/quizzes-previous [номер] — сравнить текущий результат викторины с прошлым"
+  },
+  "help.cmd_quizzes_previous_tg": {
+    "status": "unverified",
+    "text": "/quizzes_previous [номер] — сравнить текущий результат викторины с прошлым"
+  },
+  "help.cmd_quizzes_stop": {
+    "status": "unverified",
+    "text": "/quizzes-stop — остановить викторину, сохранив прогресс на 7 дней"
+  },
+  "help.cmd_quizzes_stop_tg": {
+    "status": "unverified",
+    "text": "/quizzes_stop — остановить викторину, сохранив прогресс на 7 дней"
+  },
+  "help.cmd_setup": {
+    "status": "verified",
+    "text": "/setup <союз> <язык> — привязать сервер/группу к союзу и задать язык (админы бота)"
+  },
+  "help.cmd_verify": {
+    "status": "verified",
+    "text": "/verify <ник_на_fandom> — подтвердить аккаунт на Fandom (открывает команды, связанные с викийной деятельностью)"
+  },
+  "help.cmd_wiki_founday": {
+    "status": "unverified",
+    "text": "/wiki-founday <ссылка> <название> <дата> [id_канала] [время] [язык] — ежегодно поздравлять вики с днём рождения (админы сервера)"
+  },
+  "help.cmd_wiki_founday_remove": {
+    "status": "unverified",
+    "text": "/wiki-founday-remove <ссылка> — перестать поздравлять вики (админы сервера)"
+  },
+  "help.cmd_wiki_foundays": {
+    "status": "unverified",
+    "text": "/wiki-foundays — список дней рождения вики этого сервера (админы сервера)"
+  },
+  "help.section_admins": {
+    "status": "verified",
+    "text": "Для админов серверов"
+  },
+  "help.section_bot_admins": {
+    "status": "verified",
+    "text": "Для админов бота"
+  },
+  "help.section_everyone": {
+    "status": "verified",
+    "text": "Для всех"
+  },
+  "help.title": {
+    "status": "verified",
+    "text": "Команды бота"
+  },
+  "help_next": {
+    "status": "unverified",
+    "text": "Вперёд ▶"
+  },
+  "help_page": {
+    "status": "unverified",
+    "text": "Страница {page} из {total}"
+  },
+  "help_prev": {
+    "status": "unverified",
+    "text": "◀ Назад"
+  },
+  "internal_error": {
+    "status": "verified",
+    "text": "Внутренняя ошибка: {error}"
+  },
+  "lang_flag": {
+    "status": "unverified",
+    "text": "🇷🇺"
+  },
+  "lang_set": {
+    "status": "verified",
+    "text": "Язык бота для этого чата: {code}"
+  },
+  "lang_set_server": {
+    "status": "verified",
+    "text": "Язык бота по умолчанию для этого сервера/группы: {code}"
+  },
+  "lang_usage": {
+    "status": "verified",
+    "text": "Использование: /lang <ru|uk|pl|en|es|pt>"
+  },
+  "leader_added": {
+    "status": "verified",
+    "text": "✅ {user} теперь лидер партии {name}."
+  },
+  "leader_declined": {
+    "status": "verified",
+    "text": "Лидеры партии не изменяются."
+  },
+  "link_need_username": {
+    "status": "verified",
+    "text": "Для связывания аккаунтов необходимо наличие публичного @username в Telegram. Сначала задайте его в настройках Telegram."
+  },
+  "link_need_verify": {
+    "status": "verified",
+    "text": "Сначала подтвердите аккаунт на Fandom командой /verify, затем связывайте Telegram."
+  },
+  "link_pending_discord": {
+    "status": "verified",
+    "text": "Принято. Теперь в течение 30 минут используйте /add-discord {nick} в Telegram, чтобы завершить связывание."
+  },
+  "link_pending_telegram": {
+    "status": "verified",
+    "text": "Принято. Теперь в течение 30 минут используйте /add-telegram {nick} в Discord, чтобы завершить связывание."
+  },
+  "link_success": {
+    "status": "verified",
+    "text": "✅ Аккаунты связаны. Теперь вы верифицированы и в Telegram."
+  },
+  "link_success_unverified": {
+    "status": "verified",
+    "text": "✅ Аккаунты связаны. Но Discord-аккаунт ещё не связан с вашим аккаунтом на Fandom — верификация в Telegram заработает, как только вы используете /verify в Discord."
+  },
+  "link_usage_discord": {
+    "status": "verified",
+    "text": "Использование: /add-telegram <ваш @username в Telegram>"
+  },
+  "link_usage_telegram": {
+    "status": "verified",
+    "text": "Использование: /add-discord <ваш ник в Discord>"
+  },
+  "list_chats_discord_header": {
+    "status": "verified",
+    "text": "**Discord-серверы:**"
+  },
+  "list_chats_no_telegram": {
+    "status": "verified",
+    "text": "Нет Telegram-чатов в базе."
+  },
+  "list_chats_telegram_header": {
+    "status": "verified",
+    "text": "**Telegram-группы:**"
+  },
+  "list_chats_too_long": {
+    "status": "verified",
+    "text": "Список большой — загружаю файл."
+  },
+  "loc_compare_header": {
+    "status": "verified",
+    "text": "Сравнение реплики `{key}` по языкам:"
+  },
+  "loc_compare_not_found": {
+    "status": "verified",
+    "text": "Реплика с кодом `{key}` не найдена в локализациях."
+  },
+  "loc_compare_untranslated": {
+    "status": "verified",
+    "text": "(не переведено)"
+  },
+  "loc_compare_usage": {
+    "status": "verified",
+    "text": "Использование: /loc_compare <код реплики>"
+  },
+  "loc_cooldown": {
+    "status": "verified",
+    "text": "Этот файл уже запрашивали недавно. Попробуйте позже (не чаще одного раза в 10 минут на сервер/группу)."
+  },
+  "loc_file_caption": {
+    "status": "verified",
+    "text": "Локализация: {name} ({code}). Проверено: {percent}%."
+  },
+  "loc_list_footer": {
+    "status": "verified",
+    "text": "Отправьте /locale <код>, чтобы получить файл локализации."
+  },
+  "loc_list_header": {
+    "status": "verified",
+    "text": "Доступные языки локализации (🟩 — проверено, 🟧 — не проверено, 🟥 — не переведено):"
+  },
+  "loc_reply_dm_body": {
+    "status": "verified",
+    "text": "> {suggestion}\n{reply}\n\nЯзык: {name} / {lang}\nКод: {key}"
+  },
+  "loc_reply_dm_title": {
+    "status": "verified",
+    "text": "Ответ от администратора бота"
+  },
+  "loc_reply_failed": {
+    "status": "verified",
+    "text": "Не удалось отправить личное сообщение пользователю (возможно, закрыты ЛС)."
+  },
+  "loc_reply_not_found": {
+    "status": "verified",
+    "text": "Сообщение с кодом {code} не найдено."
+  },
+  "loc_reply_sent": {
+    "status": "verified",
+    "text": "Ответ отправлен пользователю."
+  },
+  "loc_reply_support_prefix": {
+    "status": "verified",
+    "text": "Ответ администратора {admin} (код {code}):"
+  },
+  "loc_reply_usage": {
+    "status": "verified",
+    "text": "Использование: /loc_reply <код> <текст>"
+  },
+  "loc_suggest_confirm": {
+    "status": "verified",
+    "text": "Спасибо! Ваше предложение отправлено команде. Код вашего сообщения: {code}"
+  },
+  "loc_suggest_no_support": {
+    "status": "verified",
+    "text": "Канал поддержки не настроен. Обратитесь к администратору бота."
+  },
+  "loc_suggest_support_body": {
+    "status": "verified",
+    "text": "{suggestion}\n\nЯзык: {name} / {lang}\nКод: {key}"
+  },
+  "loc_suggest_usage": {
+    "status": "verified",
+    "text": "Использование: /loc-suggest <язык> <код реплики> <текст>"
+  },
+  "loc_unknown_lang": {
+    "status": "verified",
+    "text": "Неизвестный язык: {lang}. Доступны: {supported}."
+  },
+  "locallang_usage": {
+    "status": "verified",
+    "text": "Использование: /locallang <ru|uk|pl|en|es|pt>"
+  },
+  "no_permission": {
+    "status": "verified",
+    "text": "У вас нет прав для использования этой команды."
+  },
+  "party_choose": {
+    "status": "verified",
+    "text": "Вы управляете несколькими партиями. Отправьте номер нужной партии:"
+  },
+  "party_feature_disabled": {
+    "status": "verified",
+    "text": "Партии в этом союзе отключены."
+  },
+  "party_field_allies": {
+    "status": "verified",
+    "text": "Союзные партии"
+  },
+  "party_field_description": {
+    "status": "verified",
+    "text": "Описание"
+  },
+  "party_field_founder": {
+    "status": "verified",
+    "text": "Основатель"
+  },
+  "party_field_ideologies": {
+    "status": "verified",
+    "text": "Идеологии"
+  },
+  "party_field_leader": {
+    "status": "verified",
+    "text": "Текущий лидер"
+  },
+  "party_field_members": {
+    "status": "verified",
+    "text": "Члены партии"
+  },
+  "party_field_seats": {
+    "status": "verified",
+    "text": "Места в правительственных органах"
+  },
+  "party_join_accept": {
+    "status": "verified",
+    "text": "Принять"
+  },
+  "party_join_accepted_leader": {
+    "status": "verified",
+    "text": "✅ Вы приняли {requester} в партию {name}."
+  },
+  "party_join_accepted_user": {
+    "status": "verified",
+    "text": "✅ Ваша заявка на вступление в {name} [{code}] принята!"
+  },
+  "party_join_already_handled": {
+    "status": "verified",
+    "text": "Эта заявка уже обработана."
+  },
+  "party_join_already_member": {
+    "status": "verified",
+    "text": "Вы уже состоите в этой партии."
+  },
+  "party_join_in_other": {
+    "status": "verified",
+    "text": "Вы уже состоите в партии {name}. Сначала выйдите из неё командой /party-leave."
+  },
+  "party_join_leader_dm": {
+    "status": "verified",
+    "text": "🏛️ {requester} хочет вступить в вашу партию {name} [{code}]."
+  },
+  "party_join_no_leader": {
+    "status": "verified",
+    "text": "Не удалось связаться ни с одним из лидеров партии. Попробуйте позже."
+  },
+  "party_join_not_leader": {
+    "status": "verified",
+    "text": "Ответить на заявку может только лидер партии."
+  },
+  "party_join_pending": {
+    "status": "verified",
+    "text": "У вас уже есть заявка на вступление в эту партию."
+  },
+  "party_join_reject": {
+    "status": "verified",
+    "text": "Отказать"
+  },
+  "party_join_rejected_leader": {
+    "status": "verified",
+    "text": "❌ Вы отклонили заявку {requester} на вступление в {name}."
+  },
+  "party_join_rejected_user": {
+    "status": "verified",
+    "text": "❌ Ваша заявка на вступление в {name} [{code}] отклонена."
+  },
+  "party_join_sent": {
+    "status": "verified",
+    "text": "📨 Ваша заявка на вступление в {name} отправлена лидерам партии."
+  },
+  "party_join_suspended": {
+    "status": "verified",
+    "text": "Эта партия приостановлена и не принимает новых участников."
+  },
+  "party_join_usage": {
+    "status": "verified",
+    "text": "Использование: /party-join <код партии или точное название>"
+  },
+  "party_kick_done": {
+    "status": "verified",
+    "text": "✅ {user} исключён из партии {name}."
+  },
+  "party_kick_founder": {
+    "status": "verified",
+    "text": "Нельзя исключить основателя партии."
+  },
+  "party_kick_leader": {
+    "status": "verified",
+    "text": "Нельзя исключить другого лидера. Он должен выйти сам через /party-leave."
+  },
+  "party_kick_not_member": {
+    "status": "verified",
+    "text": "Этот пользователь не состоит в вашей партии."
+  },
+  "party_kick_usage": {
+    "status": "verified",
+    "text": "Использование: /party-kick <ID или юзернейм участника>"
+  },
+  "party_leave_done": {
+    "status": "verified",
+    "text": "Вы вышли из партии {name}."
+  },
+  "party_leave_founder": {
+    "status": "verified",
+    "text": "Вы являетесь основателем этой партии и не можете просто покинуть её. Передайте её или приостановите через /edit-party."
+  },
+  "party_leave_none": {
+    "status": "verified",
+    "text": "Вы не состоите ни в одной партии этого союза."
+  },
+  "party_more_button": {
+    "status": "verified",
+    "text": "Подробнее"
+  },
+  "party_none_led": {
+    "status": "verified",
+    "text": "Вы не являетесь ни основателем, ни лидером какой-либо партии в этом союзе."
+  },
+  "party_not_found": {
+    "status": "verified",
+    "text": "Партия не найдена."
+  },
+  "party_not_found_suggest": {
+    "status": "verified",
+    "text": "Партия не найдена. Возможно, вы искали какую-то из этих? Отправьте номер в течение 30 минут:"
+  },
+  "party_suspended_mark": {
+    "status": "verified",
+    "text": "⏸️ Партия приостановлена."
+  },
+  "party_usage": {
+    "status": "verified",
+    "text": "Использование: /party <код или название>"
+  },
+  "privacy_block_all_off": {
+    "status": "unverified",
+    "text": "✅ Теперь другие пользователи снова могут сравнивать свои результаты с вашими."
+  },
+  "privacy_block_all_on": {
+    "status": "unverified",
+    "text": "✅ Теперь другие пользователи не могут сравнивать свои результаты с вашими."
+  },
+  "privacy_block_quiz_off": {
+    "status": "unverified",
+    "text": "✅ Сравнение ваших результатов по «{name}» снова разрешено."
+  },
+  "privacy_block_quiz_on": {
+    "status": "unverified",
+    "text": "✅ Сравнение ваших результатов по «{name}» запрещено."
+  },
+  "privacy_choose_quiz_block": {
+    "status": "unverified",
+    "text": "Для какой викторины изменить запрет на сравнение? Отправьте номер в течение 30 минут (в скобках — текущий запрет):"
+  },
+  "privacy_choose_quiz_clear": {
+    "status": "unverified",
+    "text": "Результаты какой викторины удалить? Отправьте номер в течение 30 минут:"
+  },
+  "privacy_cleared_all": {
+    "status": "unverified",
+    "text": "✅ Удалил все ваши результаты викторин."
+  },
+  "privacy_cleared_quiz": {
+    "status": "unverified",
+    "text": "✅ Удалил ваши результаты по «{name}»."
+  },
+  "privacy_header": {
+    "status": "unverified",
+    "text": "Здесь вы можете настроить, что бот о вас хранит. Отправьте номер в течение 30 минут:"
+  },
+  "privacy_none": {
+    "status": "unverified",
+    "text": "Бот не хранит о вас данных, которые можно было бы настроить."
+  },
+  "privacy_opt_block_all": {
+    "status": "unverified",
+    "text": "запретить пользователям сравнивать мои результаты викторин (сейчас запрещено: {state})"
+  },
+  "privacy_opt_block_one": {
+    "status": "unverified",
+    "text": "запретить пользователям сравнивать мои результаты отдельных викторин"
+  },
+  "privacy_opt_clear_all": {
+    "status": "unverified",
+    "text": "удалить мои результаты викторин"
+  },
+  "privacy_opt_clear_one": {
+    "status": "unverified",
+    "text": "удалить мои результаты отдельных викторин"
+  },
+  "privacy_title": {
+    "status": "unverified",
+    "text": "Конфиденциальность"
+  },
+  "quiz_answer_hint": {
+    "status": "verified",
+    "text": "Ответ в формате «Номер-Ответ»: Mb — слабое предпочтение, Y — уверенное (например, «2-Y» или «3 Mb»). Для последних вариантов достаточно номера."
+  },
+  "quiz_answer_invalid": {
+    "status": "verified",
+    "text": "Не понял. Ответьте, например, «2-Y» или «3 Mb»; для последних вариантов пришлите только номер."
+  },
+  "quiz_answer_need_weight": {
+    "status": "verified",
+    "text": "Укажите силу предпочтения для этого варианта: Mb (слабое) или Y (уверенное) — например, «{num}-Y» или «{num} Mb»."
+  },
+  "quiz_answer_out_of_range": {
+    "status": "verified",
+    "text": "Нет варианта с таким номером. Выберите номер из списка."
+  },
+  "quiz_cancelled": {
+    "status": "verified",
+    "text": "Хорошо — в следующий раз!"
+  },
+  "quiz_consent_no": {
+    "status": "verified",
+    "text": "Нет, спасибо"
+  },
+  "quiz_consent_prompt": {
+    "status": "verified",
+    "text": "Перед выдачей результатов: могу ли я их сохранить? Так вы сможете позже сравнить их со своими прошлыми результатами или с результатами других участников. Удалить их можно в любой момент командой /quizzes-clear."
+  },
+  "quiz_consent_yes": {
+    "status": "verified",
+    "text": "Да, запомнить"
+  },
+  "quiz_go": {
+    "status": "verified",
+    "text": "Поехали!"
+  },
+  "quiz_later": {
+    "status": "verified",
+    "text": "В следующий раз"
+  },
+  "quiz_not_saved": {
+    "status": "verified",
+    "text": "Хорошо, не буду сохранять результаты."
+  },
+  "quiz_results_title": {
+    "status": "verified",
+    "text": "Ваши результаты — {name}"
+  },
+  "quiz_resumed": {
+    "status": "unverified",
+    "text": "▶️ Продолжаем «{name}» с вопроса {num} из {total}."
+  },
+  "quiz_saved": {
+    "status": "verified",
+    "text": "Сохранил. Удалить можно в любой момент командой /quizzes-clear."
+  },
+  "quiz_start_prompt": {
+    "status": "verified",
+    "text": "Вы выбрали «{name}».\n\nВам будет показана тема с пронумерованными утверждениями. Отвечайте в формате «Номер-Ответ»: после номера добавьте Mb для слабого предпочтения или Y для уверенного (например, «3-Y» или «2 Mb»). Для последних вариантов (не согласен со всеми / не волнует / предыдущий вопрос) достаточно одного номера.\n\nНачнём?"
+  },
+  "quiz_stop_none": {
+    "status": "unverified",
+    "text": "Сейчас вы не проходите викторину."
+  },
+  "quiz_stop_saved": {
+    "status": "unverified",
+    "text": "⏸️ Прогресс по «{name}» сохранён на 7 дней. Начните эту викторину снова, чтобы продолжить с того же места; иначе прогресс будет сброшен."
+  },
+  "quizzes_clear_deleted": {
+    "status": "verified",
+    "text": "Удалил ваш результат по «{name}» ({date})."
+  },
+  "quizzes_clear_header": {
+    "status": "verified",
+    "text": "Ваши сохранённые результаты — ответьте номером в течение 30 минут, чтобы удалить:"
+  },
+  "quizzes_clear_none": {
+    "status": "verified",
+    "text": "У вас нет сохранённых результатов викторин."
+  },
+  "quizzes_compare_blocked": {
+    "status": "unverified",
+    "text": "Этот пользователь запретил сравнивать свои результаты викторин."
+  },
+  "quizzes_compare_header": {
+    "status": "verified",
+    "text": "Викторины, которые вы оба прошли — ответьте номером в течение 30 минут:"
+  },
+  "quizzes_compare_none": {
+    "status": "verified",
+    "text": "У вас и этого пользователя нет общих пройденных викторин."
+  },
+  "quizzes_compare_self": {
+    "status": "verified",
+    "text": "Выберите для сравнения кого-то, кроме себя."
+  },
+  "quizzes_compare_title": {
+    "status": "verified",
+    "text": "Сравнение — {name}"
+  },
+  "quizzes_compare_usage": {
+    "status": "verified",
+    "text": "Использование: /quizzes_compare <ID пользователя или @username>"
+  },
+  "quizzes_compare_user_invalid": {
+    "status": "verified",
+    "text": "Укажите корректного пользователя — упоминание или ID."
+  },
+  "quizzes_compare_you": {
+    "status": "verified",
+    "text": "Вы"
+  },
+  "quizzes_list_header": {
+    "status": "verified",
+    "text": "Доступные викторины — ответьте номером в течение 30 минут, чтобы начать:"
+  },
+  "quizzes_previous_current": {
+    "status": "unverified",
+    "text": "Текущий результат ({date})"
+  },
+  "quizzes_previous_earlier": {
+    "status": "unverified",
+    "text": "Прошлый результат ({date})"
+  },
+  "quizzes_previous_invalid": {
+    "status": "unverified",
+    "text": "Нет викторины с таким номером. Список викторин — /quizzes."
+  },
+  "quizzes_previous_no_recent": {
+    "status": "unverified",
+    "text": "С прохождения викторины прошло больше 30 минут. Укажите номер викторины: /quizzes-previous <номер> (список — /quizzes)."
+  },
+  "quizzes_previous_no_results": {
+    "status": "unverified",
+    "text": "У вас нет сохранённых результатов викторин."
+  },
+  "quizzes_previous_none": {
+    "status": "unverified",
+    "text": "У вас нет прошлого результата по «{name}» — сравнивать не с чем."
+  },
+  "quizzes_previous_title": {
+    "status": "unverified",
+    "text": "Сравнение с прошлым результатом — {name}"
+  },
+  "quizzes_previous_usage": {
+    "status": "unverified",
+    "text": "Использование: /quizzes_previous [номер викторины]"
+  },
+  "quizzes_title": {
+    "status": "verified",
+    "text": "Викторины"
+  },
+  "resume_confirm": {
+    "status": "verified",
+    "text": "Возобновить партию {name}?"
+  },
+  "resume_done": {
+    "status": "verified",
+    "text": "▶️ Партия {name} возобновлена."
+  },
+  "rules_invites_disabled": {
+    "status": "verified",
+    "text": "✅ Участники партии больше не могут приглашать новых участников."
+  },
+  "rules_invites_enabled": {
+    "status": "verified",
+    "text": "✅ Участники партии теперь могут приглашать новых участников."
+  },
+  "rules_menu_1": {
+    "status": "verified",
+    "text": "1 — разрешить участникам партии приглашать новых участников (сейчас: {state})"
+  },
+  "rules_menu_title": {
+    "status": "verified",
+    "text": "Правила партии — {name} [{code}]"
+  },
+  "service_event.bot_started": {
+    "status": "verified",
+    "text": "🤖 Бот запущен."
+  },
+  "service_event.bot_stopped": {
+    "status": "verified",
+    "text": "🛑 Бот остановлен."
+  },
+  "service_event.parties_disabled": {
+    "status": "verified",
+    "text": "🏛️ Партии выключены в союзе {code} участником {user}."
+  },
+  "service_event.parties_enabled": {
+    "status": "verified",
+    "text": "🏛️ Партии включены в союзе {code} участником {user}."
+  },
+  "service_event.party_created": {
+    "status": "verified",
+    "text": "🏛️ В союзе {union} создана партия {name} [{party}] участником {user}."
+  },
+  "service_event.party_deleted": {
+    "status": "unverified",
+    "text": "🗑️ В союзе {union} удалена партия {name} [{party}] участником {user}."
+  },
+  "service_event.setup_done": {
+    "status": "verified",
+    "text": "🔗 Чат {platform} «{chat}» привязан к союзу {union} участником {user}."
+  },
+  "service_event.union_created": {
+    "status": "verified",
+    "text": "🆕 Создан новый союз {code} участником {user}."
+  },
+  "setup_success": {
+    "status": "verified",
+    "text": "✅ Чат привязан к союзу {union} ({code}). Язык: {lang_name} ({lang})."
+  },
+  "setup_unknown_union": {
+    "status": "verified",
+    "text": "Неизвестный код союза: {code}. Доступные: {codes}."
+  },
+  "setup_usage": {
+    "status": "verified",
+    "text": "Использование: /setup <UNION> <ru|uk|pl|en|es|pt>"
+  },
+  "state_no": {
+    "status": "verified",
+    "text": "нет"
+  },
+  "state_yes": {
+    "status": "verified",
+    "text": "да"
+  },
+  "suspend_confirm": {
+    "status": "verified",
+    "text": "Приостановить партию {name}? Информация о ней сохранится, в /party она будет помечена как приостановленная, лидер сможет возобновить её позже."
+  },
+  "suspend_done": {
+    "status": "verified",
+    "text": "⏸️ Партия {name} приостановлена."
+  },
+  "too_many_requests": {
+    "status": "verified",
+    "text": "Слишком много запросов — попробуйте позже."
+  },
+  "transfer_declined": {
+    "status": "verified",
+    "text": "Лидер партии не заменяется."
+  },
+  "transfer_done": {
+    "status": "verified",
+    "text": "✅ {user} теперь управляет партией {name}."
+  },
+  "verify_cooldown": {
+    "status": "verified",
+    "text": "Слишком много попыток верификации. Повторите через несколько минут."
+  },
+  "verify_error": {
+    "status": "verified",
+    "text": "Не удалось связаться с Fandom. Попробуйте позже."
+  },
+  "verify_mismatch": {
+    "status": "verified",
+    "text": "Discord-аккаунт в профиле на Fandom («{handle}») не совпадает с вашим именем пользователя в Discord («{you}»)."
+  },
+  "verify_no_handle": {
+    "status": "verified",
+    "text": "В профиле пользователя {name} на Fandom не указан аккаунт в Discord. Укажите его в профиле на любой вики и повторите /verify."
+  },
+  "verify_not_found": {
+    "status": "verified",
+    "text": "Пользователь Fandom с ником «{name}» не найден."
+  },
+  "verify_required": {
+    "status": "verified",
+    "text": "Сначала подтвердите свой аккаунт на Fandom командой /verify <ваш ник на Fandom>."
+  },
+  "verify_required_tg": {
+    "status": "verified",
+    "text": "Сначала пройдите верификацию: используйте /add-discord здесь и /add-telegram в Discord, чтобы связать аккаунты (ваш Discord-аккаунт должен быть верифицирован через /verify)."
+  },
+  "verify_success": {
+    "status": "verified",
+    "text": "✅ Вы верифицированы как пользователь Fandom {name}. Теперь вам доступны команды, связанные с Fandom."
+  },
+  "verify_usage": {
+    "status": "verified",
+    "text": "Использование: /verify <ваш ник на fandom.com>"
+  }
+}

@@ -1,0 +1,365 @@
+{
+  "name": "WikiCharts — twoje wikijne poglądy",
+  "credit": "Ten test został zaadaptowany z otwartego projektu WikiCharts: https://github.com/WikiCharts/wikicharts.github.io/tree/main",
+  "axes": {
+    "gov": "Ustrój polityczny",
+    "speech": "Komunikacja",
+    "legal": "Bezpieczeństwo",
+    "for": "Polityka zagraniczna"
+  },
+  "special": {
+    "nota_opt": "Absolutnie nie zgadzam się z żadną z tych opinii",
+    "idc_opt": "Nie obchodzi mnie ta kwestia",
+    "prev_opt": "Poprzednie pytanie"
+  },
+  "labels": {
+    "auth": "Autokracja",
+    "olig": "Oligarchia",
+    "strato": "Merytokracja",
+    "dir": "Demokracja bezpośrednia",
+    "rep": "Demokracja przedstawicielska",
+    "min": "Samorządność",
+    "cons": "Demokracja konsensualna",
+    "dir*": "Demokracja bezpośrednia*",
+    "rep*": "Demokracja przedstawicielska*",
+    "free": "Wolność",
+    "cont": "Kontrola",
+    "moder": "Umiarkowanie",
+    "obs": "Obscenizm",
+    "just": "Sprawiedliwość",
+    "cont*": "Całkowity zakaz",
+    "decn": "Decentralizacja",
+    "retrib": "Sprawiedliwość karna",
+    "det": "Odstraszanie",
+    "warn": "Kary",
+    "rehab": "Rehabilitacja",
+    "retrib*": "Podporządkowanie administracyjne",
+    "friend": "Wikiprzyjaźń",
+    "pop": "Wiki-populizm",
+    "iso": "Izolacjonizm",
+    "sov": "Suwerenność",
+    "pop*": "Ekspansjonizm",
+    "friend*": "Wikiunia",
+    "nota": "Inne",
+    "idc": "Apatia",
+    "cent": "Mieszanka poglądów"
+  },
+  "descriptions": {
+    "auth": "Cała pełnia władzy należy do jednej osoby — nieusuwalnego administratora, który osobiście zarządza społecznością. Wszelkie decyzje podejmowane są jednoosobowo, bez uwzględnienia opinii pozostałych użytkowników.",
+    "olig": "Cała pełnia władzy należy do wąskiej grupy osób — grona administratorów zarządzających społecznością. Decyzje podejmowane są z reguły wspólnie przez wszystkich administratorów, ale mimo to bez uwzględnienia opinii zwykłych użytkowników.",
+    "strato": "Władza należy głównie do najbardziej wpływowych i aktywnych uczestników, posiadających statusy i zasługi. Opinia zwykłych użytkowników może być brana pod uwagę, ale nie tak mocno jak opinia uprzywilejowanych uczestników, mająca większą wagę w różnych kwestiach.",
+    "dir": "Władza należy do ludu: wszyscy członkowie społeczności, niezależnie od statusu technicznego, mają możliwość aktywnie wpływać na zachodzące procesy. Wszystkie zainicjowane przez lud decyzje podejmowane są regularnie w referendach i mają charakter bezpośredni.",
+    "rep": "Źródłem władzy jest lud, jednak zarządzanie społecznością delegowane jest eksperckim uczestnikom, którzy są wybierani przez lud, wyrażają jego interesy i podejmują wszystkie ważne decyzje kolektywnie.",
+    "min": "Lud ma maksymalną władzę: wszyscy uczestnicy samodzielnie podejmują kluczowe decyzje w sprawach społeczności bez wpływu administracji, która z kolei ma minimalne uprawnienia i prawie niczego nie reguluje.",
+    "cons": "Władza jest podzielona między lud a administrację z zachowaniem równowagi sił. Wszystkie decyzje podejmowane są przez uczestników i administratorów z reguły nie w głosowaniach, lecz w powszechnych dyskusjach na podstawie ogólnej zgody, aby zadowolić pragnienia wszystkich.",
+    "dir*": "Udoskonalona wersja demokracji bezpośredniej, oznaczająca stosowanie nowych metod głosowania w referendach, takich jak „Głosowanie punktowe” (Score Voting, STAR Voting), aby lepiej zrozumieć opinię większości.",
+    "rep*": "Udoskonalona wersja demokracji przedstawicielskiej, oznaczająca stosowanie nowych metod głosowania w referendach, takich jak „Głosowanie punktowe” (Score Voting, STAR Voting), aby lepiej zrozumieć opinię większości.",
+    "free": "Prawo każdego uczestnika do swobodnego komunikowania się i wyrażania tak, jak chce, bez regulacji, kontroli i cenzury ze strony administracji. Brak jakichkolwiek zakazów dotyczących przekleństw, słów żargonowych i wulgarnych oraz innych treści.",
+    "cont": "Kontrola i regulacja komunikacji użytkowników. Silne ograniczenia co do tego, jakich słów można używać, przestrzeganie etykiety oraz usuwanie i cenzurowanie przekleństw, wulgaryzmów i innych nieprzyzwoitych bądź niedopuszczalnych treści.",
+    "moder": "Umiarkowane ograniczenia komunikacji użytkowników, częściowa legalizacja przekleństw, obecność cenzury zbyt grubiańskich i niedopuszczalnych wyrażeń; zachęcanie uczestników do poprawności językowej i etykiety.",
+    "obs": "Brak zakazu wulgarnego słownictwa, w tym przekleństw, słów grubiańskich i wulgarnych, zachęcanie do swobodnej komunikacji, ale mimo to obecność minimalnych ograniczeń co do tego, jak użytkownicy mogą się wyrażać.",
+    "just": "Głównym celem komunikacji jest podtrzymywanie przyjaznej atmosfery, aby uczestnicy mogli czuć się komfortowo. Zakaz prowokacji i obraźliwych zwrotów wyrażających nienawiść i ucisk wobec ludzi; udzielanie wsparcia ofiarom takich działań.",
+    "cont*": "Brak wolności słowa, maksymalny zakaz słownictwa obscenicznego, wulgarnego, przekleństw, treści nieprzyzwoitych i innych niedopuszczalnych. Tylko administracja decyduje, co można mówić, a czego nie.",
+    "decn": "Brak jednolitego systemu sprawiedliwości i karania sprawców. Uczestnicy potrafią poradzić sobie z naruszeniami samodzielnie w każdym przypadku z osobna: wybaczyć sprawcy wszystko i zrehabilitować go, albo surowo ukarać permanentnym banem.",
+    "retrib": "Najlepszą odpowiedzią na złamanie zasad jest kara. Zapobieganie przyszłym naruszeniom czy rehabilitacja sprawcy nie mają znaczenia. Najważniejsze to ukarać winnego w pełni, bo ten, kto popełnia przewinienie, zasługuje, aby traktowano go odpowiednio.",
+    "det": "Rola sprawiedliwości powinna być odstraszająca zarówno dla sprawców, jak i dla pozostałych uczestników: groźba kary powstrzyma ludzi od popełnienia przewinienia i obniży poziom naruszeń zasad w społeczności; system blokad powinien mieć charakter kumulacyjny.",
+    "warn": "Rolą sprawiedliwości nie jest powstrzymywanie uczestników od naruszeń, lecz jedynie czasowe ograniczanie ich możliwości, gdy zbyt mocno się zapędzą. Wystarczy utrzymanie umiarkowanego porządku oraz wydawanie ostrzeżeń lub czasowych blokad współmiernych do wagi naruszenia.",
+    "rehab": "Należy pobłażliwiej traktować sprawców, stosować łagodne środki karne; rolą sprawiedliwości powinno być poprawienie, przewychowanie, reintegracja sprawców ze społecznością i naprowadzenie ich na właściwą drogę.",
+    "retrib*": "Sprawiedliwość działa w interesie administracji, która może blokować uczestników według własnego uznania, niezależnie od zasad postępowania. Z reguły oznacza to obecność surowego porządku i dyscypliny, a także surowych kar.",
+    "friend": "Otwartość i przyjazność wikiprojektu wobec innych wiki, troska nie tylko o własne interesy, ale i o interesy innych użytkowników. Wikiprojekty powinny się przyjaźnić i pomagać sobie nawzajem, a także wspierać potrzebujące projekty, gdy jest to konieczne.",
+    "pop": "W polityce zagranicznej na pierwszym miejscu stoją interesy jednego wikiprojektu. Dla realizacji własnych interesów wiki może zawrzeć przyjaźń z innymi uczestnikami i pomóc im, ale tylko po to, by zdobyć sławę i popularność.",
+    "iso": "Całkowita izolacja społeczności wikiprojektu, ignorowanie świata zewnętrznego, brak jakichkolwiek kontaktów i więzi z uczestnikami innych wiki, odmowa zawierania przyjaźni, a tym bardziej wstępowania do wikiunii.",
+    "sov": "Wikiprojekt powinien mieć absolutne prawo do kontrolowania swoich zasad i polityki oraz zachowania statusu samodzielności i niezależności. Możliwa jest umiarkowana otwartość i minimalne więzi z innymi wikiprojektami, ale nie więcej.",
+    "pop*": "Gotowość wikiprojektu do robienia wszystkiego, co w jego mocy, aby poszerzyć swoje wpływy i ulepszyć się. Może to obejmować interwencję w niezależnych wikiprojektach w celu ustanowienia tam podporządkowanego reżimu.",
+    "friend*": "Najwyższa forma wikiprzyjaźni, oznaczająca połączenie kilku zaprzyjaźnionych projektów w jedną unię. Obejmuje to organizację wspólnej pracy, aktywną współpracę użytkowników, wymianę doświadczeń, kolektywne podejmowanie decyzji i przestrzeganie jednolitych zasad.",
+    "nota": "Jeśli otrzymałeś „Inne”, oznacza to, że twoje widzenie pewnych kwestii nie zgadza się z głównymi opiniami zawartymi w tym teście, który upraszcza zagadnienia dla przeważającej większości ludzi. Prawdopodobnie masz już dla siebie konkretną etykietę własnych poglądów.",
+    "idc": "„Apatia” to brak zainteresowania pewnymi kwestiami. Mogą one cię nie dotyczyć, albo po prostu możesz nie uważać, że któraś opcja jest lepsza od innych. Niektórzy apatyczni ludzie po prostu bardziej dbają o kilka innych kwestii i są apatyczni wobec pozostałych.",
+    "cent": "„Mieszanka poglądów” to połączenie elementów kilku skrajnie różnych opinii w różnych kwestiach, brak silnej preferencji między różnymi poglądami."
+  },
+  "questions": {
+    "voting": {
+      "topic": "Głosowanie",
+      "options": [
+        "Głosowanie to naprawdę zbędny proces, zachcianki mas nie mają znaczenia.",
+        "Głosowania mogą się odbywać, ale tylko w wąskim gronie administracji, nie więcej.",
+        "Ci, którzy wnoszą większy wkład w rozwój społeczności, zasługują na dodatkowe statusy i większą wagę swojego głosu.",
+        "Głosowanie to ważny element demokracji. Każdy uczestnik powinien mieć głos, a wszystkie głosy powinny być liczone jednakowo.",
+        "Powinniśmy podejmować decyzje demokratycznie, na podstawie ogólnej zgody uczestników, bez przeprowadzania głosowań. Potrzebujemy uargumentowanych opinii, a nie prostych głosów „za” lub „przeciw”."
+      ]
+    },
+    "votingreform": {
+      "topic": "Reforma referendów",
+      "options": [
+        "Powinniśmy zreformować referenda, wprowadzając współczynnik kompetencji lub inny, aby głos aktywniejszego lub bardziej statusowego uczestnika ważył więcej niż głos zwykłego użytkownika.",
+        "Powinniśmy udostępnić referenda wszystkim, aby uczestnicy mogli swobodnie w dowolnym momencie zbierać się i rozstrzygać wszelkie kwestie, jakie zechcą, bez żadnych ograniczeń.",
+        "Powinniśmy częściej przeprowadzać referenda oraz stworzyć plan lub harmonogram wszystkich najbliższych głosowań, aby uczestnicy byli ich świadomi, i w ten sposób przyciągnąć większe masy ludzi do udziału.",
+        "Powinniśmy stworzyć w referendach system, w którym uczestnik może delegować swój głos innemu, bardziej eksperckiemu użytkownikowi i być pewnym, że wyraża on jego interesy.",
+        "Powinniśmy stosować udoskonalone metody głosowań, takie jak „Głosowanie punktowe” (Score Voting, STAR Voting), aby lepiej zrozumieć opinię większości.",
+        "Powinniśmy przeprowadzić reformę, aby referenda bardziej przypominały dyskusje niż głosowania, tak by opinia publiczna kształtowała się w ramach uargumentowanego publicznego dyskursu zmierzającego do konsensusu.",
+        "Referenda powinny zostać zniesione, ponieważ prawo nie powinno być określane opinią ludu."
+      ]
+    },
+    "concentration": {
+      "topic": "Koncentracja władzy",
+      "options": [
+        "Władza powinna być zdecentralizowana na rzecz wszystkich, a ważne decyzje powinny ostatecznie zapadać w częstych referendach. Ludzie zwykle wiedzą, czego chcą, i potrafią zrozumieć kwestie przy niewielkim wyjaśnieniu.",
+        "Władza powinna być skoncentrowana w zależności od zasług użytkownika. Aktywni uczestnicy powinni mieć wyższy status i większy wpływ, w przeciwieństwie do tych, którzy nie są aktywni.",
+        "Nikt z góry nie powinien nam rozkazywać, powinniśmy mieć swobodę samodzielnego decydowania, co jest dobre, a co złe.",
+        "Przede wszystkim potrzebny nam jeden jedyny lider, który mógłby rządzić nieograniczenie długo i być zdolny w pełni pojąć ogólny obraz. Nie dbając o to, co myśli lud, lider może podejmować lepsze decyzje samodzielnie.",
+        "Władza powinna być skoncentrowana w rękach administracji, której wszyscy członkowie w wąskim gronie mogą podejmować właściwe decyzje wspólnie.",
+        "Władza powinna być rozdzielona między kolegium administratorów wybieranych przez lud, którzy powinni rozumieć problemy, słuchać ekspertów i oceniać ogólny obraz.",
+        "Władza powinna być podzielona między uczestników a administrację mniej więcej po równo, aby jedni i drudzy mogli uzgadniać swoje interesy i podejmować decyzje w powszechnych dyskusjach."
+      ]
+    },
+    "traits": {
+      "topic": "Najważniejsze cechy lidera",
+      "options": [
+        "Powinniśmy sami podejmować decyzje, nie potrzebujemy lidera nad sobą.",
+        "Lud w większości przypadków powinien samodzielnie podejmować decyzje, jedynym celem i zadaniem lidera jest zachęcanie do wspólnej pracy uczestników i ich inicjatywy.",
+        "Najważniejsze cechy lidera to odwaga i siła. Potrzebujemy kogoś, kto będzie podejmował niezbędne decyzje, nawet jeśli są niepopularne.",
+        "Najważniejsze cechy lidera to empatia i wrażliwość. Potrzebujemy kogoś, kto potrafi słuchać opinii ludu i spełniać jego prośby, wyrażając wolę większości.",
+        "Najważniejsze cechy lidera to ranga i doświadczenie. Potrzebujemy kogoś, kto zna funkcje administracyjne i ma lepsze niż inni umiejętności zarządzania społecznością.",
+        "Najważniejsze cechy lidera to rozum i inteligencja. Potrzebujemy kogoś, kto potrafi rozumieć problemy i znajdować sposoby ich rozwiązania."
+      ]
+    },
+    "leaderselect": {
+      "topic": "Wybór lidera",
+      "options": [
+        "Liderzy nie powinni się zmieniać, bo powinniśmy mieć tylko jednego jedynego administratora z bezterminową kadencją, podejmującego wszystkie decyzje samodzielnie.",
+        "Liderzy powinni być mianowani przez obecną administrację według jej decyzji, abyśmy zawsze mieli kompetentne kierownictwo.",
+        "Liderzy powinni być wybierani, ale nie bezpośrednio w powszechnym głosowaniu. Powinno ono być ważone, aby opinia aktywniejszych i bardziej statusowych uczestników miała większy udział.",
+        "Liderzy mogą być wybierani w demokratycznych wyborach, jednak przywództwo powinno być rozproszone, a w podejmowaniu większości decyzji powinna uczestniczyć cała społeczność.",
+        "Liderzy powinni być wybierani w demokratycznych wyborach przez członków społeczności, którą poprowadzą.",
+        "Liderzy powinni być wybierani demokratycznie za pomocą dyskusji, a nie głosowania, które jest nastawione bardziej na rywalizację niż na współpracę.",
+        "Nie powinniśmy mieć jednego lidera wybieranego jakąkolwiek metodą."
+      ]
+    },
+    "policysetting": {
+      "topic": "Uprawnienia do ustanawiania polityki",
+      "options": [
+        "Administracja społeczności powinna mieć większość uprawnień decyzyjnych i z reguły tworzyć politykę.",
+        "Wybrana w referendum władza administracyjna powinna określać politykę całej społeczności w interesie większości i mieć umiarkowane uprawnienia z możliwością ich regulacji przez lud.",
+        "Wybrana w powszechnej dyskusji władza administracyjna powinna w dużej mierze ustanawiać politykę, kierując się przede wszystkim dążeniem do zadowolenia pragnień wszystkich, a nie narzucaniem opinii większości całemu ludowi.",
+        "Władza powinna należeć bezpośrednio do ludu, który powinien inicjować podejmowanie decyzji poprzez głosowanie z inicjatywy uczestników.",
+        "Władza powinna należeć głównie do najbardziej aktywnych i statusowych uczestników, ponieważ są oni z reguły najzdolniejsi i wnoszą największy wkład w rozwój społeczności.",
+        "Uprawnienia administracji powinny być minimalne, powinniśmy być wolni w swoich decyzjach i działaniach."
+      ]
+    },
+    "peoplepolicy": {
+      "topic": "Rola uczestników w zarządzaniu społecznością",
+      "options": [
+        "Uczestnicy jako kolektyw zwykle potrafią rozumieć i podejmować dobre decyzje dotyczące polityki przy niewielkiej ilości wyjaśnień, aby móc bezpośrednio decydować, czego chcą.",
+        "Aktywni uczestnicy posiadający statusy z reguły wiedzą, czego chcą, i mają dobre zdanie, ale zwykli użytkownicy rzadko wiedzą, co jest dla nich dobre.",
+        "Większość uczestników ogólnie ma słabe zdanie i administracji byłoby lepiej bez niego.",
+        "Uczestnicy powinni mieć prawa i dźwignie zarządzania społecznością, ale administracja powinna starać się unikać tyranii większości, proponując rozwiązania zaspokajające maksymalną liczbę preferencji.",
+        "W społeczności powinna być silnie rozwinięta samorządność. Uczestnikom nie trzeba narzucać cudzego zdania, sami doskonale wiedzą, czego chcą, i potrafią podejmować dobre decyzje samodzielnie.",
+        "Uczestnicy zwykle wiedzą, czego chcą, ale nie można oczekiwać, że będą mieli czas na studiowanie i głosowanie w każdej kwestii, dlatego należy to delegować bardziej eksperckim użytkownikom."
+      ]
+    },
+    "representation": {
+      "topic": "Interesy ludu i rola liderów",
+      "options": [
+        "Nie potrzebuję liderów, chcę, aby każdy uczestnik mógł reprezentować swoje interesy samodzielnie, bez wpływu administracji.",
+        "Chcę mieć liderów, którzy będą wyrażać interesy ludu i działać zgodnie z nimi, aby zagwarantować, że opinia większości ludzi zostanie usłyszana i spełniona.",
+        "Chcę mieć liderów, którzy będą dążyć do rozwiązania możliwego do przyjęcia dla wszystkich, stosując kompromis i inne metody, a nie bronić opinii większości, która często bywa ze szkodą dla mniejszości.",
+        "Powinniśmy mieć jednego niewybieranego władcę, który działa zgodnie ze swoimi osobistymi interesami.",
+        "Chcę mieć możliwość głosowania bezpośrednio w większości kwestii w referendach. Liderzy nie powinni przechwytywać tej inicjatywy od uczestników w swoje ręce, rozstrzygając sprawy za nich.",
+        "Interesy ludu nie powinny być reprezentowane tak mocno jak interesy administracji czy niewielkiej grupy statusowych uczestników."
+      ]
+    },
+    "equality": {
+      "topic": "Równość użytkowników",
+      "options": [
+        "Określone statusy nadają uczestnikowi różne przywileje w porównaniu z resztą użytkowników. Choć nie czyni to go dużo ważniejszym od pozostałych, praw i możliwości statusowy uczestnik powinien mieć więcej.",
+        "Główny administrator społeczności powinien mieć najwyższą pozycję i nieograniczone prawa.",
+        "Żaden status administracyjny nie czyni uczestnika wyższym i ważniejszym od reszty. To tylko narzędzie dające dostęp do określonych funkcji. Zadaniem administratora jest myśleć nie o swoich prawach, lecz o obowiązkach wobec uczestników.",
+        "Żaden użytkownik nie powinien mieć władzy nad innym użytkownikiem, czy to ze statusami, czy bez."
+      ]
+    },
+    "openness": {
+      "topic": "Otwartość i przejrzystość",
+      "options": [
+        "Uczestnicy powinni mieć dostęp do informacji, którymi dysponuje administracja. Publiczna przejrzystość pozwoli użytkownikom być lepiej poinformowanymi i zachęci administrację do ujawniania informacji, działając jako mechanizm regulacyjny.",
+        "Administracja ma prawo ukrywać przed wglądem dowolną informację przed wszystkimi użytkownikami. Zwykli uczestnicy nie powinni wiedzieć tego, czego wiedzieć im nie wolno.",
+        "Bardziej statusowi uczestnicy mogą mieć dostęp do tajnych informacji administracji, ale zwykli użytkownicy z reguły nie powinni.",
+        "Zwykłym użytkownikom nie jest potrzebna absolutnie cała informacja o administracji, ale administratorzy powinni być otwarci i komunikatywni wobec ludu, a także powinni dzielić się z uczestnikami wynikami swojej działalności.",
+        "Nie powinno być żadnej tajnej informacji i w konsekwencji nie ma żadnych problemów z jej przejrzystością. Każdy użytkownik powinien mieć dostęp do wszystkich logów i statystyk, a także widzieć to, co administratorzy omawiają między sobą na czacie w kwestii podejmowania decyzji."
+      ]
+    },
+    "freespeech": {
+      "topic": "Wolność słowa",
+      "options": [
+        "Wolność słowa to najważniejsza koncepcja. Każdy uczestnik powinien mieć prawo mówić cokolwiek, nawet jeśli jego wypowiedź może zostać uznana przez innych za obraźliwą.",
+        "Wolność słowa powinna być ograniczona — należy usuwać i cenzurować niedopuszczalne wiadomości zawierające na przykład bardzo grubiańskie słowa lub niestosowny żart.",
+        "Powinny istnieć określone ramy, w których uczestnicy mogą swobodnie się wyrażać bez wspominania niektórych niepożądanych słów lub tematów.",
+        "Wolność słowa jest ważna, uczestnicy powinni mieć prawo wyrażać swoją opinię w jakiejkolwiek formie, ale minimalne ograniczenia też są potrzebne.",
+        "Powinniśmy zakazać i karać bardzo obraźliwe wypowiedzi (mowę nienawiści, hejtspicz), wyrażające nienawiść do określonych grup ludzi i wywołujące dyskryminację, seksizm, homofobię.",
+        "Uczestnicy nie powinni mieć wolności słowa. Administracja powinna decydować, co wolno mówić."
+      ]
+    },
+    "profanity": {
+      "topic": "Przekleństwa na czacie",
+      "options": [
+        "Wulgarne słownictwo, w tym przekleństwa, może sprowokować konflikt między uczestnikami z powodu obraźliwej treści lub obecności zwrotów wyrażających nienawiść do ludzi. Powinniśmy ograniczyć używanie przekleństw.",
+        "Przekleństwa są kategorycznie niedopuszczalne w społeczności, należy całkowicie zakazać ich używania.",
+        "Uczestnicy powinni mieć prawo używać w swojej wypowiedzi przekleństw bez żadnych ograniczeń.",
+        "Ludzie powinni móc pisać przekleństwa, ale mimo to powinny być ograniczenia, aby wiadomości nie składały się z samych przekleństw.",
+        "Można pozwolić na używanie określonych przekleństw w ograniczonych ilościach i pod warunkiem, że uczestnicy będą je maskować."
+      ]
+    },
+    "etiquette": {
+      "topic": "Etykieta",
+      "options": [
+        "Należy regulować komunikację i pilnować, aby wszyscy użytkownicy obowiązkowo przestrzegali etykiety, rozmawiali przyzwoicie, wyrażali się poprawnie i jasno.",
+        "Ogólnie etykieta jest potrzebna, ale nie zawsze trzeba jej przestrzegać. Nie ma nic złego w tym, że uczestnik podczas rozmowy używa dużo słów żargonowych lub wulgarnych.",
+        "Etykiety w większości przypadków warto przestrzegać, przede wszystkim dla podtrzymania przyjaznej atmosfery, aby uczestnicy mogli czuć się komfortowo i nie być urażeni czyimiś grubiańskimi słowami.",
+        "Nie powinniśmy wskazywać uczestnikom, jak mają się komunikować. Jeśli uczestnik chce napisać treść wiadomości w bezpośrednim, poufałym lub sprośnym tonie, to jego prawo."
+      ]
+    },
+    "literacy": {
+      "topic": "Poprawność językowa i błędy w komunikacji",
+      "options": [
+        "Wskazane jest, aby użytkownicy nie przekręcali słów zbyt często, w przeciwnym razie z powodu błędów w tekście ktoś może ich źle zrozumieć, co może prowadzić do konfliktu i urazić uczestników.",
+        "Jeśli ludziom podoba się celowe przekręcanie i chcą świadomie zniekształcać słowa lub pisać je z błędami, to nie ma w tym nic złego.",
+        "Poprawność językowa jest ważna, trzeba jej pilnować, ale w rzadkich przypadkach, jeśli uczestnicy chcą celowo pisać słowa z błędami, można im to czasowo pozwolić.",
+        "Należy wprowadzić standardy, według których wszyscy uczestnicy na czacie będą musieli pisać poprawnie i bez błędów, aby tekst wiadomości był zrozumiały i zgodny z normami języka literackiego."
+      ]
+    },
+    "vulgarity": {
+      "topic": "Nieprzyzwoitość i sprośność",
+      "options": [
+        "Powinniśmy regulować rozpowszechnianie materiałów erotycznych i nieprzyzwoitych, ale nie zakazywać ich. Uczestnicy powinni mieć prawo się nimi dzielić.",
+        "Nieprzyzwoite treści powinny być bardzo mocno ograniczone. W większości przypadków są niedopuszczalne, ale w skrajnie rzadkich sytuacjach możemy pozwolić na ich publikację w niewielkich ilościach.",
+        "Nieprzyzwoitość, sprośność, treści o charakterze erotycznym są kategorycznie niedopuszczalne. Należy ściśle pilnować takich treści i, w razie czego, niezwłocznie je usuwać.",
+        "Ludzie powinni mieć swobodę rozpowszechniania treści o dowolnej zawartości, w tym erotyki i sprośności.",
+        "Surowe tłumienie nieprzyzwoitych materiałów zwykle tylko sprzyja rozprzestrzenianiu tego, co jest cenzurowane. Uczestnikom powinno być wolno dzielić się treściami erotycznymi i sprośnymi, pod warunkiem że będą ocenzurowane."
+      ]
+    },
+    "banter": {
+      "topic": "Kpiny, trolling i żarty",
+      "options": [
+        "Trolling należy ograniczyć, ale kpiny i żarty można dopuścić, jeśli są stosowne i nie wywołują irytacji otoczenia.",
+        "Jeśli uczestnikom podobają się żarty z siebie nawzajem i przyjacielskie kpiny, to nie ma w tym nic złego, ludzie mają prawo komunikować się tak, jak im się podoba.",
+        "Wszelki trolling, kpiny i niestosowne żarty powinny być surowo zakazane. Nie potrzebujemy zbędnych konfliktów na pustym miejscu, dlatego musimy kontrolować to, co piszą uczestnicy.",
+        "Trolling i niestosowne kpiny mogą urazić uczestników, sprawić, że poczują się bezwartościowi, i rozniecić konflikt. Powinniśmy karać trolli, a ofiarom trollingu udzielać wsparcia, aby uchronić je przed obwinianiem ofiary."
+      ]
+    },
+    "rules": {
+      "topic": "Lista zasad",
+      "options": [
+        "Jesteśmy wolną społecznością, nie potrzebujemy zasad postępowania. Uczestnicy mogą zachowywać się tak, jak chcą, dopóki ich zachowanie odpowiada reszcie.",
+        "Zasady powinny być surowe, a samą listę należy uczynić maksymalnie szczegółową, bez rozmytych sformułowań, aby uczestnicy w pełni dokładnie wiedzieli, czego robić nie wolno, i nie mogli znaleźć żadnych „dziur” w zasadach.",
+        "Lista zasad powinna być niezbyt surowa, umiarkowana rozmiarem. Powinna zawierać główne postanowienia dotyczące zasad postępowania z niewielkimi szczegółami, jeśli to potrzebne.",
+        "Lepiej nie robić listy zasad nadmiernie długiej i szczegółowej — to tylko odstraszy uczestników i zniechęci ich do czytania zasad. Lepiej zrobić niewielką, krótką, ale przyjazną, zrozumiałą i dostępną dla wszystkich listę zasad, niezawierającą urzędniczego żargonu.",
+        "Zamiast listy zasad powinniśmy po prostu napisać, że nasz czat przestrzega zasad moralnych. Uczestnicy sami rozumieją, jak nie wolno się zachowywać w miejscach publicznych i normalnym społeczeństwie, nie trzeba im tłumaczyć oczywistości.",
+        "Administracja powinna mieć możliwość blokowania i wyciszania uczestników według własnego uznania, niezależnie od zasad postępowania."
+      ]
+    },
+    "blocking": {
+      "topic": "Długość banów",
+      "options": [
+        "Do utrzymania porządku wystarczą łagodne środki karne, powinniśmy pobłażliwiej traktować sprawców. Blokada od paru godzin do kilku dni to optymalny okres w większości przypadków.",
+        "Aby odstraszać użytkowników od przyszłych naruszeń, powinniśmy utrzymywać należyty poziom porządku. Powinniśmy zaczynać od krótkich okresów wobec sprawców, ale przy każdym kolejnym naruszeniu trzeba wydłużać czas blokady.",
+        "Nie należy litować się nad sprawcami. Jeśli uczestnik złamał zasady, to zasługuje na surową karę. Średnio wystarczy blokada na kilka dni, ale w szczególnych przypadkach — od kilku tygodni do miesiąca i więcej.",
+        "Nie powinno być jednolitych środków dotyczących blokad, uczestnicy wspólnie mogą zdecydować, jaki okres dać sprawcy w konkretnym przypadku, na przykład poprzez głosowanie lub dyskusję.",
+        "Długość bana zależy przede wszystkim od wagi naruszenia i w każdym przypadku z osobna może się mocno różnić: od paru godzin czy dni aż po kilka tygodni lub miesiąc."
+      ]
+    },
+    "permanent": {
+      "topic": "Ban permanentny",
+      "options": [
+        "Nie należy gardzić permanentnym banem. Jeśli uczestnik go dostał, to znaczy, że na to zasłużył. Nie powinniśmy mieć z nim już żadnych spraw, a tym bardziej nie powinniśmy go odblokowywać, nigdy.",
+        "W większości przypadków zamiast permanentnego bana lepiej wydawać ostrzeżenia lub czasowe blokady — nie powinniśmy pozbywać się uczestników na zawsze, nawet jeśli nie zachowują się zbyt dobrze.",
+        "Uczestnicy powinni samodzielnie decydować w konkretnych przypadkach, czy stosować permanentną blokadę wobec sprawcy, czy nie. To samo dotyczy odbanowania.",
+        "Permanentna blokada nie powinna być stosowana zbyt często, ale może posłużyć jako dobre narzędzie do odstraszania użytkowników od dalszych naruszeń.",
+        "Powinniśmy stosować permanentną blokadę bardzo rzadko, a także umieć wybaczać permanentnie zbanowanym uczestnikom poprzez odbanowanie i reintegrację ich ze społecznością po pewnym czasie od blokady."
+      ]
+    },
+    "recidivism": {
+      "topic": "Recydywa naruszeń",
+      "options": [
+        "Nad sprawcami-recydywistami trzeba prowadzić surowszy nadzór i kontrolę, aby zapobiec dalszym naruszeniom. Im więcej razy uczestnik łamał zasady, tym surowsze powinny być dla niego warunki blokady.",
+        "Jeśli uczestnik wielokrotnie źle się zachowuje, ale ogólnie nie budzi niechęci reszty, to nic strasznego. Jeśli natomiast swoim zachowaniem wszystkich wokół porządnie zmęczył, to użytkownicy mogą na niego złożyć skargę.",
+        "Każdy uczestnik, jakiekolwiek przewinienie by popełnił, zasługuje na wybaczenie i drugą szansę. Powinniśmy dawać sprawcom-recydywistom możliwość przepraszania za swoje przewinienia i poprawy.",
+        "Z tymi, którzy łamali zasady wielokrotnie, próba znalezienia wspólnego języka jest bezużyteczna. Recydywistów — w permanentną blokadę.",
+        "Nieważne, ile razy uczestnik łamał zasady, ważna jest waga jego naruszenia w każdym przypadku z osobna. Jeśli naruszenia się powtarzają, wystarczy po prostu ponownie wydać czasowego bana lub wyciszenie."
+      ]
+    },
+    "offender": {
+      "topic": "Co robić ze sprawcą",
+      "options": [
+        "Jeśli uczestnik dostał bana, administracja jest zobowiązana z nim porozmawiać, omówić to, co się stało, spróbować sprawić, by sprawca zrozumiał, dlaczego nie powinien robić tego, co zrobił, i dlaczego został ukarany.",
+        "Jeśli uczestnikowi wydano blokadę, to sprawca powinien mieć możliwość porozmawiać z administracją na ten temat. Ale administratorzy nie powinni jako pierwsi zaczynać rozmowy ze sprawcą.",
+        "Jeśli uczestnicy tego zechcą, mogą udzielić sprawcy głosu, aby mógł porozmawiać z nimi podczas blokady.",
+        "Warto pozbawić sprawcę dodatkowych możliwości i, jeśli trzeba, usunąć możliwość kontaktu z administracją. Administratorzy nie muszą marnować swojego czasu na tych, którzy źle się zachowują. Z takimi ludźmi nie ma o czym rozmawiać.",
+        "Od sprawcy należy oczekiwać, że doczeka końca okresu bana i przemyśli swoje zachowanie. Publiczna wiedza o blokadzie uczestnika będzie też miała efekt odstraszający — posłuży za przykład dla reszty, którego nie warto naśladować."
+      ]
+    },
+    "warnings": {
+      "topic": "Ostrzeżenia",
+      "options": [
+        "Często sprawców można banować i bez uprzedniego wydawania im ostrzeżeń. Uczestnicy powinni znać zasady postępowania z wyprzedzeniem i być gotowi na to, że jeśli nie będą ich przestrzegać, to czekają ich surowe konsekwencje.",
+        "Nie mamy prawa blokować uczestnika, dopóki nie wyczerpano innych sposobów przekonania go o niedopuszczalności złego zachowania. Możemy dawać mu ostrzeżenia, ale lepiej postarać się przekonać go słowami.",
+        "Ostrzeżenie to dobry środek powiadomienia uczestnika, że źle się zachowuje. W wielu przypadkach można dać uczestnikowi kilka ostrzeżeń, i dopiero jeśli nie rozumie, że tak zachowywać się nie należy, wówczas wydać blokadę.",
+        "Za pierwszym razem przy naruszeniu można wydać uczestnikowi ostrzeżenie, a we wszystkich kolejnych przypadkach — tylko blokady."
+      ]
+    },
+    "ambiguity": {
+      "topic": "Niejasność naruszenia",
+      "options": [
+        "Jeśli uczestnik „stąpa po kruchym lodzie”, trzeba baczniej go obserwować, czekając na najmniejszy pretekst, gdy przekroczy granicę, aby go zablokować, zapobiegając potencjalnym dalszym naruszeniom.",
+        "Uczestnika, po którego zachowaniu widać, że jest potencjalnie niebezpieczny i może narobić wiele szkód społeczności, lepiej prewencyjnie zablokować, niż dopuszczać ryzyko popełnienia przez niego przewinień.",
+        "Jeśli uczestnik dziwnie się zachowuje, trzeba z nim porozmawiać, spróbować zrozumieć, co mu się stało. Wtedy z większym prawdopodobieństwem uda się osiągnąć pozytywny wynik, bez blokad.",
+        "Uczestnika można zablokować tylko wtedy, gdy zostanie udowodnione, że złamał zasady. A dopóki nie ma bezpośrednich dowodów jego winy, uczestnika można uważać za niewinnego.",
+        "Jeśli zachowanie uczestnika wygląda na nieadekwatne dla większości innych użytkowników, to w takim przypadku mogą oni złożyć na niego skargę, aby dostał blokadę. Jeśli natomiast zachowanie uczestnika nie budzi niechęci większości, to nic strasznego."
+      ]
+    },
+    "friendship": {
+      "topic": "Wikiprzyjaźń",
+      "options": [
+        "Współpraca z uczestnikami dla wspólnych interesów to najważniejszy element rozwoju relacji i istnienia wiki. W pełni popieram przyjaźń.",
+        "Potrzebujemy sławy i rozpoznawalności wśród użytkowników, dlatego dla tych celów możemy zawrzeć przyjaźń z innymi wiki.",
+        "Powinniśmy zamknąć się przed światem zewnętrznym i skupić się całkowicie tylko na naszych własnych problemach.",
+        "Nie widzę powodów do zawierania przyjaznych relacji, raczej nie pomogą nam one czymś mocno. Możemy pracować nad naszymi problemami i kwestiami samodzielnie."
+      ]
+    },
+    "uniformrules": {
+      "topic": "Zasady międzywikijne",
+      "options": [
+        "Wspólne stosowanie zasad z innymi wiki podnosi popularność naszego wikiprojektu i nadaje mu większą wagę na platformie Fandomu w różnych kwestiach, dlatego popieram ten pomysł.",
+        "Popieram wspólne stosowanie jednolitych zasad z naszymi zaprzyjaźnionymi wiki, ponieważ ułatwi to życie wszystkim uczestnikom i usprawni koordynację działań w różnych kwestiach.",
+        "Jestem przeciwny wspólnemu stosowaniu zasad z innymi wikiprojektami. Powinniśmy mieć możliwość samodzielnego decydowania o swoich zasadach, a inne wikiprojekty nie powinny mieć do tego prawa.",
+        "Możliwość korzystania z zasad naszego wikiprojektu, gdy musimy realizować własne interesy, ma dla naszej wiki większą wartość niż korzyści ze wspólnych zasad."
+      ]
+    },
+    "wikihelp": {
+      "topic": "Pomoc wikiprojektom",
+      "options": [
+        "Powinniśmy zdobyć naszą reputację w polityce zagranicznej, a pomoc wikiprojektom to dobry sposób na zyskanie przychylności i popularności.",
+        "Powinniśmy wtrącić się w sprawy innych wikiprojektów w tym celu, aby ustanowić tam swój podporządkowany reżim, poszerzając nasze wpływy.",
+        "Nasza pomoc wikiprojektom może znacząco poprawić ich jakość i pomóc rozwinąć się społeczności przy stosunkowo niewielkim wysiłku z naszej strony, dlatego powinniśmy im pomagać.",
+        "Nie powinniśmy poświęcać swojego czasu i sił na inne wikiprojekty.",
+        "Sprawy innych wikiprojektów nie mają dla nas znaczenia, dlatego nie ma powodu im pomagać."
+      ]
+    },
+    "instructions": {
+      "topic": "Wskazówki innych wikiprojektów",
+      "options": [
+        "Nie powinniśmy zmieniać swoich zasad dlatego, że tak mówią inne wikiprojekty.",
+        "Powinniśmy brać pod uwagę wskazówki i rady innych wikiprojektów oraz wyciągać wnioski ze swoich błędów. Jeśli ktoś nas o coś prosi, powinniśmy wsłuchiwać się w prośby innych ludzi.",
+        "Zasady naszego wikiprojektu nie powinny być określane przez uczestników z innych wiki. Możemy rozpatrywać ich wskazówki, ale powinniśmy przyjmować je tylko wtedy, gdy odpowiadają naszym interesom.",
+        "Powinniśmy próbować wykorzystywać te wskazówki we własnym interesie: wspierać te, które są dla nas korzystne, i zachęcać innych do ich przestrzegania, jednak sami powinniśmy stosować tylko te wskazówki, które są dla nas korzystne."
+      ]
+    },
+    "wikiunion": {
+      "topic": "Propozycja wstąpienia do wikiunii",
+      "options": [
+        "Jestem za wstąpieniem do wikiunii. Współpraca z wikiprojektami pomoże nam w organizacji wspólnej pracy i wzajemnej pomocy, co pozwoli połączyć publiczność i ostatecznie przyniesie korzyść wszystkim uczestnikom naszych wiki.",
+        "Popieram współpracę z uczestnikami z innych wikiprojektów i cenię ich propozycję wikiunii, ale nie sądzę, aby ta unia była aż tak użyteczna. Wystarczą nam proste przyjazne relacje.",
+        "Jestem przeciwny byciu częścią jakiejkolwiek unii. Nie interesują mnie zasady innych wikiprojektów, ale jestem kategorycznie przeciwny dawaniu im głosu w naszych sprawach.",
+        "Nasze kwestie powinniśmy rozstrzygać sami, a nie uczestnicy z innych wikiprojektów. Jestem przeciwny udziałowi w tej unii.",
+        "Udział w wikiunii daje naszemu wikiprojektowi znacznie większy wpływ w sprawach międzywikijnych, co może nam pomóc w realizacji naszych własnych interesów i ustanowieniu zasad, których osobiście chcemy. Dlatego popieram członkostwo w tej unii."
+      ]
+    }
+  }
+}

@@ -1,0 +1,1362 @@
+{
+  "action_cancelled": {
+    "status": "unverified",
+    "text": "Ação cancelada."
+  },
+  "add_govt_created": {
+    "status": "unverified",
+    "text": "✅ Órgão governamental “{name}” criado na união {union} (membro: {singular}; membros: {plural})."
+  },
+  "add_govt_exists": {
+    "status": "unverified",
+    "text": "Já existe um órgão governamental com esse nome na união."
+  },
+  "add_govt_usage": {
+    "status": "unverified",
+    "text": "Uso: /add_govt <UNIÃO> <nome> | <membro singular> | <membros plural>"
+  },
+  "add_party_ask_code": {
+    "status": "unverified",
+    "text": "Agora envie o código do partido com 4 caracteres (apenas letras latinas e dígitos)."
+  },
+  "add_party_ask_logo": {
+    "status": "unverified",
+    "text": "Agora envie o logotipo do partido como imagem."
+  },
+  "add_party_ask_name": {
+    "status": "unverified",
+    "text": "🏛️ Fundando um partido! Como ele vai se chamar? (Você tem 30 minutos para cada resposta.)"
+  },
+  "add_party_created": {
+    "status": "unverified",
+    "text": "✅ Partido {name} [{code}] fundado na união {union}! Fundador: {founder}."
+  },
+  "add_party_discord_only": {
+    "status": "unverified",
+    "text": "Os partidos são fundados no Discord (os cargos exigidos só podem ser verificados lá). Os demais comandos de partidos também funcionam aqui."
+  },
+  "add_party_founder_admin_only": {
+    "status": "unverified",
+    "text": "Somente admins do bot podem indicar um fundador."
+  },
+  "add_party_invalid_code": {
+    "status": "unverified",
+    "text": "O código deve ter exatamente 4 letras latinas/dígitos e não pode coincidir com códigos de uniões ou partidos. Tente novamente."
+  },
+  "add_party_invalid_logo": {
+    "status": "unverified",
+    "text": "Isso não é uma imagem. Envie o logotipo como foto ou arquivo de imagem."
+  },
+  "add_party_no_role": {
+    "status": "unverified",
+    "text": "Para fundar um partido, você precisa de um dos cargos configurados com /allow-parties."
+  },
+  "add_unia_created": {
+    "status": "unverified",
+    "text": "✅ União {code} criada:\n{names}"
+  },
+  "add_unia_exists": {
+    "status": "unverified",
+    "text": "A união {code} já existe."
+  },
+  "add_unia_invalid_code": {
+    "status": "unverified",
+    "text": "Código de união inválido. Use de 2 a 12 letras latinas ou dígitos."
+  },
+  "add_unia_need_name": {
+    "status": "unverified",
+    "text": "Informe o nome da união em pelo menos um idioma."
+  },
+  "add_unia_usage": {
+    "status": "unverified",
+    "text": "Uso: /add_unia <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
+  },
+  "allow_parties_disabled": {
+    "status": "unverified",
+    "text": "✅ Partidos desabilitados na união {code}."
+  },
+  "allow_parties_enabled": {
+    "status": "unverified",
+    "text": "✅ Partidos habilitados na união {code}. Cargos com acesso a /add-party: {roles}."
+  },
+  "allow_parties_invalid_roles": {
+    "status": "unverified",
+    "text": "Lista de IDs de cargos inválida."
+  },
+  "allow_parties_need_roles": {
+    "status": "unverified",
+    "text": "Informe pelo menos um ID de cargo para habilitar os partidos."
+  },
+  "allow_parties_usage": {
+    "status": "unverified",
+    "text": "Uso: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
+  },
+  "backup_failed": {
+    "status": "unverified",
+    "text": "Falha ao criar o backup: {error}"
+  },
+  "backup_private_only": {
+    "status": "unverified",
+    "text": "Use este comando em um chat privado com o bot."
+  },
+  "chat_not_setup": {
+    "status": "unverified",
+    "text": "Este chat ainda não foi configurado. Primeiro, um admin do bot deve vinculá-lo a uma união com /setup."
+  },
+  "choice_invalid": {
+    "status": "unverified",
+    "text": "Isso não é um número da lista — cancelado."
+  },
+  "consent_accept": {
+    "status": "unverified",
+    "text": "Aceito"
+  },
+  "consent_decline": {
+    "status": "unverified",
+    "text": "Não aceito"
+  },
+  "consent_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, você foi convidado a coliderar o partido {name} [{code}]!"
+  },
+  "consent_not_yours": {
+    "status": "unverified",
+    "text": "Este botão não é para você."
+  },
+  "consent_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, você foi convidado a assumir a liderança do partido {name} [{code}]!"
+  },
+  "delete_party_confirm": {
+    "status": "unverified",
+    "text": "Excluir o partido {name} [{code}]? Todos os seus dados, líderes, membros e pedidos serão apagados para sempre."
+  },
+  "delete_party_done": {
+    "status": "unverified",
+    "text": "🗑️ Partido {name} [{code}] excluído."
+  },
+  "dialog_timeout": {
+    "status": "unverified",
+    "text": "⏳ O tempo acabou — o diálogo foi cancelado."
+  },
+  "edit_admin_choose": {
+    "status": "unverified",
+    "text": "Responda com o número da opção em até 30 minutos."
+  },
+  "edit_admin_menu_11": {
+    "status": "unverified",
+    "text": "11 — permitir que membros do partido convidem novos membros (atualmente: {state})"
+  },
+  "edit_admin_menu_12": {
+    "status": "unverified",
+    "text": "12 — mover o partido para outra união"
+  },
+  "edit_admin_menu_13": {
+    "status": "unverified",
+    "text": "13 — excluir o partido"
+  },
+  "edit_admin_menu_title": {
+    "status": "unverified",
+    "text": "Configurações do partido (admin) — {name} [{code}]"
+  },
+  "edit_admin_not_found": {
+    "status": "unverified",
+    "text": "O partido “{query}” não foi encontrado. Informe o código do partido ou seu nome completo exatamente como está escrito."
+  },
+  "edit_admin_usage": {
+    "status": "unverified",
+    "text": "Uso: /edit_party_admin <código do partido ou seu nome completo>"
+  },
+  "edit_ask_article": {
+    "status": "unverified",
+    "text": "Envie o link do artigo do partido."
+  },
+  "edit_ask_code": {
+    "status": "unverified",
+    "text": "Envie o novo código do partido com 4 caracteres (letras latinas e dígitos)."
+  },
+  "edit_ask_color": {
+    "status": "unverified",
+    "text": "Envie a nova cor em formato hex, ex.: #245590."
+  },
+  "edit_ask_description": {
+    "status": "unverified",
+    "text": "Envie a descrição do partido."
+  },
+  "edit_ask_ideologies": {
+    "status": "unverified",
+    "text": "Envie as ideologias do partido (os links são preservados)."
+  },
+  "edit_ask_leader": {
+    "status": "unverified",
+    "text": "Envie o ID ou a menção do usuário que você quer convidar como colíder."
+  },
+  "edit_ask_logo": {
+    "status": "unverified",
+    "text": "Envie o novo logotipo como imagem."
+  },
+  "edit_ask_name": {
+    "status": "unverified",
+    "text": "Envie o novo nome do partido."
+  },
+  "edit_ask_transfer": {
+    "status": "unverified",
+    "text": "Envie o ID ou a menção do usuário para quem você transfere o partido."
+  },
+  "edit_ask_union": {
+    "status": "unverified",
+    "text": "Envie o código da união para a qual o partido será movido."
+  },
+  "edit_invalid_article": {
+    "status": "unverified",
+    "text": "Isso não parece um link. Envie uma URL começando com http(s)://."
+  },
+  "edit_invalid_color": {
+    "status": "unverified",
+    "text": "Cor inválida. Use hex, ex.: #245590."
+  },
+  "edit_invalid_option": {
+    "status": "unverified",
+    "text": "Número de opção desconhecido. Execute o comando sem parâmetros para ver o menu."
+  },
+  "edit_invalid_union": {
+    "status": "unverified",
+    "text": "Essa união não existe. Envie um código de união existente."
+  },
+  "edit_invalid_user": {
+    "status": "unverified",
+    "text": "Não foi possível reconhecer o usuário. Envie um ID ou uma menção."
+  },
+  "edit_menu_1": {
+    "status": "unverified",
+    "text": "1 — alterar o nome"
+  },
+  "edit_menu_10": {
+    "status": "unverified",
+    "text": "10 — definir o link do artigo para o botão “Mais”"
+  },
+  "edit_menu_2": {
+    "status": "unverified",
+    "text": "2 — alterar o código"
+  },
+  "edit_menu_3": {
+    "status": "unverified",
+    "text": "3 — alterar o logotipo"
+  },
+  "edit_menu_4": {
+    "status": "unverified",
+    "text": "4 — alterar a cor (cor dos embeds do Discord deste partido)"
+  },
+  "edit_menu_5": {
+    "status": "unverified",
+    "text": "5 — definir a descrição do partido"
+  },
+  "edit_menu_6": {
+    "status": "unverified",
+    "text": "6 — definir as ideologias do partido"
+  },
+  "edit_menu_7": {
+    "status": "unverified",
+    "text": "7 — adicionar um líder do partido"
+  },
+  "edit_menu_8": {
+    "status": "unverified",
+    "text": "8 — transferir o partido para outro membro"
+  },
+  "edit_menu_9": {
+    "status": "unverified",
+    "text": "9 — suspender o partido"
+  },
+  "edit_menu_9_resume": {
+    "status": "unverified",
+    "text": "9 — retomar o partido"
+  },
+  "edit_menu_title": {
+    "status": "unverified",
+    "text": "Configurações do partido — {name} [{code}]"
+  },
+  "edit_saved": {
+    "status": "unverified",
+    "text": "✅ Salvo."
+  },
+  "edit_union_changed": {
+    "status": "unverified",
+    "text": "✅ O partido {name} foi movido para a união {union}."
+  },
+  "find_channel_not_found": {
+    "status": "unverified",
+    "text": "Canal não encontrado ou inacessível."
+  },
+  "find_channel_other_guild": {
+    "status": "unverified",
+    "text": "Esse canal pertence a outro servidor."
+  },
+  "find_done": {
+    "status": "unverified",
+    "text": "✅ Análise concluída: {checked} mensagens verificadas, {found} correspondências."
+  },
+  "find_history_error": {
+    "status": "unverified",
+    "text": "Não foi possível ler o histórico do canal: {error}"
+  },
+  "find_invalid_channel": {
+    "status": "unverified",
+    "text": "ID de canal inválido."
+  },
+  "find_invalid_date": {
+    "status": "unverified",
+    "text": "Data inválida. Use MM-DD-YYYY ou MM-DD-YYYY + 7D."
+  },
+  "find_no_keywords": {
+    "status": "unverified",
+    "text": "Informe pelo menos uma palavra-chave (separe com ponto e vírgula)."
+  },
+  "find_started": {
+    "status": "unverified",
+    "text": "🔎 Analisando {channel} de {start} a {end} ({count} palavras-chave)…"
+  },
+  "force_leave_failed": {
+    "status": "unverified",
+    "text": "Falha ao sair: {error}"
+  },
+  "force_leave_invalid_id": {
+    "status": "unverified",
+    "text": "ID inválido."
+  },
+  "force_leave_not_member": {
+    "status": "unverified",
+    "text": "O bot não está nesse servidor."
+  },
+  "force_leave_success_discord": {
+    "status": "unverified",
+    "text": "O bot saiu do servidor {guild_id} e seus dados foram removidos do banco de dados."
+  },
+  "force_leave_success_telegram": {
+    "status": "unverified",
+    "text": "O bot saiu do chat do Telegram {chat_id} (ou seus dados foram removidos do banco de dados)."
+  },
+  "force_leave_unsupported_platform": {
+    "status": "unverified",
+    "text": "Plataforma não suportada. Use 'discord' ou 'telegram'."
+  },
+  "force_leave_usage": {
+    "status": "unverified",
+    "text": "Uso: /force_leave <discord|telegram> <id>"
+  },
+  "founday_added": {
+    "status": "unverified",
+    "text": "✅ Vou parabenizar {name} todo ano em {channel} às {time} UTC. Fundação: {date} UTC. Idioma da wiki: {lang_name}."
+  },
+  "founday_future_date": {
+    "status": "unverified",
+    "text": "Essa data de fundação ainda está no futuro."
+  },
+  "founday_future_few": {
+    "status": "unverified",
+    "text": "Hoje {name} completa {n} anos!"
+  },
+  "founday_future_many": {
+    "status": "unverified",
+    "text": "Hoje {name} completa {n} anos!"
+  },
+  "founday_future_one": {
+    "status": "unverified",
+    "text": "Hoje {name} completa {n} ano!"
+  },
+  "founday_future_other": {
+    "status": "unverified",
+    "text": "Hoje {name} completa {n} anos!"
+  },
+  "founday_invalid_channel": {
+    "status": "unverified",
+    "text": "Canal não encontrado ou não pertence a este servidor."
+  },
+  "founday_invalid_date": {
+    "status": "unverified",
+    "text": "Data de fundação inválida. Use MM-DD-YYYY ou MM-DD-YYYY HH:MM em UTC."
+  },
+  "founday_invalid_time": {
+    "status": "unverified",
+    "text": "Horário de publicação inválido. Use HH:MM ou HH em UTC."
+  },
+  "founday_invalid_url": {
+    "status": "unverified",
+    "text": "Link de wiki inválido. Por exemplo: amongus.fandom.com/pt-br ou https://amongus.fandom.com/pt-br"
+  },
+  "founday_list_empty": {
+    "status": "unverified",
+    "text": "Nenhum aniversário de wiki está configurado neste servidor."
+  },
+  "founday_list_header": {
+    "status": "unverified",
+    "text": "Aniversários de wikis neste servidor:"
+  },
+  "founday_list_title": {
+    "status": "unverified",
+    "text": "Aniversários de wikis"
+  },
+  "founday_no_webhook_perm": {
+    "status": "unverified",
+    "text": "⚠️ O bot não tem a permissão “Gerenciar webhooks” em {channel} — a felicitação será enviada como uma mensagem comum."
+  },
+  "founday_not_found": {
+    "status": "unverified",
+    "text": "Este servidor não tem nenhum aniversário de wiki com esse link."
+  },
+  "founday_past_few": {
+    "status": "unverified",
+    "text": "Hoje {name} completou {n} anos!"
+  },
+  "founday_past_many": {
+    "status": "unverified",
+    "text": "Hoje {name} completou {n} anos!"
+  },
+  "founday_past_one": {
+    "status": "unverified",
+    "text": "Hoje {name} completou {n} ano!"
+  },
+  "founday_past_other": {
+    "status": "unverified",
+    "text": "Hoje {name} completou {n} anos!"
+  },
+  "founday_removed": {
+    "status": "unverified",
+    "text": "🗑️ Não vou mais parabenizar a wiki {url}."
+  },
+  "founday_webhook_name": {
+    "status": "unverified",
+    "text": "Aniversários"
+  },
+  "govt_no_members": {
+    "status": "unverified",
+    "text": "Ainda não há membros."
+  },
+  "govt_not_found": {
+    "status": "unverified",
+    "text": "Governo não encontrado."
+  },
+  "govt_not_found_suggest": {
+    "status": "unverified",
+    "text": "Governo não encontrado. Talvez você procurasse um destes? Responda com um número em até 30 minutos:"
+  },
+  "govt_other_union_mark": {
+    "status": "unverified",
+    "text": "(união {code})"
+  },
+  "govt_usage": {
+    "status": "unverified",
+    "text": "Uso: /govt <nome>"
+  },
+  "group_only": {
+    "status": "unverified",
+    "text": "Este comando só pode ser usado em um grupo."
+  },
+  "guild_only": {
+    "status": "unverified",
+    "text": "Este comando só pode ser usado em um servidor."
+  },
+  "help.cmd_add_discord": {
+    "status": "unverified",
+    "text": "/add_discord <usuário_discord> — vincule sua conta do Discord (conclua com /add-telegram no Discord)"
+  },
+  "help.cmd_add_govt": {
+    "status": "unverified",
+    "text": "/add-govt <união> <nome> <membro> <membros> — criar um órgão governamental (admins do bot)"
+  },
+  "help.cmd_add_govt_tg": {
+    "status": "unverified",
+    "text": "/add_govt <união> <nome> <membro> <membros> — criar um órgão governamental (admins do bot)"
+  },
+  "help.cmd_add_party": {
+    "status": "unverified",
+    "text": "/add-party [id_fundador] — fundar um partido (diálogo; requer um cargo configurado com /allow-parties)"
+  },
+  "help.cmd_add_telegram": {
+    "status": "unverified",
+    "text": "/add-telegram <@usuário> — vincule sua conta do Telegram (conclua com /add-discord no Telegram)"
+  },
+  "help.cmd_add_unia": {
+    "status": "unverified",
+    "text": "/add-unia <código> <nomes…> — criar uma nova união à qual /setup pode vincular chats (admins do bot)"
+  },
+  "help.cmd_add_unia_tg": {
+    "status": "unverified",
+    "text": "/add_unia <código> <nomes…> — criar uma nova união à qual /setup pode vincular chats (admins do bot)"
+  },
+  "help.cmd_allow_parties": {
+    "status": "unverified",
+    "text": "/allow-parties <união> <enable|disable> [id_cargos] — habilitar ou desabilitar partidos em uma união (admins do bot)"
+  },
+  "help.cmd_allow_parties_tg": {
+    "status": "unverified",
+    "text": "/allow_parties <união> <enable|disable> [id_cargos] — habilitar ou desabilitar partidos em uma união (admins do bot)"
+  },
+  "help.cmd_backup": {
+    "status": "unverified",
+    "text": "/backup — obter um backup do banco de dados (admins do bot)"
+  },
+  "help.cmd_edit_party": {
+    "status": "unverified",
+    "text": "/edit-party [opção] — gerenciar seu partido (fundadores e líderes)"
+  },
+  "help.cmd_edit_party_admin": {
+    "status": "unverified",
+    "text": "/edit-party-admin <código|nome> — alterar qualquer configuração de qualquer partido (admins do bot)"
+  },
+  "help.cmd_edit_party_admin_tg": {
+    "status": "unverified",
+    "text": "/edit_party_admin <código|nome> — alterar qualquer configuração de qualquer partido (admins do bot)"
+  },
+  "help.cmd_edit_party_tg": {
+    "status": "unverified",
+    "text": "/edit_party [opção] — gerenciar seu partido (fundadores e líderes)"
+  },
+  "help.cmd_edit_rules": {
+    "status": "unverified",
+    "text": "/edit-rules [opção] — regras do partido (fundadores e líderes)"
+  },
+  "help.cmd_edit_rules_tg": {
+    "status": "unverified",
+    "text": "/edit_rules [opção] — regras do partido (fundadores e líderes)"
+  },
+  "help.cmd_find_with": {
+    "status": "unverified",
+    "text": "/find-with <id_canal> <MM-DD-YYYY[ + 7D]> <palavras;…> — responder com menção às mensagens que contêm as palavras-chave (admins do servidor)"
+  },
+  "help.cmd_find_without": {
+    "status": "unverified",
+    "text": "/find-without <id_canal> <MM-DD-YYYY[ + 7D]> <palavras;…> — responder com menção às mensagens que não contêm as palavras-chave (admins do servidor)"
+  },
+  "help.cmd_force_leave": {
+    "status": "unverified",
+    "text": "/force_leave <plataforma> <id> — fazer o bot sair de um chat (admins do bot)"
+  },
+  "help.cmd_govt": {
+    "status": "unverified",
+    "text": "/govt <nome> — informações sobre um órgão governamental da união"
+  },
+  "help.cmd_help": {
+    "status": "unverified",
+    "text": "/help — mostrar a lista de comandos"
+  },
+  "help.cmd_lang": {
+    "status": "unverified",
+    "text": "/lang <código> — definir o idioma padrão do bot para todo o servidor/grupo (admins do servidor)"
+  },
+  "help.cmd_list_chats": {
+    "status": "unverified",
+    "text": "/list_chats — listar todos os chats do bot (admins do bot)"
+  },
+  "help.cmd_loc_compare": {
+    "status": "unverified",
+    "text": "/loc-compare <código> — comparar uma resposta entre idiomas"
+  },
+  "help.cmd_loc_compare_tg": {
+    "status": "unverified",
+    "text": "/loc_compare <código> — comparar uma resposta entre idiomas"
+  },
+  "help.cmd_loc_reply": {
+    "status": "unverified",
+    "text": "/loc-reply <código> <texto> — responder a uma sugestão de localização (admins do bot)"
+  },
+  "help.cmd_loc_reply_tg": {
+    "status": "unverified",
+    "text": "/loc_reply <código> <texto> — responder a uma sugestão de localização (admins do bot)"
+  },
+  "help.cmd_loc_suggest": {
+    "status": "unverified",
+    "text": "/loc-suggest <idioma> <código> <texto> — sugerir uma localização"
+  },
+  "help.cmd_loc_suggest_tg": {
+    "status": "unverified",
+    "text": "/loc_suggest <idioma> <código> <texto> — sugerir uma localização"
+  },
+  "help.cmd_locale": {
+    "status": "unverified",
+    "text": "/locale [código] — status da localização ou arquivo de um idioma"
+  },
+  "help.cmd_locallang": {
+    "status": "unverified",
+    "text": "/locallang <código> — definir o idioma do bot para este canal/tópico (ru, uk, pl, en, es, pt)"
+  },
+  "help.cmd_party": {
+    "status": "unverified",
+    "text": "/party <código|nome> — informações sobre um partido da união"
+  },
+  "help.cmd_party_join": {
+    "status": "unverified",
+    "text": "/party-join <código|nome> — solicite entrar em um partido da união"
+  },
+  "help.cmd_party_join_tg": {
+    "status": "unverified",
+    "text": "/party_join <código|nome> — solicite entrar em um partido da união"
+  },
+  "help.cmd_party_kick": {
+    "status": "unverified",
+    "text": "/party-kick <id|usuário> — remova um membro do seu partido (líderes de partido)"
+  },
+  "help.cmd_party_kick_tg": {
+    "status": "unverified",
+    "text": "/party_kick <id|usuário> — remova um membro do seu partido (líderes de partido)"
+  },
+  "help.cmd_party_leave": {
+    "status": "unverified",
+    "text": "/party-leave — saia do seu partido nesta união"
+  },
+  "help.cmd_party_leave_tg": {
+    "status": "unverified",
+    "text": "/party_leave — saia do seu partido nesta união"
+  },
+  "help.cmd_privacy": {
+    "status": "unverified",
+    "text": "/privacy — configurar a privacidade dos seus dados"
+  },
+  "help.cmd_quizzes": {
+    "status": "unverified",
+    "text": "/quizzes — faça um questionário (também funciona em mensagens privadas)"
+  },
+  "help.cmd_quizzes_clear": {
+    "status": "unverified",
+    "text": "/quizzes-clear — apague seus resultados de questionários guardados"
+  },
+  "help.cmd_quizzes_clear_tg": {
+    "status": "unverified",
+    "text": "/quizzes_clear — apague seus resultados de questionários guardados"
+  },
+  "help.cmd_quizzes_compare": {
+    "status": "unverified",
+    "text": "/quizzes-compare <usuário> — compare resultados de questionários"
+  },
+  "help.cmd_quizzes_compare_tg": {
+    "status": "unverified",
+    "text": "/quizzes_compare <usuário> — compare resultados de questionários"
+  },
+  "help.cmd_quizzes_previous": {
+    "status": "unverified",
+    "text": "/quizzes-previous [número] — comparar seu último resultado com o anterior"
+  },
+  "help.cmd_quizzes_previous_tg": {
+    "status": "unverified",
+    "text": "/quizzes_previous [número] — comparar seu último resultado com o anterior"
+  },
+  "help.cmd_quizzes_stop": {
+    "status": "unverified",
+    "text": "/quizzes-stop — parar o questionário, guardando o progresso por 7 dias"
+  },
+  "help.cmd_quizzes_stop_tg": {
+    "status": "unverified",
+    "text": "/quizzes_stop — parar o questionário, guardando o progresso por 7 dias"
+  },
+  "help.cmd_setup": {
+    "status": "unverified",
+    "text": "/setup <união> <idioma> — vincular o servidor/grupo a uma união e definir o idioma (admins do bot)"
+  },
+  "help.cmd_verify": {
+    "status": "unverified",
+    "text": "/verify <usuário_fandom> — verifique sua conta do Fandom (libera os comandos do Fandom)"
+  },
+  "help.cmd_wiki_founday": {
+    "status": "unverified",
+    "text": "/wiki-founday <link> <nome> <data> [id_canal] [hora] [idioma] — parabenizar uma wiki no aniversário dela todo ano (admins do servidor)"
+  },
+  "help.cmd_wiki_founday_remove": {
+    "status": "unverified",
+    "text": "/wiki-founday-remove <link> — parar de parabenizar uma wiki (admins do servidor)"
+  },
+  "help.cmd_wiki_foundays": {
+    "status": "unverified",
+    "text": "/wiki-foundays — lista dos aniversários de wikis deste servidor (admins do servidor)"
+  },
+  "help.section_admins": {
+    "status": "unverified",
+    "text": "Para admins de servidores"
+  },
+  "help.section_bot_admins": {
+    "status": "unverified",
+    "text": "Para admins do bot"
+  },
+  "help.section_everyone": {
+    "status": "unverified",
+    "text": "Para todos"
+  },
+  "help.title": {
+    "status": "unverified",
+    "text": "Comandos do bot"
+  },
+  "help_next": {
+    "status": "unverified",
+    "text": "Avançar ▶"
+  },
+  "help_page": {
+    "status": "unverified",
+    "text": "Página {page} de {total}"
+  },
+  "help_prev": {
+    "status": "unverified",
+    "text": "◀ Voltar"
+  },
+  "internal_error": {
+    "status": "unverified",
+    "text": "Erro interno: {error}"
+  },
+  "lang_flag": {
+    "status": "unverified",
+    "text": "🇵🇹"
+  },
+  "lang_set": {
+    "status": "unverified",
+    "text": "Idioma do bot para este chat: {code}"
+  },
+  "lang_set_server": {
+    "status": "unverified",
+    "text": "Idioma padrão do bot para este servidor/grupo: {code}"
+  },
+  "lang_usage": {
+    "status": "unverified",
+    "text": "Uso: /lang <ru|uk|pl|en|es|pt>"
+  },
+  "leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} agora é líder de {name}."
+  },
+  "leader_declined": {
+    "status": "unverified",
+    "text": "Os líderes do partido permanecem inalterados."
+  },
+  "link_need_username": {
+    "status": "unverified",
+    "text": "Para vincular contas você precisa de um @usuário público do Telegram. Defina um nas configurações do Telegram primeiro."
+  },
+  "link_need_verify": {
+    "status": "unverified",
+    "text": "Primeiro verifique sua conta do Fandom com /verify e depois vincule seu Telegram."
+  },
+  "link_pending_discord": {
+    "status": "unverified",
+    "text": "Entendido. Agora use /add-discord {nick} no Telegram em até 30 minutos para concluir a vinculação."
+  },
+  "link_pending_telegram": {
+    "status": "unverified",
+    "text": "Entendido. Agora use /add-telegram {nick} no Discord em até 30 minutos para concluir a vinculação."
+  },
+  "link_success": {
+    "status": "unverified",
+    "text": "✅ Contas vinculadas. Agora você também está verificado no Telegram."
+  },
+  "link_success_unverified": {
+    "status": "unverified",
+    "text": "✅ Contas vinculadas. Mas a conta do Discord ainda não está verificada no Fandom — sua verificação no Telegram será ativada quando ela usar /verify."
+  },
+  "link_usage_discord": {
+    "status": "unverified",
+    "text": "Uso: /add-telegram <seu @usuário do Telegram>"
+  },
+  "link_usage_telegram": {
+    "status": "unverified",
+    "text": "Uso: /add-discord <seu usuário do Discord>"
+  },
+  "list_chats_discord_header": {
+    "status": "unverified",
+    "text": "**Servidores do Discord:**"
+  },
+  "list_chats_no_telegram": {
+    "status": "unverified",
+    "text": "Não há chats do Telegram no banco de dados."
+  },
+  "list_chats_telegram_header": {
+    "status": "unverified",
+    "text": "**Grupos do Telegram:**"
+  },
+  "list_chats_too_long": {
+    "status": "unverified",
+    "text": "A lista é longa — enviando um arquivo."
+  },
+  "loc_compare_header": {
+    "status": "unverified",
+    "text": "Comparação da resposta `{key}` entre idiomas:"
+  },
+  "loc_compare_not_found": {
+    "status": "unverified",
+    "text": "Nenhuma resposta com o código `{key}` foi encontrada nas localizações."
+  },
+  "loc_compare_untranslated": {
+    "status": "unverified",
+    "text": "(não traduzido)"
+  },
+  "loc_compare_usage": {
+    "status": "unverified",
+    "text": "Uso: /loc_compare <código>"
+  },
+  "loc_cooldown": {
+    "status": "unverified",
+    "text": "Este arquivo foi solicitado recentemente. Tente novamente mais tarde (no máximo uma vez a cada 10 minutos por servidor/grupo)."
+  },
+  "loc_file_caption": {
+    "status": "unverified",
+    "text": "Localização: {name} ({code}). Verificado: {percent}%."
+  },
+  "loc_list_footer": {
+    "status": "unverified",
+    "text": "Envie /locale <código> para receber o arquivo de localização."
+  },
+  "loc_list_header": {
+    "status": "unverified",
+    "text": "Idiomas de localização disponíveis (🟩 verificado, 🟧 não verificado, 🟥 não traduzido):"
+  },
+  "loc_reply_dm_body": {
+    "status": "unverified",
+    "text": "> {suggestion}\n{reply}\n\nIdioma: {name} / {lang}\nCódigo: {key}"
+  },
+  "loc_reply_dm_title": {
+    "status": "unverified",
+    "text": "Resposta à sua sugestão de localização"
+  },
+  "loc_reply_failed": {
+    "status": "unverified",
+    "text": "Não foi possível enviar uma mensagem direta ao usuário (os DMs podem estar fechados)."
+  },
+  "loc_reply_not_found": {
+    "status": "unverified",
+    "text": "Nenhuma mensagem com o código {code} foi encontrada."
+  },
+  "loc_reply_sent": {
+    "status": "unverified",
+    "text": "A resposta foi enviada ao usuário."
+  },
+  "loc_reply_support_prefix": {
+    "status": "unverified",
+    "text": "Resposta do administrador {admin} (código {code}):"
+  },
+  "loc_reply_usage": {
+    "status": "unverified",
+    "text": "Uso: /loc_reply <código> <texto>"
+  },
+  "loc_suggest_confirm": {
+    "status": "unverified",
+    "text": "Obrigado! Sua sugestão foi enviada. Código da sua mensagem: {code}"
+  },
+  "loc_suggest_no_support": {
+    "status": "unverified",
+    "text": "O canal de suporte não está configurado. Contate o administrador do bot."
+  },
+  "loc_suggest_support_body": {
+    "status": "unverified",
+    "text": "{suggestion}\n\nIdioma: {name} / {lang}\nCódigo: {key}"
+  },
+  "loc_suggest_usage": {
+    "status": "unverified",
+    "text": "Uso: /loc-suggest <idioma> <código> <texto>"
+  },
+  "loc_unknown_lang": {
+    "status": "unverified",
+    "text": "Idioma desconhecido: {lang}. Disponíveis: {supported}."
+  },
+  "locallang_usage": {
+    "status": "unverified",
+    "text": "Uso: /locallang <ru|uk|pl|en|es|pt>"
+  },
+  "no_permission": {
+    "status": "unverified",
+    "text": "Você não tem permissão para usar este comando."
+  },
+  "party_choose": {
+    "status": "unverified",
+    "text": "Você lidera vários partidos. Responda com o número do partido a gerenciar:"
+  },
+  "party_feature_disabled": {
+    "status": "unverified",
+    "text": "Os partidos estão desabilitados nesta união."
+  },
+  "party_field_allies": {
+    "status": "unverified",
+    "text": "Partidos aliados"
+  },
+  "party_field_description": {
+    "status": "unverified",
+    "text": "Descrição"
+  },
+  "party_field_founder": {
+    "status": "unverified",
+    "text": "Fundador"
+  },
+  "party_field_ideologies": {
+    "status": "unverified",
+    "text": "Ideologias"
+  },
+  "party_field_leader": {
+    "status": "unverified",
+    "text": "Líder atual"
+  },
+  "party_field_members": {
+    "status": "unverified",
+    "text": "Membros"
+  },
+  "party_field_seats": {
+    "status": "unverified",
+    "text": "Assentos em órgãos governamentais"
+  },
+  "party_join_accept": {
+    "status": "unverified",
+    "text": "Aceitar"
+  },
+  "party_join_accepted_leader": {
+    "status": "unverified",
+    "text": "✅ Você aceitou {requester} em {name}."
+  },
+  "party_join_accepted_user": {
+    "status": "unverified",
+    "text": "✅ Seu pedido para entrar em {name} [{code}] foi aceito!"
+  },
+  "party_join_already_handled": {
+    "status": "unverified",
+    "text": "Este pedido já foi tratado."
+  },
+  "party_join_already_member": {
+    "status": "unverified",
+    "text": "Você já está neste partido."
+  },
+  "party_join_in_other": {
+    "status": "unverified",
+    "text": "Você já está no partido {name}. Saia primeiro com /party-leave."
+  },
+  "party_join_leader_dm": {
+    "status": "unverified",
+    "text": "🏛️ {requester} quer entrar no seu partido {name} [{code}]."
+  },
+  "party_join_no_leader": {
+    "status": "unverified",
+    "text": "Não foi possível contatar nenhum líder do partido. Tente mais tarde."
+  },
+  "party_join_not_leader": {
+    "status": "unverified",
+    "text": "Apenas um líder deste partido pode responder ao pedido."
+  },
+  "party_join_pending": {
+    "status": "unverified",
+    "text": "Você já tem um pedido de adesão pendente para este partido."
+  },
+  "party_join_reject": {
+    "status": "unverified",
+    "text": "Recusar"
+  },
+  "party_join_rejected_leader": {
+    "status": "unverified",
+    "text": "❌ Você recusou o pedido de {requester} para entrar em {name}."
+  },
+  "party_join_rejected_user": {
+    "status": "unverified",
+    "text": "❌ Seu pedido para entrar em {name} [{code}] foi recusado."
+  },
+  "party_join_sent": {
+    "status": "unverified",
+    "text": "📨 Seu pedido para entrar em {name} foi enviado aos líderes."
+  },
+  "party_join_suspended": {
+    "status": "unverified",
+    "text": "Este partido está suspenso e não aceita novos membros."
+  },
+  "party_join_usage": {
+    "status": "unverified",
+    "text": "Uso: /party-join <código do partido ou nome exato>"
+  },
+  "party_kick_done": {
+    "status": "unverified",
+    "text": "✅ {user} foi removido de {name}."
+  },
+  "party_kick_founder": {
+    "status": "unverified",
+    "text": "Você não pode expulsar o fundador do partido."
+  },
+  "party_kick_leader": {
+    "status": "unverified",
+    "text": "Você não pode expulsar outro líder. Ele deve sair com /party-leave."
+  },
+  "party_kick_not_member": {
+    "status": "unverified",
+    "text": "Esse usuário não é membro do seu partido."
+  },
+  "party_kick_usage": {
+    "status": "unverified",
+    "text": "Uso: /party-kick <ID ou usuário do membro>"
+  },
+  "party_leave_done": {
+    "status": "unverified",
+    "text": "Você saiu do partido {name}."
+  },
+  "party_leave_founder": {
+    "status": "unverified",
+    "text": "Você fundou este partido e não pode simplesmente sair. Transfira-o ou suspenda-o com /edit-party."
+  },
+  "party_leave_none": {
+    "status": "unverified",
+    "text": "Você não está em nenhum partido desta união."
+  },
+  "party_more_button": {
+    "status": "unverified",
+    "text": "Mais"
+  },
+  "party_none_led": {
+    "status": "unverified",
+    "text": "Você não é fundador nem líder de nenhum partido nesta união."
+  },
+  "party_not_found": {
+    "status": "unverified",
+    "text": "Partido não encontrado."
+  },
+  "party_not_found_suggest": {
+    "status": "unverified",
+    "text": "Partido não encontrado. Talvez você procurasse um destes? Responda com um número em até 30 minutos:"
+  },
+  "party_suspended_mark": {
+    "status": "unverified",
+    "text": "⏸️ O partido está suspenso."
+  },
+  "party_usage": {
+    "status": "unverified",
+    "text": "Uso: /party <código ou nome>"
+  },
+  "privacy_block_all_off": {
+    "status": "unverified",
+    "text": "✅ Outros usuários voltaram a poder comparar os resultados deles com os seus."
+  },
+  "privacy_block_all_on": {
+    "status": "unverified",
+    "text": "✅ Outros usuários não podem mais comparar os resultados deles com os seus."
+  },
+  "privacy_block_quiz_off": {
+    "status": "unverified",
+    "text": "✅ Comparar seus resultados de “{name}” está permitido novamente."
+  },
+  "privacy_block_quiz_on": {
+    "status": "unverified",
+    "text": "✅ Comparar seus resultados de “{name}” está proibido."
+  },
+  "privacy_choose_quiz_block": {
+    "status": "unverified",
+    "text": "Para qual questionário devo mudar a proibição de comparar? Responda com um número em até 30 minutos (a proibição atual está entre parênteses):"
+  },
+  "privacy_choose_quiz_clear": {
+    "status": "unverified",
+    "text": "De qual questionário devo apagar os resultados? Responda com um número em até 30 minutos:"
+  },
+  "privacy_cleared_all": {
+    "status": "unverified",
+    "text": "✅ Apaguei todos os seus resultados de questionários."
+  },
+  "privacy_cleared_quiz": {
+    "status": "unverified",
+    "text": "✅ Apaguei seus resultados de “{name}”."
+  },
+  "privacy_header": {
+    "status": "unverified",
+    "text": "Aqui você pode configurar o que o bot guarda sobre você. Responda com um número em até 30 minutos:"
+  },
+  "privacy_none": {
+    "status": "unverified",
+    "text": "O bot não guarda nenhum dado seu que possa ser configurado."
+  },
+  "privacy_opt_block_all": {
+    "status": "unverified",
+    "text": "proibir que outros usuários comparem meus resultados de questionários (agora proibido: {state})"
+  },
+  "privacy_opt_block_one": {
+    "status": "unverified",
+    "text": "proibir que outros usuários comparem meus resultados de questionários específicos"
+  },
+  "privacy_opt_clear_all": {
+    "status": "unverified",
+    "text": "apagar meus resultados de questionários"
+  },
+  "privacy_opt_clear_one": {
+    "status": "unverified",
+    "text": "apagar meus resultados de questionários específicos"
+  },
+  "privacy_title": {
+    "status": "unverified",
+    "text": "Privacidade"
+  },
+  "quiz_answer_hint": {
+    "status": "unverified",
+    "text": "Responda com “Número-Resposta”: Mb = preferência leve, Y = definida (por exemplo “2-Y” ou “3 Mb”). As últimas opções precisam apenas do número."
+  },
+  "quiz_answer_invalid": {
+    "status": "unverified",
+    "text": "Não entendi. Responda por exemplo “2-Y” ou “3 Mb”; para as últimas opções envie apenas o número."
+  },
+  "quiz_answer_need_weight": {
+    "status": "unverified",
+    "text": "Indique a força da sua preferência para esta opção: Mb (leve) ou Y (definida) — por exemplo “{num}-Y” ou “{num} Mb”."
+  },
+  "quiz_answer_out_of_range": {
+    "status": "unverified",
+    "text": "Não há opção com esse número. Escolha um número da lista."
+  },
+  "quiz_cancelled": {
+    "status": "unverified",
+    "text": "Tudo bem — fica para a próxima!"
+  },
+  "quiz_consent_no": {
+    "status": "unverified",
+    "text": "Não, obrigado"
+  },
+  "quiz_consent_prompt": {
+    "status": "unverified",
+    "text": "Antes dos resultados: posso guardá-los? Assim você poderá compará-los depois com seus resultados anteriores ou com outras pessoas. Você pode apagá-los quando quiser com /quizzes-clear."
+  },
+  "quiz_consent_yes": {
+    "status": "unverified",
+    "text": "Sim, guarde"
+  },
+  "quiz_go": {
+    "status": "unverified",
+    "text": "Vamos lá!"
+  },
+  "quiz_later": {
+    "status": "unverified",
+    "text": "Fica para a próxima"
+  },
+  "quiz_not_saved": {
+    "status": "unverified",
+    "text": "Tudo bem, não vou guardar seus resultados."
+  },
+  "quiz_results_title": {
+    "status": "unverified",
+    "text": "Seus resultados — {name}"
+  },
+  "quiz_resumed": {
+    "status": "unverified",
+    "text": "▶️ Continuando “{name}” a partir da pergunta {num} de {total}."
+  },
+  "quiz_saved": {
+    "status": "unverified",
+    "text": "Guardado. Você pode apagá-lo quando quiser com /quizzes-clear."
+  },
+  "quiz_start_prompt": {
+    "status": "unverified",
+    "text": "Você escolheu “{name}”.\n\nVocê verá um tema com afirmações numeradas. Responda no formato “Número-Resposta”: após o número, acrescente Mb para uma preferência leve ou Y para uma definida (por exemplo “3-Y” ou “2 Mb”). As últimas opções (não concordo com nenhuma / não me importo / pergunta anterior) precisam apenas do número.\n\nVamos começar?"
+  },
+  "quiz_stop_none": {
+    "status": "unverified",
+    "text": "Você não está fazendo nenhum questionário agora."
+  },
+  "quiz_stop_saved": {
+    "status": "unverified",
+    "text": "⏸️ Seu progresso em “{name}” fica guardado por 7 dias. Comece este questionário de novo para continuar do mesmo ponto; caso contrário, o progresso será descartado."
+  },
+  "quizzes_clear_deleted": {
+    "status": "unverified",
+    "text": "Apaguei seu resultado de “{name}” ({date})."
+  },
+  "quizzes_clear_header": {
+    "status": "unverified",
+    "text": "Seus resultados guardados — responda com um número em 30 minutos para apagar um:"
+  },
+  "quizzes_clear_none": {
+    "status": "unverified",
+    "text": "Você não tem resultados de questionários guardados."
+  },
+  "quizzes_compare_blocked": {
+    "status": "unverified",
+    "text": "Este usuário proibiu a comparação dos seus resultados de questionários."
+  },
+  "quizzes_compare_header": {
+    "status": "unverified",
+    "text": "Questionários que vocês dois completaram — responda com um número em 30 minutos:"
+  },
+  "quizzes_compare_none": {
+    "status": "unverified",
+    "text": "Você e este usuário não têm questionários concluídos em comum."
+  },
+  "quizzes_compare_self": {
+    "status": "unverified",
+    "text": "Escolha outra pessoa que não você para comparar."
+  },
+  "quizzes_compare_title": {
+    "status": "unverified",
+    "text": "Comparação — {name}"
+  },
+  "quizzes_compare_usage": {
+    "status": "unverified",
+    "text": "Uso: /quizzes_compare <ID de usuário ou @username>"
+  },
+  "quizzes_compare_user_invalid": {
+    "status": "unverified",
+    "text": "Indique um usuário válido — uma menção ou um ID."
+  },
+  "quizzes_compare_you": {
+    "status": "unverified",
+    "text": "Você"
+  },
+  "quizzes_list_header": {
+    "status": "unverified",
+    "text": "Questionários disponíveis — responda com um número em 30 minutos para começar:"
+  },
+  "quizzes_previous_current": {
+    "status": "unverified",
+    "text": "Resultado atual ({date})"
+  },
+  "quizzes_previous_earlier": {
+    "status": "unverified",
+    "text": "Resultado anterior ({date})"
+  },
+  "quizzes_previous_invalid": {
+    "status": "unverified",
+    "text": "Não há questionário com esse número. A lista é /quizzes."
+  },
+  "quizzes_previous_no_recent": {
+    "status": "unverified",
+    "text": "Passaram-se mais de 30 minutos desde que você fez um questionário. Informe o número: /quizzes-previous <número> (a lista é /quizzes)."
+  },
+  "quizzes_previous_no_results": {
+    "status": "unverified",
+    "text": "Você não tem resultados de questionários guardados."
+  },
+  "quizzes_previous_none": {
+    "status": "unverified",
+    "text": "Você não tem um resultado anterior de “{name}” — não há com o que comparar."
+  },
+  "quizzes_previous_title": {
+    "status": "unverified",
+    "text": "Comparação com seu resultado anterior — {name}"
+  },
+  "quizzes_previous_usage": {
+    "status": "unverified",
+    "text": "Uso: /quizzes_previous [número do questionário]"
+  },
+  "quizzes_title": {
+    "status": "unverified",
+    "text": "Questionários"
+  },
+  "resume_confirm": {
+    "status": "unverified",
+    "text": "Retomar o partido {name}?"
+  },
+  "resume_done": {
+    "status": "unverified",
+    "text": "▶️ Partido {name} retomado."
+  },
+  "rules_invites_disabled": {
+    "status": "unverified",
+    "text": "✅ Os membros do partido não podem mais convidar novos membros."
+  },
+  "rules_invites_enabled": {
+    "status": "unverified",
+    "text": "✅ Os membros do partido agora podem convidar novos membros."
+  },
+  "rules_menu_1": {
+    "status": "unverified",
+    "text": "1 — permitir que membros do partido convidem novos membros (atualmente: {state})"
+  },
+  "rules_menu_title": {
+    "status": "unverified",
+    "text": "Regras do partido — {name} [{code}]"
+  },
+  "service_event.bot_started": {
+    "status": "unverified",
+    "text": "🤖 Bot iniciado."
+  },
+  "service_event.bot_stopped": {
+    "status": "unverified",
+    "text": "🛑 Bot parado."
+  },
+  "service_event.parties_disabled": {
+    "status": "unverified",
+    "text": "🏛️ {user} desabilitou os partidos na união {code}."
+  },
+  "service_event.parties_enabled": {
+    "status": "unverified",
+    "text": "🏛️ {user} habilitou os partidos na união {code}."
+  },
+  "service_event.party_created": {
+    "status": "unverified",
+    "text": "🏛️ Na união {union}, {user} criou o partido {name} [{party}]."
+  },
+  "service_event.party_deleted": {
+    "status": "unverified",
+    "text": "🗑️ Na união {union}, {user} excluiu o partido {name} [{party}]."
+  },
+  "service_event.setup_done": {
+    "status": "unverified",
+    "text": "🔗 O chat do {platform} “{chat}” foi vinculado à união {union} por {user}."
+  },
+  "service_event.union_created": {
+    "status": "unverified",
+    "text": "🆕 A união {code} foi criada por {user}."
+  },
+  "setup_success": {
+    "status": "unverified",
+    "text": "✅ Chat vinculado à união {union} ({code}). Idioma: {lang_name} ({lang})."
+  },
+  "setup_unknown_union": {
+    "status": "unverified",
+    "text": "Código de união desconhecido: {code}. Disponíveis: {codes}."
+  },
+  "setup_usage": {
+    "status": "unverified",
+    "text": "Uso: /setup <UNION> <ru|uk|pl|en|es|pt>"
+  },
+  "state_no": {
+    "status": "unverified",
+    "text": "não"
+  },
+  "state_yes": {
+    "status": "unverified",
+    "text": "sim"
+  },
+  "suspend_confirm": {
+    "status": "unverified",
+    "text": "Suspender o partido {name}? As informações permanecerão, em /party ele será marcado como suspenso e um líder poderá retomá-lo depois."
+  },
+  "suspend_done": {
+    "status": "unverified",
+    "text": "⏸️ Partido {name} suspenso."
+  },
+  "too_many_requests": {
+    "status": "unverified",
+    "text": "Muitas solicitações — tente novamente mais tarde."
+  },
+  "transfer_declined": {
+    "status": "unverified",
+    "text": "O líder do partido permanece inalterado."
+  },
+  "transfer_done": {
+    "status": "unverified",
+    "text": "✅ {user} agora lidera {name}."
+  },
+  "verify_cooldown": {
+    "status": "unverified",
+    "text": "Muitas tentativas de verificação. Tente novamente em alguns minutos."
+  },
+  "verify_error": {
+    "status": "unverified",
+    "text": "Não foi possível conectar ao Fandom agora. Tente mais tarde."
+  },
+  "verify_mismatch": {
+    "status": "unverified",
+    "text": "O Discord do perfil do Fandom (“{handle}”) não corresponde ao seu usuário do Discord (“{you}”)."
+  },
+  "verify_no_handle": {
+    "status": "unverified",
+    "text": "{name} não tem uma conta do Discord no perfil do Fandom. Adicione-a no seu perfil em qualquer wiki e use /verify novamente."
+  },
+  "verify_not_found": {
+    "status": "unverified",
+    "text": "Nenhum usuário do Fandom chamado “{name}” foi encontrado."
+  },
+  "verify_required": {
+    "status": "unverified",
+    "text": "Primeiro verifique sua conta do Fandom com /verify <seu usuário do Fandom>."
+  },
+  "verify_required_tg": {
+    "status": "unverified",
+    "text": "Primeiro verifique-se: use /add-discord aqui e /add-telegram no Discord para vincular suas contas (sua conta do Discord precisa estar verificada com /verify)."
+  },
+  "verify_success": {
+    "status": "unverified",
+    "text": "✅ Verificado como usuário do Fandom {name}. Agora você pode usar os comandos de atividade do Fandom."
+  },
+  "verify_usage": {
+    "status": "unverified",
+    "text": "Uso: /verify <seu usuário no fandom.com>"
+  }
+}

@@ -1,0 +1,1362 @@
+{
+  "action_cancelled": {
+    "status": "unverified",
+    "text": "Action cancelled."
+  },
+  "add_govt_created": {
+    "status": "unverified",
+    "text": "✅ Government body “{name}” created in union {union} (one member: {singular}; several: {plural})."
+  },
+  "add_govt_exists": {
+    "status": "unverified",
+    "text": "A government body with this name already exists in the union."
+  },
+  "add_govt_usage": {
+    "status": "unverified",
+    "text": "Usage: /add_govt <UNION> <name> | <member singular> | <members plural>"
+  },
+  "add_party_ask_code": {
+    "status": "unverified",
+    "text": "Now send a 4-character party code (Latin letters and digits only)."
+  },
+  "add_party_ask_logo": {
+    "status": "unverified",
+    "text": "Now send the party's logo as an image."
+  },
+  "add_party_ask_name": {
+    "status": "unverified",
+    "text": "🏛️ Founding a party! What is the party's name? (You have 30 minutes for each answer.)"
+  },
+  "add_party_created": {
+    "status": "unverified",
+    "text": "✅ Party {name} [{code}] founded in union {union}! Founder: {founder}."
+  },
+  "add_party_discord_only": {
+    "status": "unverified",
+    "text": "Parties are founded on Discord (role requirements can only be checked there). The other party commands work here too."
+  },
+  "add_party_founder_admin_only": {
+    "status": "unverified",
+    "text": "Only Bot Admins can specify a founder."
+  },
+  "add_party_invalid_code": {
+    "status": "unverified",
+    "text": "The code must be exactly 4 Latin letters/digits and must not clash with union or party codes. Try again."
+  },
+  "add_party_invalid_logo": {
+    "status": "unverified",
+    "text": "That is not an image. Send the logo as a picture or an image file."
+  },
+  "add_party_no_role": {
+    "status": "unverified",
+    "text": "You need one of the roles configured with /allow-parties to found a party."
+  },
+  "add_unia_created": {
+    "status": "unverified",
+    "text": "✅ Union {code} created:\n{names}"
+  },
+  "add_unia_exists": {
+    "status": "unverified",
+    "text": "Union {code} already exists."
+  },
+  "add_unia_invalid_code": {
+    "status": "unverified",
+    "text": "Invalid union code. Use 2–12 Latin letters or digits."
+  },
+  "add_unia_need_name": {
+    "status": "unverified",
+    "text": "Provide the union's name in at least one language."
+  },
+  "add_unia_usage": {
+    "status": "unverified",
+    "text": "Usage: /add_unia <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
+  },
+  "allow_parties_disabled": {
+    "status": "unverified",
+    "text": "✅ Parties are now disabled in union {code}."
+  },
+  "allow_parties_enabled": {
+    "status": "unverified",
+    "text": "✅ Parties are now enabled in union {code}. Roles allowed to use /add-party: {roles}."
+  },
+  "allow_parties_invalid_roles": {
+    "status": "unverified",
+    "text": "Invalid role ID list."
+  },
+  "allow_parties_need_roles": {
+    "status": "unverified",
+    "text": "List at least one role ID to enable parties."
+  },
+  "allow_parties_usage": {
+    "status": "unverified",
+    "text": "Usage: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
+  },
+  "backup_failed": {
+    "status": "unverified",
+    "text": "Failed to build the backup: {error}"
+  },
+  "backup_private_only": {
+    "status": "unverified",
+    "text": "Use this command in a private chat with the bot."
+  },
+  "chat_not_setup": {
+    "status": "unverified",
+    "text": "This chat is not set up yet. A Bot Admin must link it to a union with /setup first."
+  },
+  "choice_invalid": {
+    "status": "unverified",
+    "text": "That is not a number from the list — cancelled."
+  },
+  "consent_accept": {
+    "status": "unverified",
+    "text": "Accept"
+  },
+  "consent_decline": {
+    "status": "unverified",
+    "text": "Decline"
+  },
+  "consent_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, you are invited to co-lead the party {name} [{code}]!"
+  },
+  "consent_not_yours": {
+    "status": "unverified",
+    "text": "This button is not for you."
+  },
+  "consent_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, you are invited to take over the party {name} [{code}]!"
+  },
+  "delete_party_confirm": {
+    "status": "unverified",
+    "text": "Delete the party {name} [{code}]? All of its data, leaders, members and join requests will be erased for good."
+  },
+  "delete_party_done": {
+    "status": "unverified",
+    "text": "🗑️ Party {name} [{code}] deleted."
+  },
+  "dialog_timeout": {
+    "status": "unverified",
+    "text": "⏳ Time is up — the dialog is cancelled."
+  },
+  "edit_admin_choose": {
+    "status": "unverified",
+    "text": "Reply with the option number within 30 minutes."
+  },
+  "edit_admin_menu_11": {
+    "status": "unverified",
+    "text": "11 — allow party members to invite new members (currently: {state})"
+  },
+  "edit_admin_menu_12": {
+    "status": "unverified",
+    "text": "12 — move the party to another union"
+  },
+  "edit_admin_menu_13": {
+    "status": "unverified",
+    "text": "13 — delete the party"
+  },
+  "edit_admin_menu_title": {
+    "status": "unverified",
+    "text": "Party settings (admin) — {name} [{code}]"
+  },
+  "edit_admin_not_found": {
+    "status": "unverified",
+    "text": "No party “{query}” was found. Give the party code or its full name exactly as written."
+  },
+  "edit_admin_usage": {
+    "status": "unverified",
+    "text": "Usage: /edit_party_admin <party code or its full name>"
+  },
+  "edit_ask_article": {
+    "status": "unverified",
+    "text": "Send the link to the party's article."
+  },
+  "edit_ask_code": {
+    "status": "unverified",
+    "text": "Send the new 4-character party code (Latin letters and digits)."
+  },
+  "edit_ask_color": {
+    "status": "unverified",
+    "text": "Send the new color as hex, e.g. #245590."
+  },
+  "edit_ask_description": {
+    "status": "unverified",
+    "text": "Send the party description."
+  },
+  "edit_ask_ideologies": {
+    "status": "unverified",
+    "text": "Send the party ideologies (links are preserved)."
+  },
+  "edit_ask_leader": {
+    "status": "unverified",
+    "text": "Send the ID or mention of the user to invite as a co-leader."
+  },
+  "edit_ask_logo": {
+    "status": "unverified",
+    "text": "Send the new logo as an image."
+  },
+  "edit_ask_name": {
+    "status": "unverified",
+    "text": "Send the new party name."
+  },
+  "edit_ask_transfer": {
+    "status": "unverified",
+    "text": "Send the ID or mention of the user to transfer the party to."
+  },
+  "edit_ask_union": {
+    "status": "unverified",
+    "text": "Send the code of the union to move the party to."
+  },
+  "edit_invalid_article": {
+    "status": "unverified",
+    "text": "That does not look like a link. Send a URL starting with http(s)://."
+  },
+  "edit_invalid_color": {
+    "status": "unverified",
+    "text": "Invalid color. Use hex like #245590."
+  },
+  "edit_invalid_option": {
+    "status": "unverified",
+    "text": "Unknown option number. Run the command without arguments to see the menu."
+  },
+  "edit_invalid_union": {
+    "status": "unverified",
+    "text": "No such union. Send an existing union code."
+  },
+  "edit_invalid_user": {
+    "status": "unverified",
+    "text": "Could not parse the user. Send an ID or a mention."
+  },
+  "edit_menu_1": {
+    "status": "unverified",
+    "text": "1 — change the name"
+  },
+  "edit_menu_10": {
+    "status": "unverified",
+    "text": "10 — set the article link for the “More” button"
+  },
+  "edit_menu_2": {
+    "status": "unverified",
+    "text": "2 — change the code"
+  },
+  "edit_menu_3": {
+    "status": "unverified",
+    "text": "3 — change the logo"
+  },
+  "edit_menu_4": {
+    "status": "unverified",
+    "text": "4 — change the color (Discord embed color for this party)"
+  },
+  "edit_menu_5": {
+    "status": "unverified",
+    "text": "5 — set the party description"
+  },
+  "edit_menu_6": {
+    "status": "unverified",
+    "text": "6 — set the party ideologies"
+  },
+  "edit_menu_7": {
+    "status": "unverified",
+    "text": "7 — add a party leader"
+  },
+  "edit_menu_8": {
+    "status": "unverified",
+    "text": "8 — transfer the party to another member"
+  },
+  "edit_menu_9": {
+    "status": "unverified",
+    "text": "9 — suspend the party"
+  },
+  "edit_menu_9_resume": {
+    "status": "unverified",
+    "text": "9 — resume the party"
+  },
+  "edit_menu_title": {
+    "status": "unverified",
+    "text": "Party settings — {name} [{code}]"
+  },
+  "edit_saved": {
+    "status": "unverified",
+    "text": "✅ Saved."
+  },
+  "edit_union_changed": {
+    "status": "unverified",
+    "text": "✅ Party {name} moved to union {union}."
+  },
+  "find_channel_not_found": {
+    "status": "unverified",
+    "text": "Channel not found or inaccessible."
+  },
+  "find_channel_other_guild": {
+    "status": "unverified",
+    "text": "That channel belongs to another server."
+  },
+  "find_done": {
+    "status": "unverified",
+    "text": "✅ Scan finished: {checked} messages checked, {found} matched."
+  },
+  "find_history_error": {
+    "status": "unverified",
+    "text": "Failed to read the channel history: {error}"
+  },
+  "find_invalid_channel": {
+    "status": "unverified",
+    "text": "Invalid channel ID."
+  },
+  "find_invalid_date": {
+    "status": "unverified",
+    "text": "Invalid date. Use MM-DD-YYYY or MM-DD-YYYY + 7D."
+  },
+  "find_no_keywords": {
+    "status": "unverified",
+    "text": "Provide at least one keyword (separate them with semicolons)."
+  },
+  "find_started": {
+    "status": "unverified",
+    "text": "🔎 Scanning {channel} from {start} to {end} ({count} keyword(s))…"
+  },
+  "force_leave_failed": {
+    "status": "unverified",
+    "text": "Failed to leave: {error}"
+  },
+  "force_leave_invalid_id": {
+    "status": "unverified",
+    "text": "Invalid ID."
+  },
+  "force_leave_not_member": {
+    "status": "unverified",
+    "text": "The bot is not a member of that server."
+  },
+  "force_leave_success_discord": {
+    "status": "unverified",
+    "text": "The bot left server {guild_id} and its data was removed from the database."
+  },
+  "force_leave_success_telegram": {
+    "status": "unverified",
+    "text": "The bot left Telegram chat {chat_id} (or its data was cleaned from the database)."
+  },
+  "force_leave_unsupported_platform": {
+    "status": "unverified",
+    "text": "Unsupported platform. Use 'discord' or 'telegram'."
+  },
+  "force_leave_usage": {
+    "status": "unverified",
+    "text": "Usage: /force_leave <discord|telegram> <id>"
+  },
+  "founday_added": {
+    "status": "unverified",
+    "text": "✅ I will congratulate {name} every year in {channel} at {time} UTC. Founded: {date} UTC. Wiki language: {lang_name}."
+  },
+  "founday_future_date": {
+    "status": "unverified",
+    "text": "That founding date is still in the future."
+  },
+  "founday_future_few": {
+    "status": "unverified",
+    "text": "Today {name} turns {n} years old!"
+  },
+  "founday_future_many": {
+    "status": "unverified",
+    "text": "Today {name} turns {n} years old!"
+  },
+  "founday_future_one": {
+    "status": "unverified",
+    "text": "Today {name} turns {n} year old!"
+  },
+  "founday_future_other": {
+    "status": "unverified",
+    "text": "Today {name} turns {n} years old!"
+  },
+  "founday_invalid_channel": {
+    "status": "unverified",
+    "text": "Channel not found, or it does not belong to this server."
+  },
+  "founday_invalid_date": {
+    "status": "unverified",
+    "text": "Invalid founding date. Use MM-DD-YYYY or MM-DD-YYYY HH:MM in UTC."
+  },
+  "founday_invalid_time": {
+    "status": "unverified",
+    "text": "Invalid posting time. Use HH:MM or HH in UTC."
+  },
+  "founday_invalid_url": {
+    "status": "unverified",
+    "text": "Invalid wiki link. For example: amongus.fandom.com or https://amongus.fandom.com"
+  },
+  "founday_list_empty": {
+    "status": "unverified",
+    "text": "No wiki anniversaries are set up on this server."
+  },
+  "founday_list_header": {
+    "status": "unverified",
+    "text": "Wiki anniversaries on this server:"
+  },
+  "founday_list_title": {
+    "status": "unverified",
+    "text": "Wiki anniversaries"
+  },
+  "founday_no_webhook_perm": {
+    "status": "unverified",
+    "text": "⚠️ The bot lacks the “Manage Webhooks” permission in {channel} — the greeting will be sent as an ordinary message."
+  },
+  "founday_not_found": {
+    "status": "unverified",
+    "text": "This server has no wiki anniversary with that link."
+  },
+  "founday_past_few": {
+    "status": "unverified",
+    "text": "Today {name} turned {n} years old!"
+  },
+  "founday_past_many": {
+    "status": "unverified",
+    "text": "Today {name} turned {n} years old!"
+  },
+  "founday_past_one": {
+    "status": "unverified",
+    "text": "Today {name} turned {n} year old!"
+  },
+  "founday_past_other": {
+    "status": "unverified",
+    "text": "Today {name} turned {n} years old!"
+  },
+  "founday_removed": {
+    "status": "unverified",
+    "text": "🗑️ I will no longer congratulate the wiki {url}."
+  },
+  "founday_webhook_name": {
+    "status": "unverified",
+    "text": "Birthdays"
+  },
+  "govt_no_members": {
+    "status": "unverified",
+    "text": "No members yet."
+  },
+  "govt_not_found": {
+    "status": "unverified",
+    "text": "Government not found."
+  },
+  "govt_not_found_suggest": {
+    "status": "unverified",
+    "text": "Government not found. Perhaps you were looking for one of these? Reply with a number within 30 minutes:"
+  },
+  "govt_other_union_mark": {
+    "status": "unverified",
+    "text": "(union {code})"
+  },
+  "govt_usage": {
+    "status": "unverified",
+    "text": "Usage: /govt <name>"
+  },
+  "group_only": {
+    "status": "unverified",
+    "text": "This command can only be used in a group."
+  },
+  "guild_only": {
+    "status": "unverified",
+    "text": "This command can only be used on a server."
+  },
+  "help.cmd_add_discord": {
+    "status": "unverified",
+    "text": "/add_discord <discord_name> — link your Discord account (finish with /add-telegram on Discord)"
+  },
+  "help.cmd_add_govt": {
+    "status": "unverified",
+    "text": "/add-govt <union> <name> <member> <members> — create a government body (bot admins)"
+  },
+  "help.cmd_add_govt_tg": {
+    "status": "unverified",
+    "text": "/add_govt <union> <name> <member> <members> — create a government body (bot admins)"
+  },
+  "help.cmd_add_party": {
+    "status": "unverified",
+    "text": "/add-party [founder_id] — found a party (interactive; requires a role set by /allow-parties)"
+  },
+  "help.cmd_add_telegram": {
+    "status": "unverified",
+    "text": "/add-telegram <@username> — link your Telegram account (finish with /add-discord on Telegram)"
+  },
+  "help.cmd_add_unia": {
+    "status": "unverified",
+    "text": "/add-unia <code> <names…> — create a new union that /setup can link chats to (bot admins)"
+  },
+  "help.cmd_add_unia_tg": {
+    "status": "unverified",
+    "text": "/add_unia <code> <names…> — create a new union that /setup can link chats to (bot admins)"
+  },
+  "help.cmd_allow_parties": {
+    "status": "unverified",
+    "text": "/allow-parties <union> <enable|disable> [role_ids] — enable or disable parties in a union (bot admins)"
+  },
+  "help.cmd_allow_parties_tg": {
+    "status": "unverified",
+    "text": "/allow_parties <union> <enable|disable> [role_ids] — enable or disable parties in a union (bot admins)"
+  },
+  "help.cmd_backup": {
+    "status": "unverified",
+    "text": "/backup — get a database backup (bot admins)"
+  },
+  "help.cmd_edit_party": {
+    "status": "unverified",
+    "text": "/edit-party [option] — manage your party (founders and leaders)"
+  },
+  "help.cmd_edit_party_admin": {
+    "status": "unverified",
+    "text": "/edit-party-admin <code|name> — change any setting of any party (bot admins)"
+  },
+  "help.cmd_edit_party_admin_tg": {
+    "status": "unverified",
+    "text": "/edit_party_admin <code|name> — change any setting of any party (bot admins)"
+  },
+  "help.cmd_edit_party_tg": {
+    "status": "unverified",
+    "text": "/edit_party [option] — manage your party (founders and leaders)"
+  },
+  "help.cmd_edit_rules": {
+    "status": "unverified",
+    "text": "/edit-rules [option] — manage your party's rules (founders and leaders)"
+  },
+  "help.cmd_edit_rules_tg": {
+    "status": "unverified",
+    "text": "/edit_rules [option] — manage your party's rules (founders and leaders)"
+  },
+  "help.cmd_find_with": {
+    "status": "unverified",
+    "text": "/find-with <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages containing the keywords (server admins)"
+  },
+  "help.cmd_find_without": {
+    "status": "unverified",
+    "text": "/find-without <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages NOT containing the keywords (server admins)"
+  },
+  "help.cmd_force_leave": {
+    "status": "unverified",
+    "text": "/force_leave <platform> <id> — make the bot leave a chat (bot admins)"
+  },
+  "help.cmd_govt": {
+    "status": "unverified",
+    "text": "/govt <name> — information about a government body of this union"
+  },
+  "help.cmd_help": {
+    "status": "unverified",
+    "text": "/help — show this command list"
+  },
+  "help.cmd_lang": {
+    "status": "unverified",
+    "text": "/lang <code> — set the default bot language for the whole server/group (server admins)"
+  },
+  "help.cmd_list_chats": {
+    "status": "unverified",
+    "text": "/list_chats — list all chats the bot is in (bot admins)"
+  },
+  "help.cmd_loc_compare": {
+    "status": "unverified",
+    "text": "/loc-compare <code> — compare a reply across languages"
+  },
+  "help.cmd_loc_compare_tg": {
+    "status": "unverified",
+    "text": "/loc_compare <code> — compare a reply across languages"
+  },
+  "help.cmd_loc_reply": {
+    "status": "unverified",
+    "text": "/loc-reply <code> <text> — reply to a localization suggestion (bot admins)"
+  },
+  "help.cmd_loc_reply_tg": {
+    "status": "unverified",
+    "text": "/loc_reply <code> <text> — reply to a localization suggestion (bot admins)"
+  },
+  "help.cmd_loc_suggest": {
+    "status": "unverified",
+    "text": "/loc-suggest <lang> <code> <text> — suggest a localization"
+  },
+  "help.cmd_loc_suggest_tg": {
+    "status": "unverified",
+    "text": "/loc_suggest <lang> <code> <text> — suggest a localization"
+  },
+  "help.cmd_locale": {
+    "status": "unverified",
+    "text": "/locale [code] — localization status, or a language's file"
+  },
+  "help.cmd_locallang": {
+    "status": "unverified",
+    "text": "/locallang <code> — set bot language for this channel/topic (ru, uk, pl, en, es, pt)"
+  },
+  "help.cmd_party": {
+    "status": "unverified",
+    "text": "/party <code|name> — information about a party of this union"
+  },
+  "help.cmd_party_join": {
+    "status": "unverified",
+    "text": "/party-join <code|name> — request to join a party of this union"
+  },
+  "help.cmd_party_join_tg": {
+    "status": "unverified",
+    "text": "/party_join <code|name> — request to join a party of this union"
+  },
+  "help.cmd_party_kick": {
+    "status": "unverified",
+    "text": "/party-kick <id|username> — remove a member from your party (party leaders)"
+  },
+  "help.cmd_party_kick_tg": {
+    "status": "unverified",
+    "text": "/party_kick <id|username> — remove a member from your party (party leaders)"
+  },
+  "help.cmd_party_leave": {
+    "status": "unverified",
+    "text": "/party-leave — leave your party in this union"
+  },
+  "help.cmd_party_leave_tg": {
+    "status": "unverified",
+    "text": "/party_leave — leave your party in this union"
+  },
+  "help.cmd_privacy": {
+    "status": "unverified",
+    "text": "/privacy — manage the privacy of your data"
+  },
+  "help.cmd_quizzes": {
+    "status": "unverified",
+    "text": "/quizzes — take a quiz (works in DMs too)"
+  },
+  "help.cmd_quizzes_clear": {
+    "status": "unverified",
+    "text": "/quizzes-clear — delete your saved quiz results"
+  },
+  "help.cmd_quizzes_clear_tg": {
+    "status": "unverified",
+    "text": "/quizzes_clear — delete your saved quiz results"
+  },
+  "help.cmd_quizzes_compare": {
+    "status": "unverified",
+    "text": "/quizzes-compare <user> — compare quiz results with someone"
+  },
+  "help.cmd_quizzes_compare_tg": {
+    "status": "unverified",
+    "text": "/quizzes_compare <user> — compare quiz results with someone"
+  },
+  "help.cmd_quizzes_previous": {
+    "status": "unverified",
+    "text": "/quizzes-previous [number] — compare your latest quiz result with the previous one"
+  },
+  "help.cmd_quizzes_previous_tg": {
+    "status": "unverified",
+    "text": "/quizzes_previous [number] — compare your latest quiz result with the previous one"
+  },
+  "help.cmd_quizzes_stop": {
+    "status": "unverified",
+    "text": "/quizzes-stop — stop the quiz, keeping your progress for 7 days"
+  },
+  "help.cmd_quizzes_stop_tg": {
+    "status": "unverified",
+    "text": "/quizzes_stop — stop the quiz, keeping your progress for 7 days"
+  },
+  "help.cmd_setup": {
+    "status": "unverified",
+    "text": "/setup <union> <lang> — link this server/group to a union and set the language (bot admins)"
+  },
+  "help.cmd_verify": {
+    "status": "unverified",
+    "text": "/verify <fandom_name> — verify your Fandom account (unlocks the Fandom-activity commands)"
+  },
+  "help.cmd_wiki_founday": {
+    "status": "unverified",
+    "text": "/wiki-founday <link> <name> <date> [channel_id] [time] [language] — congratulate a wiki on its anniversary every year (server admins)"
+  },
+  "help.cmd_wiki_founday_remove": {
+    "status": "unverified",
+    "text": "/wiki-founday-remove <link> — stop congratulating a wiki (server admins)"
+  },
+  "help.cmd_wiki_foundays": {
+    "status": "unverified",
+    "text": "/wiki-foundays — list this server's wiki anniversaries (server admins)"
+  },
+  "help.section_admins": {
+    "status": "unverified",
+    "text": "For server admins"
+  },
+  "help.section_bot_admins": {
+    "status": "unverified",
+    "text": "For Bot Admins"
+  },
+  "help.section_everyone": {
+    "status": "unverified",
+    "text": "For everyone"
+  },
+  "help.title": {
+    "status": "unverified",
+    "text": "Bot commands"
+  },
+  "help_next": {
+    "status": "unverified",
+    "text": "Next ▶"
+  },
+  "help_page": {
+    "status": "unverified",
+    "text": "Page {page} of {total}"
+  },
+  "help_prev": {
+    "status": "unverified",
+    "text": "◀ Back"
+  },
+  "internal_error": {
+    "status": "unverified",
+    "text": "Internal error: {error}"
+  },
+  "lang_flag": {
+    "status": "unverified",
+    "text": "🇬🇧"
+  },
+  "lang_set": {
+    "status": "unverified",
+    "text": "Bot language for this chat is now: {code}"
+  },
+  "lang_set_server": {
+    "status": "unverified",
+    "text": "Default bot language for this server/group is now: {code}"
+  },
+  "lang_usage": {
+    "status": "unverified",
+    "text": "Usage: /lang <ru|uk|pl|en|es|pt>"
+  },
+  "leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} is now a leader of {name}."
+  },
+  "leader_declined": {
+    "status": "unverified",
+    "text": "The party's leaders remain unchanged."
+  },
+  "link_need_username": {
+    "status": "unverified",
+    "text": "You need a public Telegram @username to link accounts. Set one in Telegram settings first."
+  },
+  "link_need_verify": {
+    "status": "unverified",
+    "text": "Verify your Fandom account with /verify first, then link your Telegram."
+  },
+  "link_pending_discord": {
+    "status": "unverified",
+    "text": "Got it. Now run /add-discord {nick} on Telegram within 30 minutes to finish linking."
+  },
+  "link_pending_telegram": {
+    "status": "unverified",
+    "text": "Got it. Now run /add-telegram {nick} on Discord within 30 minutes to finish linking."
+  },
+  "link_success": {
+    "status": "unverified",
+    "text": "✅ Accounts linked. You are now verified on Telegram too."
+  },
+  "link_success_unverified": {
+    "status": "unverified",
+    "text": "✅ Accounts linked. Note: the Discord account is not Fandom-verified yet — your Telegram verification will activate once it runs /verify."
+  },
+  "link_usage_discord": {
+    "status": "unverified",
+    "text": "Usage: /add-telegram <your Telegram @username>"
+  },
+  "link_usage_telegram": {
+    "status": "unverified",
+    "text": "Usage: /add-discord <your Discord username>"
+  },
+  "list_chats_discord_header": {
+    "status": "unverified",
+    "text": "**Discord servers:**"
+  },
+  "list_chats_no_telegram": {
+    "status": "unverified",
+    "text": "No Telegram chats in the database."
+  },
+  "list_chats_telegram_header": {
+    "status": "unverified",
+    "text": "**Telegram groups:**"
+  },
+  "list_chats_too_long": {
+    "status": "unverified",
+    "text": "The list is long — uploading a file."
+  },
+  "loc_compare_header": {
+    "status": "unverified",
+    "text": "Comparison of reply `{key}` across languages:"
+  },
+  "loc_compare_not_found": {
+    "status": "unverified",
+    "text": "No reply with code `{key}` was found in the localizations."
+  },
+  "loc_compare_untranslated": {
+    "status": "unverified",
+    "text": "(untranslated)"
+  },
+  "loc_compare_usage": {
+    "status": "unverified",
+    "text": "Usage: /loc_compare <reply code>"
+  },
+  "loc_cooldown": {
+    "status": "unverified",
+    "text": "This file was requested recently. Try again later (at most once every 10 minutes per server/group)."
+  },
+  "loc_file_caption": {
+    "status": "unverified",
+    "text": "Localization: {name} ({code}). Verified: {percent}%."
+  },
+  "loc_list_footer": {
+    "status": "unverified",
+    "text": "Send /locale <code> to get the localization file."
+  },
+  "loc_list_header": {
+    "status": "unverified",
+    "text": "Available localization languages (🟩 verified, 🟧 unverified, 🟥 untranslated):"
+  },
+  "loc_reply_dm_body": {
+    "status": "unverified",
+    "text": "> {suggestion}\n{reply}\n\nLanguage: {name} / {lang}\nCode: {key}"
+  },
+  "loc_reply_dm_title": {
+    "status": "unverified",
+    "text": "Reply to your localization suggestion"
+  },
+  "loc_reply_failed": {
+    "status": "unverified",
+    "text": "Could not send a direct message to the user (their DMs may be closed)."
+  },
+  "loc_reply_not_found": {
+    "status": "unverified",
+    "text": "No message with code {code} was found."
+  },
+  "loc_reply_sent": {
+    "status": "unverified",
+    "text": "The reply has been sent to the user."
+  },
+  "loc_reply_support_prefix": {
+    "status": "unverified",
+    "text": "Reply from admin {admin} (code {code}):"
+  },
+  "loc_reply_usage": {
+    "status": "unverified",
+    "text": "Usage: /loc_reply <code> <text>"
+  },
+  "loc_suggest_confirm": {
+    "status": "unverified",
+    "text": "Thanks! Your suggestion has been sent. Your message code: {code}"
+  },
+  "loc_suggest_no_support": {
+    "status": "unverified",
+    "text": "The support channel is not configured. Contact the bot administrator."
+  },
+  "loc_suggest_support_body": {
+    "status": "unverified",
+    "text": "{suggestion}\n\nLanguage: {name} / {lang}\nCode: {key}"
+  },
+  "loc_suggest_usage": {
+    "status": "unverified",
+    "text": "Usage: /loc-suggest <language> <reply code> <text>"
+  },
+  "loc_unknown_lang": {
+    "status": "unverified",
+    "text": "Unknown language: {lang}. Available: {supported}."
+  },
+  "locallang_usage": {
+    "status": "unverified",
+    "text": "Usage: /locallang <ru|uk|pl|en|es|pt>"
+  },
+  "no_permission": {
+    "status": "unverified",
+    "text": "You don't have permission to use this command."
+  },
+  "party_choose": {
+    "status": "unverified",
+    "text": "You lead several parties. Reply with the number of the party to manage:"
+  },
+  "party_feature_disabled": {
+    "status": "unverified",
+    "text": "Parties are disabled in this union."
+  },
+  "party_field_allies": {
+    "status": "unverified",
+    "text": "Allied parties"
+  },
+  "party_field_description": {
+    "status": "unverified",
+    "text": "Description"
+  },
+  "party_field_founder": {
+    "status": "unverified",
+    "text": "Founder"
+  },
+  "party_field_ideologies": {
+    "status": "unverified",
+    "text": "Ideologies"
+  },
+  "party_field_leader": {
+    "status": "unverified",
+    "text": "Current leader"
+  },
+  "party_field_members": {
+    "status": "unverified",
+    "text": "Members"
+  },
+  "party_field_seats": {
+    "status": "unverified",
+    "text": "Seats in government bodies"
+  },
+  "party_join_accept": {
+    "status": "unverified",
+    "text": "Accept"
+  },
+  "party_join_accepted_leader": {
+    "status": "unverified",
+    "text": "✅ You accepted {requester} into {name}."
+  },
+  "party_join_accepted_user": {
+    "status": "unverified",
+    "text": "✅ Your request to join {name} [{code}] was accepted!"
+  },
+  "party_join_already_handled": {
+    "status": "unverified",
+    "text": "This request has already been handled."
+  },
+  "party_join_already_member": {
+    "status": "unverified",
+    "text": "You are already in this party."
+  },
+  "party_join_in_other": {
+    "status": "unverified",
+    "text": "You are already in the party {name}. Leave it first with /party-leave."
+  },
+  "party_join_leader_dm": {
+    "status": "unverified",
+    "text": "🏛️ {requester} wants to join your party {name} [{code}]."
+  },
+  "party_join_no_leader": {
+    "status": "unverified",
+    "text": "Could not reach any of the party's leaders. Try again later."
+  },
+  "party_join_not_leader": {
+    "status": "unverified",
+    "text": "Only a leader of this party can answer the request."
+  },
+  "party_join_pending": {
+    "status": "unverified",
+    "text": "You already have a pending join request for this party."
+  },
+  "party_join_reject": {
+    "status": "unverified",
+    "text": "Reject"
+  },
+  "party_join_rejected_leader": {
+    "status": "unverified",
+    "text": "❌ You rejected {requester}'s request to join {name}."
+  },
+  "party_join_rejected_user": {
+    "status": "unverified",
+    "text": "❌ Your request to join {name} [{code}] was rejected."
+  },
+  "party_join_sent": {
+    "status": "unverified",
+    "text": "📨 Your request to join {name} was sent to its leaders."
+  },
+  "party_join_suspended": {
+    "status": "unverified",
+    "text": "This party is suspended and is not accepting new members."
+  },
+  "party_join_usage": {
+    "status": "unverified",
+    "text": "Usage: /party-join <party code or exact name>"
+  },
+  "party_kick_done": {
+    "status": "unverified",
+    "text": "✅ {user} was removed from {name}."
+  },
+  "party_kick_founder": {
+    "status": "unverified",
+    "text": "You cannot kick the party's founder."
+  },
+  "party_kick_leader": {
+    "status": "unverified",
+    "text": "You cannot kick another leader. They must leave with /party-leave."
+  },
+  "party_kick_not_member": {
+    "status": "unverified",
+    "text": "That user is not a member of your party."
+  },
+  "party_kick_usage": {
+    "status": "unverified",
+    "text": "Usage: /party-kick <member ID or username>"
+  },
+  "party_leave_done": {
+    "status": "unverified",
+    "text": "You have left the party {name}."
+  },
+  "party_leave_founder": {
+    "status": "unverified",
+    "text": "You founded this party and cannot simply leave it. Transfer it or suspend it with /edit-party."
+  },
+  "party_leave_none": {
+    "status": "unverified",
+    "text": "You are not in any party in this union."
+  },
+  "party_more_button": {
+    "status": "unverified",
+    "text": "More"
+  },
+  "party_none_led": {
+    "status": "unverified",
+    "text": "You are not a founder or leader of any party in this union."
+  },
+  "party_not_found": {
+    "status": "unverified",
+    "text": "Party not found."
+  },
+  "party_not_found_suggest": {
+    "status": "unverified",
+    "text": "Party not found. Perhaps you were looking for one of these? Reply with a number within 30 minutes:"
+  },
+  "party_suspended_mark": {
+    "status": "unverified",
+    "text": "⏸️ The party is suspended."
+  },
+  "party_usage": {
+    "status": "unverified",
+    "text": "Usage: /party <code or name>"
+  },
+  "privacy_block_all_off": {
+    "status": "unverified",
+    "text": "✅ Other users can compare their results with yours again."
+  },
+  "privacy_block_all_on": {
+    "status": "unverified",
+    "text": "✅ Other users can no longer compare their results with yours."
+  },
+  "privacy_block_quiz_off": {
+    "status": "unverified",
+    "text": "✅ Comparing your results for “{name}” is allowed again."
+  },
+  "privacy_block_quiz_on": {
+    "status": "unverified",
+    "text": "✅ Comparing your results for “{name}” is now forbidden."
+  },
+  "privacy_choose_quiz_block": {
+    "status": "unverified",
+    "text": "Which quiz should I change the comparison ban for? Reply with a number within 30 minutes (the current ban is in brackets):"
+  },
+  "privacy_choose_quiz_clear": {
+    "status": "unverified",
+    "text": "Which quiz's results should I delete? Reply with a number within 30 minutes:"
+  },
+  "privacy_cleared_all": {
+    "status": "unverified",
+    "text": "✅ Deleted all of your quiz results."
+  },
+  "privacy_cleared_quiz": {
+    "status": "unverified",
+    "text": "✅ Deleted your results for “{name}”."
+  },
+  "privacy_header": {
+    "status": "unverified",
+    "text": "Here you can control what the bot keeps about you. Reply with a number within 30 minutes:"
+  },
+  "privacy_none": {
+    "status": "unverified",
+    "text": "The bot holds no data about you that you could configure."
+  },
+  "privacy_opt_block_all": {
+    "status": "unverified",
+    "text": "forbid other users from comparing my quiz results (currently forbidden: {state})"
+  },
+  "privacy_opt_block_one": {
+    "status": "unverified",
+    "text": "forbid other users from comparing my results for individual quizzes"
+  },
+  "privacy_opt_clear_all": {
+    "status": "unverified",
+    "text": "delete my quiz results"
+  },
+  "privacy_opt_clear_one": {
+    "status": "unverified",
+    "text": "delete my results for individual quizzes"
+  },
+  "privacy_title": {
+    "status": "unverified",
+    "text": "Privacy"
+  },
+  "quiz_answer_hint": {
+    "status": "unverified",
+    "text": "Answer with “Number-Answer”: Mb = slight preference, Y = definite (e.g. “2-Y” or “3 Mb”). The last options need only their number."
+  },
+  "quiz_answer_invalid": {
+    "status": "unverified",
+    "text": "I didn't understand that. Reply like “2-Y” or “3 Mb”; for the last options send just the number."
+  },
+  "quiz_answer_need_weight": {
+    "status": "unverified",
+    "text": "Add your strength of preference to this option: Mb (slight) or Y (definite) — e.g. “{num}-Y” or “{num} Mb”."
+  },
+  "quiz_answer_out_of_range": {
+    "status": "unverified",
+    "text": "There is no option with that number. Pick a number from the list."
+  },
+  "quiz_cancelled": {
+    "status": "unverified",
+    "text": "No problem — maybe next time!"
+  },
+  "quiz_consent_no": {
+    "status": "unverified",
+    "text": "No, thanks"
+  },
+  "quiz_consent_prompt": {
+    "status": "unverified",
+    "text": "Before the results: may I remember them? That way you'll be able to compare them later with your own past results or with other people. You can delete them anytime with /quizzes-clear."
+  },
+  "quiz_consent_yes": {
+    "status": "unverified",
+    "text": "Yes, remember"
+  },
+  "quiz_go": {
+    "status": "unverified",
+    "text": "Let's go!"
+  },
+  "quiz_later": {
+    "status": "unverified",
+    "text": "Maybe next time"
+  },
+  "quiz_not_saved": {
+    "status": "unverified",
+    "text": "Alright, I won't store your results."
+  },
+  "quiz_results_title": {
+    "status": "unverified",
+    "text": "Your results — {name}"
+  },
+  "quiz_resumed": {
+    "status": "unverified",
+    "text": "▶️ Continuing “{name}” from question {num} of {total}."
+  },
+  "quiz_saved": {
+    "status": "unverified",
+    "text": "Saved. You can remove it anytime with /quizzes-clear."
+  },
+  "quiz_start_prompt": {
+    "status": "unverified",
+    "text": "You chose “{name}”.\n\nYou will be shown a topic with numbered statements. Reply in the form “Number-Answer” — put Mb after the number for a slight preference or Y for a definite one (e.g. “3-Y” or “2 Mb”). The last options (disagree with all / don't care / previous question) need only their number.\n\nShall we begin?"
+  },
+  "quiz_stop_none": {
+    "status": "unverified",
+    "text": "You are not taking a quiz right now."
+  },
+  "quiz_stop_saved": {
+    "status": "unverified",
+    "text": "⏸️ Your progress in “{name}” is kept for 7 days. Start this quiz again to continue from the same place; otherwise the progress is discarded."
+  },
+  "quizzes_clear_deleted": {
+    "status": "unverified",
+    "text": "Deleted your result for “{name}” ({date})."
+  },
+  "quizzes_clear_header": {
+    "status": "unverified",
+    "text": "Your saved results — reply with a number within 30 minutes to delete one:"
+  },
+  "quizzes_clear_none": {
+    "status": "unverified",
+    "text": "You have no saved quiz results."
+  },
+  "quizzes_compare_blocked": {
+    "status": "unverified",
+    "text": "This user has forbidden comparing their quiz results."
+  },
+  "quizzes_compare_header": {
+    "status": "unverified",
+    "text": "Quizzes you have both completed — reply with a number within 30 minutes:"
+  },
+  "quizzes_compare_none": {
+    "status": "unverified",
+    "text": "You and this user have no completed quizzes in common."
+  },
+  "quizzes_compare_self": {
+    "status": "unverified",
+    "text": "Choose someone other than yourself to compare with."
+  },
+  "quizzes_compare_title": {
+    "status": "unverified",
+    "text": "Comparison — {name}"
+  },
+  "quizzes_compare_usage": {
+    "status": "unverified",
+    "text": "Usage: /quizzes_compare <user id or @username>"
+  },
+  "quizzes_compare_user_invalid": {
+    "status": "unverified",
+    "text": "Give a valid user — a mention or an ID."
+  },
+  "quizzes_compare_you": {
+    "status": "unverified",
+    "text": "You"
+  },
+  "quizzes_list_header": {
+    "status": "unverified",
+    "text": "Available quizzes — reply with a number within 30 minutes to begin:"
+  },
+  "quizzes_previous_current": {
+    "status": "unverified",
+    "text": "Current result ({date})"
+  },
+  "quizzes_previous_earlier": {
+    "status": "unverified",
+    "text": "Previous result ({date})"
+  },
+  "quizzes_previous_invalid": {
+    "status": "unverified",
+    "text": "There is no quiz with that number. The quiz list is /quizzes."
+  },
+  "quizzes_previous_no_recent": {
+    "status": "unverified",
+    "text": "More than 30 minutes have passed since you took a quiz. Give the quiz number: /quizzes-previous <number> (the list is /quizzes)."
+  },
+  "quizzes_previous_no_results": {
+    "status": "unverified",
+    "text": "You have no saved quiz results."
+  },
+  "quizzes_previous_none": {
+    "status": "unverified",
+    "text": "You have no previous result for “{name}” — there is nothing to compare with."
+  },
+  "quizzes_previous_title": {
+    "status": "unverified",
+    "text": "Compared with your previous result — {name}"
+  },
+  "quizzes_previous_usage": {
+    "status": "unverified",
+    "text": "Usage: /quizzes_previous [quiz number]"
+  },
+  "quizzes_title": {
+    "status": "unverified",
+    "text": "Quizzes"
+  },
+  "resume_confirm": {
+    "status": "unverified",
+    "text": "Resume the party {name}?"
+  },
+  "resume_done": {
+    "status": "unverified",
+    "text": "▶️ Party {name} resumed."
+  },
+  "rules_invites_disabled": {
+    "status": "unverified",
+    "text": "✅ Party members may no longer invite new members."
+  },
+  "rules_invites_enabled": {
+    "status": "unverified",
+    "text": "✅ Party members may now invite new members."
+  },
+  "rules_menu_1": {
+    "status": "unverified",
+    "text": "1 — allow party members to invite new members (currently: {state})"
+  },
+  "rules_menu_title": {
+    "status": "unverified",
+    "text": "Party rules — {name} [{code}]"
+  },
+  "service_event.bot_started": {
+    "status": "unverified",
+    "text": "🤖 Bot started."
+  },
+  "service_event.bot_stopped": {
+    "status": "unverified",
+    "text": "🛑 Bot stopped."
+  },
+  "service_event.parties_disabled": {
+    "status": "unverified",
+    "text": "🏛️ Parties were disabled in union {code} by {user}."
+  },
+  "service_event.parties_enabled": {
+    "status": "unverified",
+    "text": "🏛️ Parties were enabled in union {code} by {user}."
+  },
+  "service_event.party_created": {
+    "status": "unverified",
+    "text": "🏛️ Party {name} [{party}] was created in union {union} by {user}."
+  },
+  "service_event.party_deleted": {
+    "status": "unverified",
+    "text": "🗑️ Party {name} [{party}] was deleted in union {union} by {user}."
+  },
+  "service_event.setup_done": {
+    "status": "unverified",
+    "text": "🔗 {platform} chat “{chat}” was linked to union {union} by {user}."
+  },
+  "service_event.union_created": {
+    "status": "unverified",
+    "text": "🆕 Union {code} was created by {user}."
+  },
+  "setup_success": {
+    "status": "unverified",
+    "text": "✅ Chat linked to union {union} ({code}). Language: {lang_name} ({lang})."
+  },
+  "setup_unknown_union": {
+    "status": "unverified",
+    "text": "Unknown union code: {code}. Available: {codes}."
+  },
+  "setup_usage": {
+    "status": "unverified",
+    "text": "Usage: /setup <UNION> <ru|uk|pl|en|es|pt>"
+  },
+  "state_no": {
+    "status": "unverified",
+    "text": "no"
+  },
+  "state_yes": {
+    "status": "unverified",
+    "text": "yes"
+  },
+  "suspend_confirm": {
+    "status": "unverified",
+    "text": "Suspend the party {name}? Its information will remain, /party will mark it as suspended, and a leader can resume it later."
+  },
+  "suspend_done": {
+    "status": "unverified",
+    "text": "⏸️ Party {name} suspended."
+  },
+  "too_many_requests": {
+    "status": "unverified",
+    "text": "Too many requests — try again later."
+  },
+  "transfer_declined": {
+    "status": "unverified",
+    "text": "The party's leader remains unchanged."
+  },
+  "transfer_done": {
+    "status": "unverified",
+    "text": "✅ {user} now leads {name}."
+  },
+  "verify_cooldown": {
+    "status": "unverified",
+    "text": "Too many verification attempts. Try again in a few minutes."
+  },
+  "verify_error": {
+    "status": "unverified",
+    "text": "Could not reach Fandom right now. Please try again later."
+  },
+  "verify_mismatch": {
+    "status": "unverified",
+    "text": "The Discord handle on that Fandom profile (“{handle}”) does not match your Discord username (“{you}”)."
+  },
+  "verify_no_handle": {
+    "status": "unverified",
+    "text": "{name} has no Discord account listed on their Fandom profile. Add it on your profile on any wiki, then run /verify again."
+  },
+  "verify_not_found": {
+    "status": "unverified",
+    "text": "No Fandom user named “{name}” was found."
+  },
+  "verify_required": {
+    "status": "unverified",
+    "text": "You must verify your Fandom account first with /verify <your Fandom username>."
+  },
+  "verify_required_tg": {
+    "status": "unverified",
+    "text": "You must verify first: run /add-discord here and /add-telegram on Discord to link your accounts (your Discord account must be verified with /verify)."
+  },
+  "verify_success": {
+    "status": "unverified",
+    "text": "✅ Verified as Fandom user {name}. You can now use the Fandom-activity commands."
+  },
+  "verify_usage": {
+    "status": "unverified",
+    "text": "Usage: /verify <your username on fandom.com>"
+  }
+}

@@ -1,0 +1,365 @@
+{
+  "name": "WikiCharts — seus pontos de vista wiki",
+  "credit": "Este teste foi adaptado do projeto de código aberto WikiCharts: https://github.com/WikiCharts/wikicharts.github.io/tree/main",
+  "axes": {
+    "gov": "Regime político",
+    "speech": "Comunicação",
+    "legal": "Segurança",
+    "for": "Política externa"
+  },
+  "special": {
+    "nota_opt": "Discordo totalmente de todas estas opiniões",
+    "idc_opt": "Não me importo com esta questão",
+    "prev_opt": "Pergunta anterior"
+  },
+  "labels": {
+    "auth": "Autocracia",
+    "olig": "Oligarquia",
+    "strato": "Meritocracia",
+    "dir": "Democracia direta",
+    "rep": "Democracia representativa",
+    "min": "Autogestão",
+    "cons": "Democracia de consenso",
+    "dir*": "Democracia direta*",
+    "rep*": "Democracia representativa*",
+    "free": "Liberdade",
+    "cont": "Controle",
+    "moder": "Moderação",
+    "obs": "Obscenismo",
+    "just": "Justiça",
+    "cont*": "Proibição total",
+    "decn": "Descentralização",
+    "retrib": "Justiça retributiva",
+    "det": "Dissuasão",
+    "warn": "Penalidades",
+    "rehab": "Reabilitação",
+    "retrib*": "Submissão administrativa",
+    "friend": "Wiki-amizade",
+    "pop": "Wiki-populismo",
+    "iso": "Isolacionismo",
+    "sov": "Soberania",
+    "pop*": "Expansionismo",
+    "friend*": "Wiki-união",
+    "nota": "Outro",
+    "idc": "Apatia",
+    "cent": "Mistura de pontos de vista"
+  },
+  "descriptions": {
+    "auth": "Todo o poder pertence a uma única pessoa — um administrador inamovível que dirige a comunidade pessoalmente. Quaisquer decisões são tomadas de forma unipessoal, sem levar em conta as opiniões dos demais usuários.",
+    "olig": "Todo o poder pertence a um grupo restrito — o corpo de administradores que dirige a comunidade. As decisões são tomadas, via de regra, em conjunto por todos os administradores, mas ainda assim sem levar em conta as opiniões dos usuários comuns.",
+    "strato": "O poder pertence principalmente aos participantes mais influentes e ativos, que possuem status e méritos. A opinião dos usuários comuns pode ser considerada, mas não tanto quanto a dos participantes privilegiados, cuja voz tem mais peso em diversas questões.",
+    "dir": "O poder pertence ao povo: todos os membros da comunidade, independentemente do status técnico, podem influenciar ativamente o que acontece. Todas as decisões iniciadas pelo povo são tomadas regularmente em referendos e têm caráter direto.",
+    "rep": "O povo é reconhecido como fonte do poder, porém a gestão da comunidade é delegada a participantes especialistas, eleitos pelo povo, que expressam seus interesses e tomam todas as decisões importantes coletivamente.",
+    "min": "O povo detém o máximo poder: todos os membros tomam por conta própria as decisões-chave sobre as questões da comunidade, sem a influência da administração, que, por sua vez, tem competências mínimas e quase nada regula.",
+    "cons": "O poder é dividido entre o povo e a administração, mantendo um equilíbrio de forças. As decisões são tomadas pelos membros e administradores, via de regra, não em votações, mas em debates comunitários com base no acordo geral, para satisfazer os desejos de todos.",
+    "dir*": "Uma versão aprimorada da democracia direta, que significa usar novos métodos de votação nos referendos, como o “voto por pontuação” (Score Voting, STAR Voting), para compreender melhor a opinião da maioria.",
+    "rep*": "Uma versão aprimorada da democracia representativa, que significa usar novos métodos de votação nos referendos, como o “voto por pontuação” (Score Voting, STAR Voting), para compreender melhor a opinião da maioria.",
+    "free": "O direito de cada membro de se comunicar e se expressar como quiser, sem regulação, controle ou censura por parte da administração. Ausência de quaisquer proibições a palavrões, gírias e palavras vulgares e demais conteúdo.",
+    "cont": "Controle e regulação da comunicação dos usuários. Fortes restrições quanto a quais palavras se podem usar, cumprimento da etiqueta e limpeza e censura de palavrões, palavras grosseiras e demais conteúdo indecente ou inaceitável.",
+    "moder": "Restrições moderadas à comunicação dos usuários, legalização parcial dos palavrões, presença de censura para expressões grosseiras demais e inaceitáveis; incentivo à correção linguística e à etiqueta entre os participantes.",
+    "obs": "Ausência de proibição da linguagem obscena, incluindo palavrões, palavras grosseiras e vulgares, incentivo à comunicação livre, mas ainda assim com restrições mínimas quanto a como os usuários podem se expressar.",
+    "just": "O objetivo principal da comunicação é manter uma atmosfera amistosa para que os participantes se sintam à vontade. Proibição de provocações e frases ofensivas que expressem ódio e opressão contra as pessoas; oferecimento de apoio às vítimas de tais atos.",
+    "cont*": "Ausência de liberdade de expressão, proibição máxima de linguagem obscena e vulgar, palavrões, conteúdo indecente e demais conteúdo inaceitável. Somente a administração decide o que se pode dizer e o que não.",
+    "decn": "Ausência de um sistema único de justiça e punição dos infratores. Os participantes são capazes de lidar com as violações por conta própria em cada caso específico: perdoar tudo ao infrator e reabilitá-lo, ou puni-lo com rigor com um banimento permanente.",
+    "retrib": "A melhor resposta à violação das regras é a punição. Prevenir violações futuras ou reabilitar o infrator não importa. O essencial é punir o culpado em toda a sua medida, pois quem comete um delito merece ser tratado à altura.",
+    "det": "O papel da justiça deve ser dissuasório tanto para os infratores quanto para os demais participantes: a ameaça de punição afastará as pessoas de cometer delitos e reduzirá o nível de violações das regras na comunidade; o sistema de bloqueios deve ter caráter cumulativo.",
+    "warn": "O papel da justiça não é dissuadir os participantes das violações, mas apenas limitar temporariamente suas possibilidades quando exageram demais. Basta manter uma ordem moderada e emitir advertências ou bloqueios temporários proporcionais à gravidade da violação.",
+    "rehab": "É preciso tratar os infratores com mais indulgência, usar medidas de punição brandas; o papel da justiça deve ser corrigir, reeducar e reintegrar os infratores à sociedade e colocá-los no caminho certo.",
+    "retrib*": "A justiça trabalha em favor dos interesses da administração, que pode bloquear participantes a seu bel-prazer, independentemente das regras de conduta. Via de regra, isso significa a presença de ordem e disciplina rígidas, bem como de punições severas.",
+    "friend": "Abertura e cordialidade do projeto wiki para com outras wikis, preocupando-se não só com seus próprios interesses, mas também com os interesses dos demais usuários. Os projetos wiki devem ser amigos e ajudar uns aos outros, além de prestar ajuda a projetos necessitados quando for preciso.",
+    "pop": "Na política externa, os interesses de um único projeto wiki estão em primeiro lugar. Para promover seus próprios interesses, uma wiki pode firmar amizade com outros participantes e ajudá-los, mas apenas para conquistar fama e popularidade.",
+    "iso": "Isolamento total da comunidade do projeto wiki, ignorando o mundo exterior, sem quaisquer contatos ou vínculos com participantes de outras wikis, recusando a amizade e, muito mais, o ingresso em uma wiki-união.",
+    "sov": "Um projeto wiki deve ter o direito absoluto de controlar suas regras e sua política e de manter seu status de autonomia e independência. É possível uma abertura moderada e vínculos mínimos com outros projetos wiki, mas nada além disso.",
+    "pop*": "A disposição de um projeto wiki de fazer tudo o que estiver ao seu alcance para ampliar sua influência e melhorar a si mesmo. Isso pode incluir intervir em projetos wiki independentes com o fim de instaurar ali um regime sob seu controle.",
+    "friend*": "A forma mais alta de wiki-amizade, que pressupõe a união de vários projetos amistosos em uma única união. Isso inclui organizar o trabalho conjunto, a cooperação ativa dos usuários, a troca de experiência, a tomada coletiva de decisões e o cumprimento de regras comuns.",
+    "nota": "Se você obteve “Outro”, isso significa que sua visão de certas questões não coincide com as opiniões principais deste teste, que simplifica as questões para a esmagadora maioria das pessoas. Provavelmente você já tem para si um rótulo específico para suas próprias ideias.",
+    "idc": "A “Apatia” é a falta de interesse por certas questões. Elas podem não afetar você, ou você simplesmente pode não considerar que qualquer uma das opções seja melhor que as outras. Algumas pessoas apáticas simplesmente se importam mais com algumas outras questões e são apáticas quanto ao resto.",
+    "cent": "A “Mistura de pontos de vista” é uma combinação de elementos de várias opiniões extremamente distintas sobre diferentes questões, a ausência de uma preferência marcante entre pontos de vista distintos."
+  },
+  "questions": {
+    "voting": {
+      "topic": "Votação",
+      "options": [
+        "A votação é um processo realmente desnecessário; os caprichos das massas não têm importância.",
+        "Podem-se realizar votações, mas apenas em um círculo restrito da administração, nada além disso.",
+        "Aqueles que contribuem mais para o desenvolvimento da comunidade merecem status adicionais e mais peso para o seu voto.",
+        "A votação é um elemento importante da democracia. Cada membro deve ter voto, e todos os votos devem contar de forma igual.",
+        "Devemos tomar as decisões democraticamente, com base no acordo geral dos participantes, sem realizar votações. Precisamos de opiniões fundamentadas, e não de simples votos “a favor” ou “contra”."
+      ]
+    },
+    "votingreform": {
+      "topic": "Reforma dos referendos",
+      "options": [
+        "Devemos reformar os referendos introduzindo um coeficiente de competência ou outro, para que o voto de um participante mais ativo ou de maior status pese mais que o de um usuário comum.",
+        "Devemos tornar os referendos abertos a todos, para que os participantes possam livremente, a qualquer momento, reunir-se e resolver todas as questões que quiserem, sem quaisquer restrições.",
+        "Devemos realizar referendos com mais frequência e criar um plano ou cronograma de todas as votações próximas para que os participantes fiquem cientes delas, e assim atrair mais gente à participação.",
+        "Devemos criar nos referendos um sistema em que um participante possa delegar seu voto a outro usuário mais especialista e ter a certeza de que este expressa seus interesses.",
+        "Devemos usar métodos de votação aprimorados, como o “voto por pontuação” (Score Voting, STAR Voting), para compreender melhor a opinião da maioria.",
+        "Devemos fazer uma reforma para que os referendos se pareçam mais com debates do que com votações, de modo que a opinião pública se forme no âmbito de um discurso público fundamentado voltado a alcançar o consenso.",
+        "Os referendos devem ser abolidos, pois a lei não deve ser determinada pela opinião do povo."
+      ]
+    },
+    "concentration": {
+      "topic": "Concentração do poder",
+      "options": [
+        "O poder deve ser descentralizado para todos, e as decisões importantes devem, em última instância, ser tomadas em referendos frequentes. As pessoas geralmente sabem o que querem e são capazes de entender as questões com uma pequena explicação.",
+        "O poder deve ser concentrado conforme os méritos do usuário. Os participantes ativos devem ter status mais alto e mais influência, ao contrário daqueles que não se dedicam à atividade.",
+        "Ninguém de cima deve nos dar ordens; devemos ter a liberdade de decidir por nós mesmos o que é certo e o que é errado.",
+        "Antes de tudo, precisamos de um único líder que possa governar por tempo ilimitado e ser capaz de compreender plenamente o quadro geral. Sem se preocupar com o que o povo pensa, um líder pode tomar melhores decisões sozinho.",
+        "O poder deve ser concentrado nas mãos da administração, cujos membros, em um círculo restrito, podem tomar as decisões corretas em conjunto.",
+        "O poder deve ser distribuído entre um colegiado de administradores eleitos pelo povo, que devem entender os problemas, ouvir os especialistas e avaliar o quadro geral.",
+        "O poder deve ser dividido entre os participantes e a administração mais ou menos por igual, para que ambos possam conciliar seus interesses e tomar decisões em debates comunitários."
+      ]
+    },
+    "traits": {
+      "topic": "As qualidades mais importantes de um líder",
+      "options": [
+        "Devemos tomar as decisões nós mesmos, não precisamos de um líder acima de nós.",
+        "O povo, na maioria dos casos, deve tomar as decisões por conta própria; o único objetivo e tarefa do líder é incentivar o trabalho conjunto dos participantes e a sua iniciativa.",
+        "As qualidades mais importantes de um líder são a coragem e a força. Precisamos de alguém que tome as decisões necessárias, mesmo que sejam impopulares.",
+        "As qualidades mais importantes de um líder são a empatia e a sensibilidade. Precisamos de alguém capaz de ouvir a opinião do povo e cumprir seus pedidos, expressando a vontade da maioria.",
+        "As qualidades mais importantes de um líder são a patente e a experiência. Precisamos de alguém que conheça as funções administrativas e tenha melhores habilidades de gestão da comunidade que os demais.",
+        "As qualidades mais importantes de um líder são a razão e o intelecto. Precisamos de alguém capaz de entender os problemas e encontrar caminhos para resolvê-los."
+      ]
+    },
+    "leaderselect": {
+      "topic": "Escolha do líder",
+      "options": [
+        "Os líderes não devem mudar, pois devemos ter apenas um único administrador com mandato por tempo indeterminado, que toma todas as decisões sozinho.",
+        "Os líderes devem ser nomeados pela administração vigente conforme sua decisão, para que sempre tenhamos uma liderança competente.",
+        "Os líderes devem ser eleitos, mas não diretamente por uma votação geral. Ela deve ser ponderada, para que a opinião dos participantes mais ativos e de maior status tenha uma parcela maior.",
+        "Os líderes podem ser escolhidos em eleições democráticas, porém a liderança deve ser distribuída, e toda a comunidade deve participar da tomada da maioria das decisões.",
+        "Os líderes devem ser eleitos em eleições democráticas pelos membros da comunidade que irão liderar.",
+        "Os líderes devem ser escolhidos democraticamente por meio de debate, e não de votação, que se volta mais à rivalidade do que à cooperação.",
+        "Não devemos ter um único líder escolhido por qualquer método."
+      ]
+    },
+    "policysetting": {
+      "topic": "Competência para estabelecer a política",
+      "options": [
+        "A administração da comunidade deve ter a maioria das competências de decisão e, via de regra, criar a política.",
+        "Uma autoridade administrativa eleita em referendo deve determinar a política de toda a comunidade em favor da maioria e ter competências moderadas, com possibilidade de regulação por parte do povo.",
+        "Uma autoridade administrativa escolhida em um debate comunitário deve, em grande parte, estabelecer a política, guiando-se antes de tudo pelo desejo de satisfazer os desejos de todos, e não por impor a opinião da maioria a todo o povo.",
+        "O poder deve pertencer diretamente ao povo, que deve iniciar a tomada de decisões por meio de votações a partir de iniciativas dos participantes.",
+        "O poder deve pertencer principalmente aos participantes mais ativos e de maior status, pois eles são, via de regra, os mais capazes e os que mais contribuem para o desenvolvimento da comunidade.",
+        "As competências da administração devem ser mínimas; devemos ser livres em nossas decisões e ações."
+      ]
+    },
+    "peoplepolicy": {
+      "topic": "O papel dos participantes na gestão da comunidade",
+      "options": [
+        "Os participantes, como coletivo, geralmente conseguem entender e tomar boas decisões sobre a política com poucas explicações, de modo a poder decidir diretamente o que querem.",
+        "Os participantes ativos que possuem status via de regra sabem o que querem e têm bom senso, mas os usuários comuns raramente sabem o que é bom para eles.",
+        "A maioria dos participantes em geral tem mau senso, e a administração ficaria melhor sem ele.",
+        "Os participantes devem ter direitos e alavancas de gestão da comunidade, mas a administração deve tentar evitar a tirania da maioria, propondo soluções que satisfaçam o maior número de preferências.",
+        "Na comunidade deve haver uma autogestão fortemente desenvolvida. Aos participantes não é preciso impor a opinião de ninguém; eles próprios sabem perfeitamente o que querem e conseguem tomar boas decisões por conta própria.",
+        "Os participantes geralmente sabem o que querem, mas não se pode esperar que tenham tempo de estudar e votar em cada questão, por isso isso deve ser delegado a usuários mais especialistas."
+      ]
+    },
+    "representation": {
+      "topic": "Os interesses do povo e o papel dos líderes",
+      "options": [
+        "Não preciso de líderes; quero que cada participante possa representar seus próprios interesses por conta própria, sem a influência da administração.",
+        "Quero ter líderes que expressem os interesses do povo e ajam de acordo com eles, para garantir que a opinião da maioria das pessoas seja ouvida e cumprida.",
+        "Quero ter líderes que busquem uma solução aceitável para todos, usando o compromisso e outros métodos, em vez de defender a opinião da maioria, que muitas vezes é em prejuízo da minoria.",
+        "Devemos ter um único governante não eleito que aja conforme seus interesses pessoais.",
+        "Quero poder votar diretamente na maioria das questões em referendos. Os líderes não devem tomar essa iniciativa das mãos dos participantes, decidindo as questões por eles.",
+        "Os interesses do povo não devem ser representados com tanta força quanto os da administração ou de um pequeno grupo de participantes com status."
+      ]
+    },
+    "equality": {
+      "topic": "Igualdade dos usuários",
+      "options": [
+        "Certos status conferem ao participante diversos privilégios em comparação com os demais usuários. Embora isso não o torne muito mais importante que os outros, um participante com status deve ter mais direitos e possibilidades.",
+        "O administrador principal da comunidade deve ter a posição mais alta e direitos ilimitados.",
+        "Nenhum status administrativo torna um participante superior e mais importante que os demais. É apenas uma ferramenta que dá acesso a certas funções. A tarefa de um administrador é pensar não em seus direitos, mas em seus deveres para com os participantes.",
+        "Nenhum usuário deve ter poder sobre outro usuário, seja com status, seja sem."
+      ]
+    },
+    "openness": {
+      "topic": "Abertura e transparência",
+      "options": [
+        "Os participantes devem ter acesso à informação de que a administração dispõe. A transparência pública permitirá aos usuários estarem mais informados e incentivará a divulgação de informação pela administração, atuando como mecanismo regulador.",
+        "A administração tem o direito de ocultar da visualização qualquer informação de todos os usuários. Os participantes comuns não devem saber o que não lhes cabe saber.",
+        "Participantes de maior status podem ter acesso a informações secretas da administração, mas os usuários comuns, via de regra, não deveriam.",
+        "Os usuários comuns não precisam de absolutamente toda a informação sobre a administração, mas os administradores devem ser abertos e comunicativos perante o povo, além de compartilhar com os participantes os resultados de sua atividade.",
+        "Não deve haver nenhuma informação secreta e, por consequência, não há nenhum problema com a sua transparência. Quaisquer usuários devem ter acesso a todos os registros e estatísticas, além de ver o que os administradores discutem entre si no chat quanto à tomada de decisões."
+      ]
+    },
+    "freespeech": {
+      "topic": "Liberdade de expressão",
+      "options": [
+        "A liberdade de expressão é o conceito mais importante. Cada membro deve ter o direito de dizer qualquer coisa, mesmo que sua fala possa ser considerada ofensiva por outros.",
+        "A liberdade de expressão deve ser limitada — é preciso limpar e censurar mensagens inaceitáveis que contenham, por exemplo, palavras muito grosseiras ou piadas fora de lugar.",
+        "Devem existir certos limites dentro dos quais os participantes possam se expressar livremente sem mencionar algumas palavras ou temas indesejáveis.",
+        "A liberdade de expressão é importante, os participantes devem ter o direito de expressar sua opinião de qualquer forma, mas restrições mínimas também são necessárias.",
+        "Devemos proibir e punir expressões muito ofensivas (discurso de ódio) que expressem ódio a certos grupos de pessoas e provoquem discriminação, sexismo, homofobia.",
+        "Os participantes não devem ter liberdade de expressão. A administração deve decidir o que é admissível dizer."
+      ]
+    },
+    "profanity": {
+      "topic": "Palavrões no chat",
+      "options": [
+        "A linguagem obscena, incluindo palavrões, pode provocar conflito entre os participantes por causa do conteúdo ofensivo ou da presença de frases que expressem ódio às pessoas. Devemos limitar o uso de palavrões.",
+        "Palavrões são categoricamente inaceitáveis na comunidade; é preciso proibir totalmente o seu uso.",
+        "Os participantes devem ter o direito de usar palavrões em sua fala sem quaisquer restrições.",
+        "As pessoas devem poder escrever palavrões, mas ainda assim deve haver limites, para que as mensagens não consistam apenas em palavrões.",
+        "Pode-se permitir o uso de certos palavrões em quantidades limitadas e desde que os participantes os disfarcem."
+      ]
+    },
+    "etiquette": {
+      "topic": "Etiqueta",
+      "options": [
+        "É preciso regular a comunicação e zelar para que todos os usuários cumpram obrigatoriamente a etiqueta, comuniquem-se com decoro e se expressem de forma correta e clara.",
+        "Em geral a etiqueta é necessária, mas nem sempre é obrigatório cumpri-la. Não há nada de errado em um participante usar muitas gírias ou palavras vulgares ao se comunicar.",
+        "Na maioria dos casos convém cumprir a etiqueta, antes de tudo para manter uma atmosfera amistosa, de modo que os participantes se sintam à vontade e não sejam ofendidos por palavras grosseiras de alguém.",
+        "Não devemos indicar aos participantes como se comunicar. Se um participante quiser escrever o texto de uma mensagem em tom franco, familiar ou vulgar, é direito dele."
+      ]
+    },
+    "literacy": {
+      "topic": "Correção linguística e erros na comunicação",
+      "options": [
+        "É preferível que os usuários não deturpem as palavras com demasiada frequência, senão os erros no texto podem fazer alguém entendê-los mal, o que pode levar a um conflito e ofender os participantes.",
+        "Se as pessoas gostam da escrita deformada de propósito e querem distorcer as palavras ou escrevê-las com erros intencionalmente, não há nada de errado nisso.",
+        "A correção linguística é importante e é preciso zelar por ela, mas em casos raros, se os participantes quiserem escrever palavras com erros de propósito, pode-se permitir isso temporariamente.",
+        "É preciso introduzir padrões segundo os quais todos os participantes no chat deverão escrever de forma correta e sem erros, para que o texto das mensagens seja compreensível e esteja de acordo com as normas da língua literária."
+      ]
+    },
+    "vulgarity": {
+      "topic": "Indecência e vulgaridade",
+      "options": [
+        "Devemos regular a divulgação de materiais eróticos e indecentes, mas não proibi-los. Os participantes devem ter o direito de compartilhá-los.",
+        "O conteúdo indecente deve ser muito fortemente limitado. Na maioria dos casos é inaceitável, mas em situações extremamente raras podemos permitir a sua publicação em quantidades ínfimas.",
+        "A indecência, a vulgaridade e o conteúdo de caráter erótico são categoricamente inaceitáveis. É preciso vigiar estritamente esse tipo de conteúdo e, se for o caso, removê-lo imediatamente.",
+        "As pessoas devem ter a liberdade de divulgar conteúdo de qualquer natureza, incluindo erotismo e vulgaridade.",
+        "A repressão severa de materiais indecentes geralmente só favorece a divulgação do que é censurado. Aos participantes deve ser permitido compartilhar conteúdo erótico e vulgar, desde que ele esteja censurado."
+      ]
+    },
+    "banter": {
+      "topic": "Zombaria, trollagem e piadas",
+      "options": [
+        "A trollagem é preciso limitar, mas a zombaria e as piadas podem ser permitidas se forem apropriadas e não causarem irritação nos que estão em volta.",
+        "Se os participantes gostam de piadas uns com os outros e de zombaria amistosa, não há nada de errado nisso; as pessoas são livres para se comunicar como quiserem.",
+        "Toda trollagem, zombaria e piada inadequada devem ser estritamente proibidas. Não precisamos de conflitos desnecessários do nada, por isso é preciso controlar o que os participantes escrevem.",
+        "A trollagem e a zombaria inadequada podem ofender os participantes, fazê-los se sentir insignificantes e acender um conflito. Devemos punir os trolls e dar apoio às vítimas de trollagem para protegê-las da culpabilização da vítima."
+      ]
+    },
+    "rules": {
+      "topic": "A lista de regras",
+      "options": [
+        "Somos uma comunidade livre, não precisamos de regras de conduta. Os participantes podem se comportar como quiserem, desde que seu comportamento agrade aos demais.",
+        "As regras devem ser rígidas, e a própria lista deve ser feita o mais detalhada possível, sem formulações vagas, para que os participantes saibam com plena exatidão o que é inadmissível fazer e não consigam achar nenhum “furo” nas regras.",
+        "A lista de regras deve ser não muito rígida, de tamanho moderado. Deve conter as disposições principais sobre os princípios de conduta, com poucos detalhes, se for necessário.",
+        "É melhor não fazer a lista de regras excessivamente longa e detalhada — isso só assusta os participantes e os afasta de ler as regras. Melhor fazer uma lista pequena, curta, mas amistosa, compreensível e acessível a todos, sem juridiquês.",
+        "Em vez de uma lista de regras, deveríamos simplesmente escrever que o nosso chat segue princípios morais. Os próprios participantes entendem como não se deve comportar em lugares públicos e em uma sociedade normal; não é preciso explicar-lhes o óbvio.",
+        "A administração deve poder bloquear e silenciar participantes a seu bel-prazer, independentemente das regras de conduta."
+      ]
+    },
+    "blocking": {
+      "topic": "Duração dos banimentos",
+      "options": [
+        "Para manter a ordem bastam medidas de punição brandas, devemos tratar os infratores com mais indulgência. Um bloqueio de algumas horas a alguns dias é a duração ótima na maioria dos casos.",
+        "Para dissuadir os usuários de futuras violações, devemos manter um nível adequado de ordem. Devemos começar com prazos curtos para os infratores, mas a cada violação seguinte é preciso aumentar a duração do bloqueio.",
+        "Não se deve ter pena dos infratores. Se um participante violou as regras, então merece uma punição severa. Em média basta um bloqueio de alguns dias, mas para casos especiais — de algumas semanas a um mês ou mais.",
+        "Não deve haver medidas uniformes quanto aos bloqueios; os participantes podem decidir juntos qual prazo dar ao infrator em um caso concreto, por exemplo, por meio de votação ou debate.",
+        "A duração de um banimento depende antes de tudo da gravidade da violação e, em cada caso concreto, pode variar muito: de algumas horas ou dias até várias semanas ou um mês."
+      ]
+    },
+    "permanent": {
+      "topic": "Banimento permanente",
+      "options": [
+        "Não se deve desprezar o banimento permanente. Se um participante o recebeu, é porque mereceu. Não devemos ter mais nenhum assunto com ele, e muito menos devemos desbloqueá-lo, jamais.",
+        "Na maioria dos casos, em vez de um banimento permanente é melhor dar advertências ou bloqueios temporários — não devemos nos livrar dos participantes para sempre, ainda que não se comportem muito bem.",
+        "Os participantes devem decidir por conta própria, em casos concretos, se usam um bloqueio permanente contra o infrator ou não. O mesmo vale para o desbanimento.",
+        "O bloqueio permanente não deve ser usado com demasiada frequência, mas pode servir como uma boa ferramenta para dissuadir os usuários de futuras violações.",
+        "Devemos usar o bloqueio permanente muito raramente, e também saber perdoar os participantes banidos permanentemente por meio do desbanimento e da sua reintegração à sociedade algum tempo após o bloqueio."
+      ]
+    },
+    "recidivism": {
+      "topic": "Reincidência nas violações",
+      "options": [
+        "Sobre os infratores reincidentes é preciso exercer supervisão e controle mais rígidos, para prevenir novas violações. Quanto mais vezes um participante violou as regras, mais severas devem ser para ele as condições do bloqueio.",
+        "Se um participante se comporta mal repetidamente, mas em geral não gera antipatia nos demais, não há problema. Mas se com o seu comportamento cansou bastante todos ao redor, os usuários podem reclamar dele.",
+        "Qualquer participante, seja qual for o delito que tenha cometido, merece perdão e uma segunda chance. Devemos dar aos infratores reincidentes a possibilidade de se desculpar por seus delitos e de se corrigir.",
+        "Com aqueles que violaram as regras repetidamente é inútil tentar encontrar uma língua comum. Os reincidentes — ao bloqueio permanente.",
+        "Não importa quantas vezes um participante violou as regras, importa a gravidade da sua violação em cada caso concreto. Se as violações se repetem, basta simplesmente dar de novo um banimento temporário ou um silenciamento."
+      ]
+    },
+    "offender": {
+      "topic": "O que fazer com o infrator",
+      "options": [
+        "Se um participante recebeu um banimento, a administração é obrigada a conversar com ele, discutir o ocorrido, tentar fazer o infrator entender por que não deveria ter feito o que fez e por que foi punido.",
+        "Se a um participante foi aplicado um bloqueio, então o infrator deve poder conversar com a administração a respeito. Mas os administradores não devem ser os primeiros a iniciar a conversa com o infrator.",
+        "Se os participantes quiserem, podem dar a palavra ao infrator para que ele possa conversar com eles durante o bloqueio.",
+        "Convém privar o infrator de possibilidades adicionais e, se preciso, retirar a possibilidade de contatar a administração. Os administradores não precisam gastar seu tempo com quem se comporta mal. Com essas pessoas não há sobre o que conversar.",
+        "Do infrator convém esperar que aguarde o fim do prazo do banimento e repense seu comportamento. Além disso, o conhecimento público sobre o bloqueio de um participante terá um efeito dissuasório — servirá de exemplo para os demais, do que não convém seguir."
+      ]
+    },
+    "warnings": {
+      "topic": "Advertências",
+      "options": [
+        "Muitas vezes é possível banir os infratores mesmo sem dar-lhes advertências prévias. Os participantes devem conhecer as regras de conduta com antecedência e estar prontos para o fato de que, se não as seguirem, consequências severas os aguardam.",
+        "Não temos o direito de bloquear um participante enquanto não se esgotarem outros meios de convencê-lo da inadmissibilidade do mau comportamento. Podemos dar-lhe advertências, mas é melhor tentar persuadi-lo com palavras.",
+        "A advertência é um bom meio de notificar um participante de que ele está se comportando mal. Em muitos casos pode-se dar a um participante várias advertências, e só se ele não entender que não se deve comportar assim é que então se aplica um bloqueio.",
+        "Na primeira violação pode-se dar ao participante uma advertência, e em todos os casos seguintes — apenas bloqueios."
+      ]
+    },
+    "ambiguity": {
+      "topic": "Ambiguidade da violação",
+      "options": [
+        "Se um participante “anda sobre gelo fino”, é preciso vigiá-lo mais de perto, aguardando o menor pretexto em que ele cruze a linha, para bloqueá-lo, prevenindo possíveis violações futuras.",
+        "Um participante cujo comportamento mostra que ele é potencialmente perigoso e pode causar muito dano à comunidade é melhor bloquear preventivamente do que admitir o risco de que cometa delitos.",
+        "Se um participante se comporta de forma estranha, é preciso conversar com ele, tentar entender o que aconteceu com ele. Assim, é mais provável conseguir um desfecho positivo, sem bloqueios.",
+        "Um participante só pode ser bloqueado se ficar provado que ele violou as regras. E enquanto não houver provas diretas de sua culpa, o participante pode ser considerado inocente.",
+        "Se o comportamento de um participante parece inadequado para a maioria dos demais usuários, então, nesse caso, eles podem reclamar dele para que receba um bloqueio. Mas se o comportamento do participante não gera antipatia na maioria, não há problema."
+      ]
+    },
+    "friendship": {
+      "topic": "Wiki-amizade",
+      "options": [
+        "A cooperação com os participantes em prol de interesses comuns é o componente mais importante do desenvolvimento das relações e da existência de uma wiki. Apoio plenamente a amizade.",
+        "Precisamos de fama e renome entre os usuários, por isso, para esses fins, podemos firmar amizade com outras wikis.",
+        "Devemos nos fechar ao mundo exterior e nos concentrar inteiramente apenas em nossos próprios problemas.",
+        "Não vejo motivos para firmar relações de amizade; é pouco provável que elas nos ajudem muito. Podemos trabalhar em nossos problemas e questões por conta própria."
+      ]
+    },
+    "uniformrules": {
+      "topic": "Regras entre wikis",
+      "options": [
+        "Compartilhar regras com outras wikis aumenta a popularidade do nosso projeto wiki e lhe confere mais peso na plataforma do Fandom em diversas questões, por isso apoio essa ideia.",
+        "Apoio o compartilhamento de regras comuns com as nossas wikis amigas, pois isso facilitará a vida de todos os participantes e aliviará a coordenação de ações em diversas questões.",
+        "Sou contra o compartilhamento de regras com outros projetos wiki. Devemos poder decidir sobre as nossas regras por conta própria, e outros projetos wiki não devem ter direito a isso.",
+        "A possibilidade de usar as regras do nosso projeto wiki, quando precisamos promover nossos próprios interesses, tem para a nossa wiki mais valor do que as vantagens de regras comuns."
+      ]
+    },
+    "wikihelp": {
+      "topic": "Ajuda aos projetos wiki",
+      "options": [
+        "Devemos conquistar a nossa reputação na política externa, e ajudar os projetos wiki é uma boa maneira de conseguir simpatia e popularidade.",
+        "Devemos intervir nos assuntos de outros projetos wiki com o fim de instaurar ali o nosso regime sob controle, ampliando a nossa influência.",
+        "A nossa ajuda aos projetos wiki pode melhorar significativamente a qualidade deles e ajudar uma comunidade a se desenvolver com um esforço relativamente pequeno de nossa parte, por isso devemos ajudá-los.",
+        "Não devemos gastar nosso tempo e forças com outros projetos wiki.",
+        "Os assuntos de outros projetos wiki não têm importância para nós, por isso não há motivo para ajudá-los."
+      ]
+    },
+    "instructions": {
+      "topic": "Orientações de outros projetos wiki",
+      "options": [
+        "Não devemos mudar nossas regras porque outros projetos wiki assim o dizem.",
+        "Devemos levar em conta as orientações e conselhos de outros projetos wiki e aprender com os nossos erros. Se nos pedem algo, devemos atender aos pedidos das outras pessoas.",
+        "As regras do nosso projeto wiki não devem ser determinadas por participantes de outras wikis. Podemos considerar as orientações deles, mas devemos aceitá-las apenas se coincidirem com os nossos interesses.",
+        "Devemos tentar usar essas orientações em nosso próprio interesse: apoiar as que nos beneficiam e incentivar os outros a segui-las, embora nós mesmos devamos seguir apenas aquelas orientações que nos beneficiam."
+      ]
+    },
+    "wikiunion": {
+      "topic": "Uma proposta de ingressar em uma wiki-união",
+      "options": [
+        "Sou a favor de ingressar em uma wiki-união. A cooperação com projetos wiki nos ajudará a organizar o trabalho conjunto e a ajuda mútua, o que permitirá unir o público e, em última instância, trará benefício a todos os participantes das nossas wikis.",
+        "Apoio a cooperação com participantes de outros projetos wiki e valorizo a proposta deles de wiki-união, mas não acho que essa união será assim tão útil. Bastam-nos simples relações de amizade.",
+        "Sou contra fazer parte de qualquer união. Não me interessam as regras de outros projetos wiki, mas sou categoricamente contra dar-lhes voz em nossos assuntos.",
+        "As nossas questões devemos resolver nós mesmos, e não os participantes de outros projetos wiki. Sou contra a participação nesta união.",
+        "Participar de uma wiki-união dá ao nosso projeto wiki uma influência muito maior nos assuntos entre wikis, o que pode nos ajudar a promover nossos próprios interesses e a estabelecer as regras que pessoalmente queremos. Por isso apoio a filiação a esta união."
+      ]
+    }
+  }
+}
