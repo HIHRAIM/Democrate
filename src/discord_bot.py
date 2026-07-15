@@ -12,6 +12,7 @@ import discord
 from discord import app_commands, ui, ButtonStyle
 
 import db
+import economy
 import quizzes
 import utils
 from config import SUPPORT_CHATS
@@ -40,9 +41,11 @@ DIALOG_TIMEOUT = 30 * 60
 
 def is_server_admin(interaction: discord.Interaction):
     """Server Admins on Discord are members with the native Administrator or
-    Manage Server permission — nothing is delegated through the bot."""
+    Manage Server permission, plus users delegated with /setadmin."""
     if interaction.guild is None:
         return False
+    if db.is_server_admin("discord", interaction.guild.id, interaction.user.id):
+        return True
     perms = getattr(interaction.user, "guild_permissions", None)
     if perms is None:
         return False
@@ -172,6 +175,29 @@ async def _send_db_backup_telegram():
 async def on_guild_remove(guild: discord.Guild):
     db.remove_chat(guild.id)
 
+@bot.event
+async def on_message(message: discord.Message):
+    """Message earning. Independent of the wait_for dialogs and slash commands
+    (those are dispatched separately), so counting a message here never disturbs
+    them. A message earns only when the channel is a /set-earn earning channel,
+    the author is a verified human, and the anti-abuse gate (min length, per-user
+    cooldown, hourly cap) lets it through — see economy.earn_from_message."""
+    try:
+        if message.author.bot or message.guild is None:
+            return
+        content = (message.content or "").strip()
+        if not content or content.startswith("/"):
+            return
+        earn = db.get_earn_channel("discord", message.channel.id)
+        if not earn:
+            return
+        if not is_verified("discord", message.author.id):
+            return
+        economy.earn_from_message("discord", message.author.id, str(message.author),
+                                  earn["bank_code"], len(content), earn["rate"])
+    except Exception as e:
+        logger.warning("on_message earning error: %s", e)
+
 async def _refuse_not_setup(interaction: discord.Interaction, lang):
     await interaction.response.send_message(localized("chat_not_setup", lang), ephemeral=True)
 
@@ -238,6 +264,144 @@ async def setup_cmd(interaction: discord.Interaction, union: str, code: str):
     await send_service_event("setup_done", platform="Discord",
                              chat=interaction.guild.name, union=union,
                              user=str(interaction.user))
+
+@bot.tree.command(name="setadmin", description="delegate bot server-admin rights to a user (bot admins)")
+@app_commands.describe(user="User to make a server admin: ping or ID")
+async def setadmin_cmd(interaction: discord.Interaction, user: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+    if interaction.guild is None:
+        await interaction.response.send_message(localized("group_only", lang), ephemeral=True)
+        return
+
+    m = USER_REF_RE.match(user.strip())
+    if not m:
+        await interaction.response.send_message(localized("setadmin_invalid_id", lang), ephemeral=True)
+        return
+    uid = int(m.group(1) or m.group(2))
+
+    if db.is_server_admin("discord", interaction.guild.id, uid):
+        await interaction.response.send_message(
+            localized("setadmin_already", lang, user_id=uid), ephemeral=True)
+        return
+
+    username = None
+    member = None
+    try:
+        member = interaction.guild.get_member(uid) or await bot.fetch_user(uid)
+        username = getattr(member, "name", None)
+    except Exception:
+        pass
+    db.add_server_admin("discord", interaction.guild.id, uid,
+                        username=username, added_by=interaction.user.id)
+    await interaction.response.send_message(localized("setadmin_success", lang, user_id=uid))
+    try:
+        if member:
+            await member.send(localized("setadmin_dm", lang, server=interaction.guild.name))
+    except Exception:
+        pass
+
+@bot.tree.command(name="remadmin", description="revoke bot server-admin rights from a user (bot admins)")
+@app_commands.describe(user="User to demote: ping or ID")
+async def remadmin_cmd(interaction: discord.Interaction, user: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+    if interaction.guild is None:
+        await interaction.response.send_message(localized("group_only", lang), ephemeral=True)
+        return
+
+    m = USER_REF_RE.match(user.strip())
+    if not m:
+        await interaction.response.send_message(localized("setadmin_invalid_id", lang), ephemeral=True)
+        return
+    uid = int(m.group(1) or m.group(2))
+
+    if not db.is_server_admin("discord", interaction.guild.id, uid):
+        await interaction.response.send_message(
+            localized("remadmin_not_admin", lang, user_id=uid), ephemeral=True)
+        return
+
+    db.remove_server_admin("discord", interaction.guild.id, uid)
+    await interaction.response.send_message(localized("remadmin_success", lang, user_id=uid))
+
+async def _resolve_user_ref(guild, identifier):
+    """Resolve a ping, raw ID or (best-effort) username to a user id."""
+    identifier = identifier.strip()
+    m = USER_REF_RE.match(identifier)
+    if m:
+        return int(m.group(1) or m.group(2))
+    if guild is not None:
+        name = identifier.lstrip("@").casefold()
+        for member in guild.members:
+            if member.name.casefold() == name \
+                    or (member.display_name or "").casefold() == name:
+                return member.id
+        try:
+            async for member in guild.fetch_members(limit=1000):
+                if member.name.casefold() == name \
+                        or (member.display_name or "").casefold() == name:
+                    return member.id
+        except Exception:
+            pass
+    return None
+
+@bot.tree.command(name="localizer-add", description="grant Localizer status: lets the user edit this bot's localization in the control panel (bot admins)")
+@app_commands.describe(user="User to make a localizer: ping, ID or username")
+async def localizer_add_cmd(interaction: discord.Interaction, user: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+
+    uid = await _resolve_user_ref(interaction.guild, user)
+    if uid is None:
+        await interaction.response.send_message(localized("could_not_resolve_user", lang), ephemeral=True)
+        return
+
+    if db.is_localizer("discord", uid):
+        await interaction.response.send_message(
+            localized("localizer_add_already", lang, user_id=uid), ephemeral=True)
+        return
+
+    username = None
+    member = None
+    try:
+        member = (interaction.guild.get_member(uid) if interaction.guild else None) \
+            or await bot.fetch_user(uid)
+        username = getattr(member, "name", None)
+    except Exception:
+        pass
+    db.add_localizer("discord", uid, username=username, added_by=interaction.user.id)
+    await interaction.response.send_message(localized("localizer_add_done", lang, user_id=uid))
+    try:
+        if member:
+            await member.send(localized("localizer_add_dm", lang))
+    except Exception:
+        pass
+
+@bot.tree.command(name="localizer-rem", description="revoke a delegated Localizer status (bot admins)")
+@app_commands.describe(user="User to demote: ping, ID or username")
+async def localizer_rem_cmd(interaction: discord.Interaction, user: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+
+    uid = await _resolve_user_ref(interaction.guild, user)
+    if uid is None:
+        await interaction.response.send_message(localized("could_not_resolve_user", lang), ephemeral=True)
+        return
+
+    if not db.remove_localizer("discord", uid):
+        await interaction.response.send_message(
+            localized("localizer_rem_not", lang, user_id=uid), ephemeral=True)
+        return
+
+    await interaction.response.send_message(localized("localizer_rem_done", lang, user_id=uid))
 
 @bot.tree.command(name="add-unia", description="create a new union; give its name in at least one language (bot admins)")
 @app_commands.describe(
@@ -690,9 +854,19 @@ HELP_SECTIONS = [
         "cmd_wiki_founday", "cmd_wiki_foundays", "cmd_wiki_founday_remove",
     ]),
     ("section_bot_admins", [
-        "cmd_setup", "cmd_add_unia", "cmd_allow_parties", "cmd_add_govt",
+        "cmd_setup", "cmd_setadmin", "cmd_remadmin",
+        "cmd_localizer_add", "cmd_localizer_rem",
+        "cmd_add_unia", "cmd_allow_parties", "cmd_add_govt",
         "cmd_edit_party_admin", "cmd_loc_reply", "cmd_list_chats", "cmd_force_leave",
         "cmd_backup",
+    ]),
+    ("section_economy", [
+        "cmd_create_bank", "cmd_bank", "cmd_bank_add_leader", "cmd_bank_transfer",
+        "cmd_open_account", "cmd_balance", "cmd_pay", "cmd_set_earn",
+        "cmd_create_good", "cmd_craft", "cmd_inventory", "cmd_sell",
+        "cmd_autocraft", "cmd_autosend", "cmd_set_profession", "cmd_fine",
+        "cmd_treaty", "cmd_set_rate", "cmd_convert", "cmd_rates",
+        "cmd_set_wage", "cmd_party_dues",
     ]),
 ]
 
@@ -822,15 +996,18 @@ async def _say(interaction: discord.Interaction, content=None, **kwargs):
     return await interaction.channel.send(content, **kwargs)
 
 async def _dialog_text(interaction, lang, prompt, *, validator=None, error_key=None,
-                       attempts=5):
+                       attempts=5, as_embed=False):
     """Ask `prompt` and wait for the caller's text answer, re-asking on invalid
     input. Returns the validated value (or the message when no validator) or
-    None on timeout/attempts exhausted."""
-    await _say(interaction, prompt)
+    None on timeout/attempts exhausted. With as_embed=True every dialog message
+    is wrapped in an embed (the economy commands use this)."""
+    def _wrap(text):
+        return {"embed": _econ_embed(text)} if as_embed else {"content": text}
+    await _say(interaction, **_wrap(prompt))
     for _ in range(attempts):
         msg = await _wait_message(interaction.channel_id, interaction.user.id)
         if msg is None:
-            await interaction.channel.send(localized("dialog_timeout", lang))
+            await interaction.channel.send(**_wrap(localized("dialog_timeout", lang)))
             return None
         value = (msg.content or "").strip()
         if validator is None:
@@ -838,8 +1015,8 @@ async def _dialog_text(interaction, lang, prompt, *, validator=None, error_key=N
         ok = validator(value)
         if ok is not None:
             return ok
-        await interaction.channel.send(localized(error_key, lang))
-    await interaction.channel.send(localized("dialog_timeout", lang))
+        await interaction.channel.send(**_wrap(localized(error_key, lang)))
+    await interaction.channel.send(**_wrap(localized("dialog_timeout", lang)))
     return None
 
 _LOGO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp"}
@@ -913,6 +1090,16 @@ def _party_logo_file(party):
     fname = f"logo.{ext}"
     return discord.File(io.BytesIO(party["logo"]), filename=fname), f"attachment://{fname}"
 
+def _party_balance_lines(party_code):
+    """The party's bank balances, one line per account (only accounts that
+    exist; a party gets one on its first incoming transfer or dues run)."""
+    lines = []
+    for acc in db.get_owner_accounts(*db.party_owner(party_code)):
+        bank = db.get_bank(acc["bank_code"])
+        if bank:
+            lines.append(economy.format_money(acc["balance"], bank))
+    return lines
+
 def _leaders_differ_from_founder(party, leaders):
     return not (
         len(leaders) == 1
@@ -961,6 +1148,10 @@ def _build_party_embed(party, lang):
     if seats:
         embed.add_field(name=localized("party_field_seats", lang),
                         value=str(seats), inline=True)
+    balances = _party_balance_lines(party["code"])
+    if balances:
+        embed.add_field(name=localized("party_field_balance", lang),
+                        value="\n".join(balances)[:1024], inline=False)
     if party["description"]:
         embed.add_field(name=localized("party_field_description", lang),
                         value=party["description"][:1024], inline=False)
@@ -2548,3 +2739,709 @@ async def wiki_founday_remove_cmd(interaction: discord.Interaction, url: str):
         await interaction.response.send_message(localized("founday_not_found", lang), ephemeral=True)
         return
     await interaction.response.send_message(localized("founday_removed", lang, url=wiki_url))
+
+def _econ_embed(desc, title=None, color=DEFAULT_EMBED_COLOR):
+    embed = discord.Embed(description=desc, color=discord.Color(color))
+    if title:
+        embed.title = title
+    return embed
+
+async def _ereply(interaction, key, lang, *, ephemeral=True, title=None, **kw):
+    await _say(interaction, embed=_econ_embed(localized(key, lang, **kw), title=title),
+               ephemeral=ephemeral)
+
+def _currency_code_validator(value):
+    code = value.strip().upper()
+    if economy.CURRENCY_CODE_RE.match(code) and not db.code_taken(code):
+        return code
+    return None
+
+def _bank_line(bank, lang):
+    emoji = f" {bank['emoji']}" if bank["emoji"] else ""
+    return f"{bank['currency_name']} [{bank['code']}]{emoji}"
+
+async def _resolve_led_bank(interaction, lang):
+    """The bank the caller leads; asks which one when they lead several. Bank
+    leadership is global, so this is not scoped to the current server's union."""
+    banks = db.user_led_banks("discord", interaction.user.id)
+    if not banks:
+        await _ereply(interaction, "bank_none_led", lang)
+        return None
+    if len(banks) == 1:
+        return banks[0]
+    return await _numbered_choice(interaction, lang, localized("bank_choose", lang),
+                                  banks, lambda b: _bank_line(b, lang))
+
+class _LeaderConsentView(ui.View):
+    """Accept/decline buttons that any leader of `bank_code` (or a Bot Admin) may
+    press — used for treaty and peg agreements between two banks."""
+
+    def __init__(self, lang, bank_code, on_accept, on_decline):
+        super().__init__(timeout=DIALOG_TIMEOUT)
+        self.lang = lang
+        self.bank_code = bank_code
+        self._on_accept = on_accept
+        self._on_decline = on_decline
+        accept = ui.Button(label=localized("consent_accept", lang), style=ButtonStyle.success)
+        decline = ui.Button(label=localized("consent_decline", lang), style=ButtonStyle.danger)
+        accept.callback = self._make_cb(True)
+        decline.callback = self._make_cb(False)
+        self.add_item(accept)
+        self.add_item(decline)
+
+    def _make_cb(self, accepted):
+        async def callback(interaction2: discord.Interaction):
+            if not (db.is_bank_leader(self.bank_code, "discord", interaction2.user.id)
+                    or is_admin("discord", interaction2.user.id)):
+                await interaction2.response.send_message(
+                    localized("bank_consent_not_leader", self.lang), ephemeral=True)
+                return
+            for item in self.children:
+                item.disabled = True
+            self.stop()
+            try:
+                await interaction2.response.edit_message(view=self)
+            except Exception:
+                pass
+            await (self._on_accept if accepted else self._on_decline)(interaction2)
+        return callback
+
+@bot.tree.command(name="create-bank", description="found a bank and its currency (bot/server admins)")
+async def create_bank_cmd(interaction: discord.Interaction):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not (is_admin("discord", interaction.user.id) or is_server_admin(interaction)):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+
+    id_msg = await _dialog_text(interaction, lang, localized("create_bank_ask_chat", lang),
+                                as_embed=True)
+    if id_msg is None:
+        return
+    raw = (id_msg.content or "").strip().lstrip("-")
+    if not raw.isdigit():
+        await interaction.channel.send(embed=_econ_embed(localized("create_bank_bad_chat", lang)))
+        return
+    chat = db.get_chat((id_msg.content or "").strip())
+    if not chat:
+        await interaction.channel.send(embed=_econ_embed(localized("create_bank_chat_not_setup", lang)))
+        return
+    union = chat["union_code"]
+
+    name_msg = await _dialog_text(interaction, lang, localized("create_bank_ask_name", lang),
+                                  as_embed=True)
+    if name_msg is None:
+        return
+    currency_name = clean_display_name(name_msg.content, max_len=40)
+
+    code = await _dialog_text(interaction, lang, localized("create_bank_ask_code", lang),
+                              validator=_currency_code_validator, error_key="create_bank_bad_code",
+                              as_embed=True)
+    if code is None:
+        return
+
+    emoji_msg = await _dialog_text(interaction, lang, localized("create_bank_ask_emoji", lang),
+                                   as_embed=True)
+    if emoji_msg is None:
+        return
+    parts = (emoji_msg.content or "").strip().split()
+    emoji = parts[0][:16] if parts else ""
+
+    db.create_bank(code, union, chat["chat_id"], currency_name, emoji,
+                   "discord", interaction.user.id, str(interaction.user))
+    await interaction.channel.send(embed=_econ_embed(
+        localized("create_bank_created", lang, name=currency_name, code=code,
+                  emoji=emoji, union=db.get_union_name(union, lang))))
+    await send_service_event("bank_created", name=currency_name, code=code, union=union,
+                             user=str(interaction.user))
+
+def _build_bank_embed(bank, lang):
+    emoji = f" {bank['emoji']}" if bank["emoji"] else ""
+    embed = discord.Embed(title=f"{bank['currency_name']} [{bank['code']}]{emoji}",
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    embed.add_field(name=localized("bank_field_union", lang),
+                    value=db.get_union_name(bank["union_code"], lang), inline=True)
+    embed.add_field(name=localized("bank_field_central", lang),
+                    value=str(bank["central_chat"]), inline=True)
+    leaders = db.get_bank_leaders(bank["code"])
+    embed.add_field(
+        name=localized("bank_field_leaders", lang),
+        value=", ".join(format_stored_user("discord", l["platform"], l["user_id"],
+                                           l["display_name"]) for l in leaders) or "—",
+        inline=False)
+    embed.add_field(name=localized("bank_field_supply", lang),
+                    value=economy.format_money(db.bank_money_supply(bank["code"]), bank),
+                    inline=True)
+    embed.add_field(name=localized("bank_field_accounts", lang),
+                    value=str(db.bank_account_count(bank["code"])), inline=True)
+    debt = db.bank_debt(bank["code"])
+    if debt:
+        embed.add_field(name=localized("bank_field_debt", lang),
+                        value=economy.format_money(debt, bank), inline=True)
+    embed.add_field(name=localized("bank_field_value", lang),
+                    value=f"{bank['value']:.4f}", inline=True)
+    return embed
+
+@bot.tree.command(name="bank", description="information about a bank and its currency")
+@app_commands.describe(code="Currency code (4 characters)")
+async def bank_cmd(interaction: discord.Interaction, code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    await _say(interaction, embed=_build_bank_embed(bank, lang))
+
+async def _offer_bank_leadership(interaction, bank, lang, target_id, transfer):
+    channel = interaction.channel
+    name = bank["currency_name"]
+
+    async def on_accept(interaction2):
+        display = str(interaction2.user)
+        if transfer:
+            db.set_bank_leader(bank["code"], "discord", target_id, display)
+            text = localized("bank_transfer_done", lang, user=f"<@{target_id}>", name=name)
+        else:
+            db.add_bank_leader(bank["code"], "discord", target_id, display)
+            text = localized("bank_leader_added", lang, user=f"<@{target_id}>", name=name)
+        await channel.send(embed=_econ_embed(text))
+
+    async def on_decline(interaction2):
+        key = "bank_transfer_declined" if transfer else "bank_leader_declined"
+        await channel.send(embed=_econ_embed(localized(key, lang)))
+
+    offer_key = "bank_transfer_offer" if transfer else "bank_leader_offer"
+    await _say(interaction, f"<@{target_id}>", embed=_econ_embed(
+        localized(offer_key, lang, mention=f"<@{target_id}>", name=name, code=bank["code"])),
+        view=_ConsentView(lang, target_id, on_accept, on_decline),
+        allowed_mentions=discord.AllowedMentions(users=True))
+
+async def _bank_leadership_cmd(interaction, code, user, transfer):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    caller_is_admin = is_admin("discord", interaction.user.id)
+    if not caller_is_admin and not db.is_bank_leader(bank["code"], "discord", interaction.user.id):
+        await _ereply(interaction, "bank_not_leader", lang)
+        return
+    if caller_is_admin:
+        try:
+            display = str(await bot.fetch_user(target_id))
+        except Exception:
+            display = str(target_id)
+        if transfer:
+            db.set_bank_leader(bank["code"], "discord", target_id, display)
+            key = "bank_transfer_done"
+        else:
+            db.add_bank_leader(bank["code"], "discord", target_id, display)
+            key = "bank_leader_added"
+        await _ereply(interaction, key, lang, ephemeral=False,
+                      user=f"<@{target_id}>", name=bank["currency_name"])
+        return
+    await _offer_bank_leadership(interaction, bank, lang, target_id, transfer)
+
+@bot.tree.command(name="bank-add-leader", description="add a co-leader to a bank (bank leaders / bot admins)")
+@app_commands.describe(code="Currency code", user="User ID or mention")
+async def bank_add_leader_cmd(interaction: discord.Interaction, code: str, user: str):
+    await _bank_leadership_cmd(interaction, code, user, transfer=False)
+
+@bot.tree.command(name="bank-transfer", description="transfer bank leadership (bank leaders / bot admins)")
+@app_commands.describe(code="Currency code", user="User ID or mention")
+async def bank_transfer_cmd(interaction: discord.Interaction, code: str, user: str):
+    await _bank_leadership_cmd(interaction, code, user, transfer=True)
+
+@bot.tree.command(name="open-account", description="open an account in a bank (verified users)")
+@app_commands.describe(code="Currency code")
+async def open_account_cmd(interaction: discord.Interaction, code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    if db.account_exists(bank["code"], *owner):
+        await _ereply(interaction, "account_exists", lang, code=bank["code"])
+        return
+    db.ensure_account(bank["code"], *owner, display_name=str(interaction.user))
+    await _ereply(interaction, "account_opened", lang, ephemeral=False,
+                  name=bank["currency_name"], code=bank["code"])
+
+@bot.tree.command(name="balance", description="your balance and energy (verified users)")
+@app_commands.describe(code="Currency code (omit for all your accounts)")
+async def balance_cmd(interaction: discord.Interaction, code: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    if code:
+        bank = db.get_bank(code.strip().upper())
+        if not bank:
+            await _ereply(interaction, "bank_not_found", lang)
+            return
+        banks = [bank]
+    else:
+        banks = [db.get_bank(a["bank_code"]) for a in db.get_owner_accounts(*owner)]
+        banks = [b for b in banks if b]
+    if not banks:
+        await _ereply(interaction, "balance_none", lang)
+        return
+    blocks = []
+    for b in banks:
+        acc = db.get_account(b["code"], *owner)
+        bal = acc["balance"] if acc else 0
+        energy = acc["energy"] if acc else 0
+        prof_code = db.get_profession(owner, b["code"])
+        prof_good = db.get_good(prof_code) if prof_code else None
+        prof = prof_good["name"] if prof_good else localized("profession_none", lang)
+        line = localized("balance_line", lang, money=economy.format_money(bal, b),
+                         energy=economy.format_energy(energy), profession=prof)
+        if bal < 0:
+            line += " " + localized("balance_debt_mark", lang)
+        blocks.append(f"**{b['currency_name']} [{b['code']}]**\n{line}")
+    embed = discord.Embed(title=localized("balance_title", lang),
+                          description="\n\n".join(blocks)[:4000],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed, ephemeral=True)
+
+@bot.tree.command(name="pay", description="send money to another user (verified users)")
+@app_commands.describe(user="Recipient ID or mention", amount="Amount, e.g. 12.34", code="Currency code")
+async def pay_cmd(interaction: discord.Interaction, user: str, amount: str, code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    minor = economy.parse_amount(amount)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    sender = db.canonical_user("discord", interaction.user.id)
+    target = db.canonical_user("discord", target_id)
+    if target == sender:
+        await _ereply(interaction, "pay_self", lang)
+        return
+    try:
+        tdisp = str(await bot.fetch_user(target_id))
+    except Exception:
+        tdisp = str(target_id)
+    if not db.transfer(bank["code"], sender, target, minor, "pay", to_display=tdisp):
+        await _ereply(interaction, "pay_insufficient", lang)
+        return
+    await _ereply(interaction, "pay_done", lang, ephemeral=False,
+                  amount=economy.format_money(minor, bank), user=f"<@{target_id}>")
+
+@bot.tree.command(name="set-earn", description="make this channel earn a bank's currency (bank leaders / server admins)")
+@app_commands.describe(code="Currency code", action="on | off", rate="Earning multiplier (default 1.0)")
+async def set_earn_cmd(interaction: discord.Interaction, code: str, action: str, rate: float = 1.0):
+    lang = get_chat_lang(_chat_key(interaction))
+    if interaction.guild is None:
+        await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
+        return
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    if not (db.is_bank_leader(bank["code"], "discord", interaction.user.id)
+            or is_server_admin(interaction) or is_admin("discord", interaction.user.id)):
+        await _ereply(interaction, "set_earn_no_permission", lang)
+        return
+    chat = db.get_chat(str(interaction.guild_id))
+    if not chat or chat["union_code"] != bank["union_code"]:
+        await _ereply(interaction, "set_earn_wrong_union", lang)
+        return
+    action = action.strip().lower()
+    if action in ("off", "disable", "0", "false", "no"):
+        db.remove_earn_channel("discord", interaction.channel_id)
+        await _ereply(interaction, "set_earn_off", lang, ephemeral=False)
+        return
+    if action not in ("on", "enable", "1", "true", "yes"):
+        await _ereply(interaction, "set_earn_usage", lang)
+        return
+    r = max(0.0, min(float(rate), 100.0))
+    db.set_earn_channel("discord", interaction.channel_id, bank["code"], r)
+    await _ereply(interaction, "set_earn_on", lang, ephemeral=False, code=bank["code"], rate=f"{r:g}")
+
+@bot.tree.command(name="create-good", description="create a craftable good for your bank (bank leaders)")
+@app_commands.describe(name="Good name", base_value="Base value in the bank's currency, e.g. 5.00",
+                       energy_cost="Energy cost per craft", emoji="Optional emoji")
+async def create_good_cmd(interaction: discord.Interaction, name: str, base_value: str,
+                          energy_cost: int, emoji: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = await _resolve_led_bank(interaction, lang)
+    if bank is None:
+        return
+    base = economy.parse_amount(base_value)
+    if base is None or energy_cost <= 0:
+        await _ereply(interaction, "create_good_bad", lang)
+        return
+    nm = clean_display_name(name, max_len=40)
+    parts = (emoji or "").strip().split()
+    em = parts[0][:16] if parts else ""
+    gcode = db.create_good(bank["code"], nm, base, energy_cost, em)
+    await _ereply(interaction, "create_good_created", lang, ephemeral=False, name=nm, code=gcode,
+                  value=economy.format_money(base, bank), energy=economy.format_energy(energy_cost),
+                  bank=bank["code"])
+
+@bot.tree.command(name="craft", description="craft one unit of a good, spending energy (verified users)")
+@app_commands.describe(good_code="Good code (4 characters)")
+async def craft_cmd(interaction: discord.Interaction, good_code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    status, info = economy.craft(owner, good)
+    if status == "no_energy":
+        await _ereply(interaction, "craft_no_energy", lang,
+                      cost=economy.format_energy(info["cost"]),
+                      have=economy.format_energy(info["have"]))
+        return
+    bank = db.get_bank(good["bank_code"])
+    emoji = f" {good['emoji']}" if good["emoji"] else ""
+    await _ereply(interaction, "craft_done", lang, ephemeral=False,
+                  name=good["name"], emoji=emoji, cost=economy.format_energy(info["cost"]),
+                  value=economy.format_money(info["value"], bank), level=info["level"])
+
+@bot.tree.command(name="inventory", description="your crafted goods (verified users)")
+async def inventory_cmd(interaction: discord.Interaction):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    inv = db.get_inventory(owner)
+    if not inv:
+        await _ereply(interaction, "inventory_empty", lang, ephemeral=False)
+        return
+    lines = []
+    for row in inv:
+        m = db.get_produced(owner, row["good_code"])
+        good = db.get_good(row["good_code"])
+        bank = db.get_bank(row["bank_code"])
+        val = economy.format_money(economy.unit_value(good, m), bank) if good and bank else "—"
+        emoji = f"{row['emoji']} " if row["emoji"] else ""
+        lines.append(localized("inventory_line", lang, emoji=emoji, name=row["name"],
+                               code=row["good_code"], qty=row["qty"], value=val,
+                               level=economy.mastery_level(m)))
+    embed = discord.Embed(title=localized("inventory_title", lang),
+                          description="\n".join(lines)[:4000],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed, ephemeral=True)
+
+@bot.tree.command(name="sell", description="sell a good back to its bank (verified users)")
+@app_commands.describe(good_code="Good code", qty="How many (default: all)")
+async def sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    have = db.get_inventory_qty(owner, good["code"])
+    want = qty if (qty and qty > 0) else have
+    status, info = economy.sell(owner, good, want)
+    if status == "nothing":
+        await _ereply(interaction, "sell_nothing", lang, name=good["name"])
+        return
+    bank = db.get_bank(good["bank_code"])
+    await _ereply(interaction, "sell_done", lang, ephemeral=False, qty=info["qty"],
+                  name=good["name"], unit=economy.format_money(info["unit"], bank),
+                  total=economy.format_money(info["total"], bank))
+
+@bot.tree.command(name="autocraft", description="auto-craft a good each day when energy allows (verified users)")
+@app_commands.describe(good_code="Good code", action="on | off")
+async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    on = action.strip().lower() in ("on", "enable", "1", "true", "yes")
+    db.set_autocraft(owner, good["code"], on)
+    await _ereply(interaction, "autocraft_on" if on else "autocraft_off", lang,
+                  ephemeral=False, name=good["name"])
+
+@bot.tree.command(name="autosend", description="auto-send a share of a good to a user or party (verified users)")
+@app_commands.describe(good_code="Good code", percent="Percent 0-100 (0 to stop)",
+                       target="Recipient: a user ID/mention or a party code")
+async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent: int, target: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    if percent < 0 or percent > 100:
+        await _ereply(interaction, "autosend_bad_percent", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    party = db.get_party(target.strip().upper())
+    if party:
+        tgt, tname = db.party_owner(party["code"]), f"{party['name']} [{party['code']}]"
+    else:
+        tid = _parse_user_ref(target)
+        if tid is None:
+            await _ereply(interaction, "autosend_bad_target", lang)
+            return
+        tgt, tname = db.canonical_user("discord", tid), f"<@{tid}>"
+    if percent == 0:
+        db.set_autosend(owner, good["code"], 0, tgt)
+        await _ereply(interaction, "autosend_off", lang, ephemeral=False, name=good["name"])
+        return
+    db.set_autosend(owner, good["code"], percent, tgt)
+    await _ereply(interaction, "autosend_on", lang, ephemeral=False, name=good["name"],
+                  percent=percent, target=tname)
+
+@bot.tree.command(name="set-profession", description="set a member's profession in your bank (bank leaders)")
+@app_commands.describe(user="Member ID or mention", good_code="Good code that becomes their profession")
+async def set_profession_cmd(interaction: discord.Interaction, user: str, good_code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    if not (db.is_bank_leader(good["bank_code"], "discord", interaction.user.id)
+            or is_admin("discord", interaction.user.id)):
+        await _ereply(interaction, "bank_not_leader", lang)
+        return
+    tid = _parse_user_ref(user)
+    if tid is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    db.set_profession(db.canonical_user("discord", tid), good["bank_code"], good["code"])
+    await _ereply(interaction, "set_profession_done", lang, ephemeral=False,
+                  user=f"<@{tid}>", name=good["name"])
+
+@bot.tree.command(name="fine", description="fine a user in your bank's currency (bank leaders)")
+@app_commands.describe(user="User ID or mention", amount="Amount, e.g. 10.00", reason="Optional reason")
+async def fine_cmd(interaction: discord.Interaction, user: str, amount: str, reason: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = await _resolve_led_bank(interaction, lang)
+    if bank is None:
+        return
+    minor = economy.parse_amount(amount)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    tid = _parse_user_ref(user)
+    if tid is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    towner = db.canonical_user("discord", tid)
+    db.burn(bank["code"], towner, minor, f"fine: {reason}" if reason else "fine", allow_negative=True)
+    await _ereply(interaction, "fine_done", lang, ephemeral=False, user=f"<@{tid}>",
+                  amount=economy.format_money(minor, bank),
+                  reason=(reason.strip()[:200] if reason else localized("fine_no_reason", lang)))
+
+@bot.tree.command(name="treaty", description="propose a currency-conversion treaty with another bank (bank leaders)")
+@app_commands.describe(code="Currency code of the other bank")
+async def treaty_cmd(interaction: discord.Interaction, code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    other = db.get_bank(code.strip().upper())
+    if not other:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    mine = await _resolve_led_bank(interaction, lang)
+    if mine is None:
+        return
+    if mine["code"] == other["code"]:
+        await _ereply(interaction, "treaty_self", lang)
+        return
+    if db.has_treaty(mine["code"], other["code"]):
+        await _ereply(interaction, "treaty_exists", lang)
+        return
+    channel = interaction.channel
+
+    async def on_accept(interaction2):
+        db.add_treaty(mine["code"], other["code"])
+        await channel.send(embed=_econ_embed(
+            localized("treaty_done", lang, a=mine["code"], b=other["code"])))
+
+    async def on_decline(interaction2):
+        await channel.send(embed=_econ_embed(localized("treaty_declined", lang)))
+
+    await _say(interaction, embed=_econ_embed(
+        localized("treaty_offer", lang, proposer=mine["code"], code=other["code"],
+                  name=other["currency_name"])),
+        view=_LeaderConsentView(lang, other["code"], on_accept, on_decline))
+
+@bot.tree.command(name="set-rate", description="fix a pegged rate with your bank's sole treaty partner (bank leaders)")
+@app_commands.describe(code="The partner bank's currency code",
+                       rate="Units of the partner currency per 1 unit of yours")
+async def set_rate_cmd(interaction: discord.Interaction, code: str, rate: float):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    other = db.get_bank(code.strip().upper())
+    if not other:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    mine = await _resolve_led_bank(interaction, lang)
+    if mine is None:
+        return
+    if not db.has_treaty(mine["code"], other["code"]):
+        await _ereply(interaction, "set_rate_no_treaty", lang)
+        return
+    if not economy.can_manual_peg(mine["code"], other["code"]):
+        await _ereply(interaction, "set_rate_multi", lang)
+        return
+    if rate <= 0:
+        await _ereply(interaction, "set_rate_bad", lang)
+        return
+    channel = interaction.channel
+
+    async def on_accept(interaction2):
+        db.set_pegged_rate(mine["code"], other["code"], rate)
+        await channel.send(embed=_econ_embed(
+            localized("set_rate_done", lang, a=mine["code"], rate=f"{rate:g}", b=other["code"])))
+
+    async def on_decline(interaction2):
+        await channel.send(embed=_econ_embed(localized("set_rate_declined", lang)))
+
+    await _say(interaction, embed=_econ_embed(
+        localized("set_rate_offer", lang, a=mine["code"], rate=f"{rate:g}", b=other["code"])),
+        view=_LeaderConsentView(lang, other["code"], on_accept, on_decline))
+
+@bot.tree.command(name="convert", description="convert between your accounts at the current rate (verified users)")
+@app_commands.describe(amount="Amount in the source currency", from_code="Source currency", to_code="Target currency")
+async def convert_cmd(interaction: discord.Interaction, amount: str, from_code: str, to_code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    minor = economy.parse_amount(amount)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    fb = db.get_bank(from_code.strip().upper())
+    tb = db.get_bank(to_code.strip().upper())
+    if not fb or not tb:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    status, info = economy.convert(owner, fb["code"], tb["code"], minor)
+    keymap = {"same": "convert_same", "not_convertible": "convert_not_convertible",
+              "too_small": "convert_too_small", "no_funds": "convert_no_funds"}
+    if status != "ok":
+        await _ereply(interaction, keymap.get(status, "convert_not_convertible"), lang)
+        return
+    await _ereply(interaction, "convert_done", lang, ephemeral=False,
+                  amount=economy.format_money(minor, fb),
+                  credited=economy.format_money(info["credited"], tb),
+                  rate=f"{info['rate']:.4f}", fee=economy.format_money(info["fee"], fb))
+
+@bot.tree.command(name="rates", description="current currency values and conversion rates")
+@app_commands.describe(code="Currency code (omit for all currency values)")
+async def rates_cmd(interaction: discord.Interaction, code: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if code:
+        bank = db.get_bank(code.strip().upper())
+        if not bank:
+            await _ereply(interaction, "bank_not_found", lang)
+            return
+        partners = db.treaty_partners(bank["code"])
+        if not partners:
+            await _ereply(interaction, "rates_none", lang, ephemeral=False, code=bank["code"])
+            return
+        lines = []
+        for p in partners:
+            r = economy.rate(bank["code"], p)
+            treaty = db.get_treaty(bank["code"], p)
+            peg = f" {localized('rates_pegged', lang)}" if treaty and treaty["pegged_rate"] is not None else ""
+            lines.append(localized("rates_line", lang, a=bank["code"], b=p,
+                                   rate=f"{r:.4f}" if r is not None else "—", peg=peg))
+        title = localized("rates_title_one", lang, code=bank["code"])
+    else:
+        banks = db.get_all_banks()
+        if not banks:
+            await _ereply(interaction, "rates_no_banks", lang, ephemeral=False)
+            return
+        lines = [localized("rates_value_line", lang, code=b["code"], name=b["currency_name"],
+                           value=f"{b['value']:.4f}") for b in banks]
+        title = localized("rates_title_all", lang)
+    embed = discord.Embed(title=title, description="\n".join(lines)[:4000],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed)
+
+@bot.tree.command(name="set-wage", description="set the monthly wage for a profession in your bank (bank leaders)")
+@app_commands.describe(profession="Good code or name defining the profession", amount="Monthly wage (0 to clear)")
+async def set_wage_cmd(interaction: discord.Interaction, profession: str, amount: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    bank = await _resolve_led_bank(interaction, lang)
+    if bank is None:
+        return
+    good = db.find_bank_good(bank["code"], profession)
+    if not good:
+        await _ereply(interaction, "set_wage_no_good", lang, bank=bank["code"])
+        return
+    if amount.strip() in ("0", "0.0", "0.00"):
+        db.set_wage(bank["code"], good["code"], None)
+        await _ereply(interaction, "set_wage_cleared", lang, ephemeral=False, name=good["name"])
+        return
+    minor = economy.parse_amount(amount)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    db.set_wage(bank["code"], good["code"], minor)
+    await _ereply(interaction, "set_wage_done", lang, ephemeral=False, name=good["name"],
+                  amount=economy.format_money(minor, bank))
+
+@bot.tree.command(name="party-dues", description="set your party's monthly member dues (party leaders)")
+@app_commands.describe(code="Currency code", amount="Monthly dues per member (0 to clear)")
+async def party_dues_cmd(interaction: discord.Interaction, code: str, amount: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not await _require_verified(interaction, lang):
+        return
+    party = await _resolve_led_party(interaction, lang)
+    if party is None:
+        return
+    bank = db.get_bank(code.strip().upper())
+    if not bank:
+        await _ereply(interaction, "bank_not_found", lang)
+        return
+    if bank["union_code"] != party["union_code"]:
+        await _ereply(interaction, "dues_wrong_union", lang)
+        return
+    if amount.strip() in ("0", "0.0", "0.00"):
+        db.set_party_dues(party["code"], bank["code"], 0)
+        await _ereply(interaction, "dues_cleared", lang, ephemeral=False, name=party["name"])
+        return
+    minor = economy.parse_amount(amount)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    db.set_party_dues(party["code"], bank["code"], minor)
+    await _ereply(interaction, "dues_done", lang, ephemeral=False, name=party["name"],
+                  amount=economy.format_money(minor, bank))

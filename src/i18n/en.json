@@ -1,4 +1,12 @@
 {
+  "account_exists": {
+    "status": "unverified",
+    "text": "You already have an account in {code}."
+  },
+  "account_opened": {
+    "status": "unverified",
+    "text": "✅ Account opened in {name} [{code}]."
+  },
   "action_cancelled": {
     "status": "unverified",
     "text": "Action cancelled."
@@ -91,6 +99,38 @@
     "status": "unverified",
     "text": "Usage: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
   },
+  "autocraft_off": {
+    "status": "unverified",
+    "text": "✅ Auto-craft of {name} is off."
+  },
+  "autocraft_on": {
+    "status": "unverified",
+    "text": "✅ Auto-craft of {name} is on."
+  },
+  "autocraft_usage": {
+    "status": "unverified",
+    "text": "Usage: /autocraft <good code> <on|off>"
+  },
+  "autosend_bad_percent": {
+    "status": "unverified",
+    "text": "Percent must be between 0 and 100."
+  },
+  "autosend_bad_target": {
+    "status": "unverified",
+    "text": "Could not resolve the recipient (user or party)."
+  },
+  "autosend_off": {
+    "status": "unverified",
+    "text": "✅ Auto-send of {name} stopped."
+  },
+  "autosend_on": {
+    "status": "unverified",
+    "text": "✅ {percent}% of your {name} will be auto-sent to {target}."
+  },
+  "autosend_usage": {
+    "status": "unverified",
+    "text": "Usage: /autosend <good code> <percent> <user|party>"
+  },
   "backup_failed": {
     "status": "unverified",
     "text": "Failed to build the backup: {error}"
@@ -98,6 +138,110 @@
   "backup_private_only": {
     "status": "unverified",
     "text": "Use this command in a private chat with the bot."
+  },
+  "bad_amount": {
+    "status": "unverified",
+    "text": "Invalid amount. Use a positive number like 12.34."
+  },
+  "balance_debt_mark": {
+    "status": "unverified",
+    "text": "⚠️ (debt)"
+  },
+  "balance_line": {
+    "status": "unverified",
+    "text": "{money} · energy: {energy} · profession: {profession}"
+  },
+  "balance_none": {
+    "status": "unverified",
+    "text": "You have no accounts yet. Earn in an earning channel or use /open-account."
+  },
+  "balance_title": {
+    "status": "unverified",
+    "text": "Your balance"
+  },
+  "bank_admin_need_id": {
+    "status": "unverified",
+    "text": "Could not resolve that user — give a numeric ID or reply to their message."
+  },
+  "bank_choose": {
+    "status": "unverified",
+    "text": "You lead several banks — reply with a number:"
+  },
+  "bank_consent_not_leader": {
+    "status": "unverified",
+    "text": "Only a leader of the other bank may accept this."
+  },
+  "bank_field_accounts": {
+    "status": "unverified",
+    "text": "Accounts"
+  },
+  "bank_field_central": {
+    "status": "unverified",
+    "text": "Central server"
+  },
+  "bank_field_debt": {
+    "status": "unverified",
+    "text": "Outstanding debt"
+  },
+  "bank_field_leaders": {
+    "status": "unverified",
+    "text": "Leaders"
+  },
+  "bank_field_supply": {
+    "status": "unverified",
+    "text": "Money supply"
+  },
+  "bank_field_union": {
+    "status": "unverified",
+    "text": "Union"
+  },
+  "bank_field_value": {
+    "status": "unverified",
+    "text": "Currency value"
+  },
+  "bank_leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} is now a leader of {name}."
+  },
+  "bank_leader_declined": {
+    "status": "unverified",
+    "text": "The co-leadership offer was declined."
+  },
+  "bank_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, you are offered co-leadership of bank {name} [{code}]. Do you accept?"
+  },
+  "bank_leader_usage": {
+    "status": "unverified",
+    "text": "Usage: /bank-add-leader <code> <user>"
+  },
+  "bank_none_led": {
+    "status": "unverified",
+    "text": "You do not lead any bank."
+  },
+  "bank_not_found": {
+    "status": "unverified",
+    "text": "No bank has that currency code."
+  },
+  "bank_not_leader": {
+    "status": "unverified",
+    "text": "Only this bank's leaders can do that."
+  },
+  "bank_transfer_declined": {
+    "status": "unverified",
+    "text": "The leadership offer was declined."
+  },
+  "bank_transfer_done": {
+    "status": "unverified",
+    "text": "✅ {user} is now the sole leader of {name}."
+  },
+  "bank_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, you are offered leadership of bank {name} [{code}]. Do you accept?"
+  },
+  "bank_usage": {
+    "status": "unverified",
+    "text": "Usage: /bank <currency code>"
   },
   "chat_not_setup": {
     "status": "unverified",
@@ -127,6 +271,90 @@
     "status": "unverified",
     "text": "{mention}, you are invited to take over the party {name} [{code}]!"
   },
+  "convert_done": {
+    "status": "unverified",
+    "text": "🔁 Converted {amount} → {credited} (rate {rate}, fee {fee})."
+  },
+  "convert_no_funds": {
+    "status": "unverified",
+    "text": "Insufficient funds in the source currency."
+  },
+  "convert_not_convertible": {
+    "status": "unverified",
+    "text": "These currencies are not convertible (no treaty)."
+  },
+  "convert_same": {
+    "status": "unverified",
+    "text": "Source and target currencies are the same."
+  },
+  "convert_too_small": {
+    "status": "unverified",
+    "text": "The amount is too small to convert."
+  },
+  "convert_usage": {
+    "status": "unverified",
+    "text": "Usage: /convert <amount> <from code> <to code>"
+  },
+  "could_not_resolve_user": {
+    "status": "unverified",
+    "text": "Could not resolve the user."
+  },
+  "craft_done": {
+    "status": "unverified",
+    "text": "🔨 Crafted 1 ×{name}{emoji} for {cost}. Quality level {level}, unit value {value}."
+  },
+  "craft_no_energy": {
+    "status": "unverified",
+    "text": "Not enough energy: need {cost}, you have {have}."
+  },
+  "craft_usage": {
+    "status": "unverified",
+    "text": "Usage: /craft <good code>"
+  },
+  "create_bank_ask_chat": {
+    "status": "unverified",
+    "text": "🏦 Founding a bank! Send the ID of the central server (it must be set up with /setup)."
+  },
+  "create_bank_ask_code": {
+    "status": "unverified",
+    "text": "Send a 4-character currency code (Latin letters and digits), unique across all codes."
+  },
+  "create_bank_ask_emoji": {
+    "status": "unverified",
+    "text": "Send an emoji for the currency."
+  },
+  "create_bank_ask_name": {
+    "status": "unverified",
+    "text": "Send the currency name (in English)."
+  },
+  "create_bank_bad_chat": {
+    "status": "unverified",
+    "text": "That is not a valid server ID."
+  },
+  "create_bank_bad_code": {
+    "status": "unverified",
+    "text": "That code is invalid or already taken. Send another 4-character code."
+  },
+  "create_bank_chat_not_setup": {
+    "status": "unverified",
+    "text": "That server is not set up. Run /setup there first."
+  },
+  "create_bank_created": {
+    "status": "unverified",
+    "text": "✅ Bank created: {name} [{code}] {emoji} in union {union}. You are its first leader."
+  },
+  "create_good_bad": {
+    "status": "unverified",
+    "text": "Invalid values. Base value must be a positive amount and energy cost a positive whole number."
+  },
+  "create_good_created": {
+    "status": "unverified",
+    "text": "✅ Good created: {name} [{code}] — base value {value}, {energy} to craft, bank {bank}."
+  },
+  "create_good_usage": {
+    "status": "unverified",
+    "text": "Usage: /create-good <name> | <base_value> | <energy_cost> | [emoji]"
+  },
   "delete_party_confirm": {
     "status": "unverified",
     "text": "Delete the party {name} [{code}]? All of its data, leaders, members and join requests will be erased for good."
@@ -138,6 +366,18 @@
   "dialog_timeout": {
     "status": "unverified",
     "text": "⏳ Time is up — the dialog is cancelled."
+  },
+  "dues_cleared": {
+    "status": "unverified",
+    "text": "✅ Monthly dues for {name} removed."
+  },
+  "dues_done": {
+    "status": "unverified",
+    "text": "✅ Monthly dues for {name} set to {amount} per member."
+  },
+  "dues_wrong_union": {
+    "status": "unverified",
+    "text": "That currency belongs to a different union than your party."
   },
   "edit_admin_choose": {
     "status": "unverified",
@@ -315,6 +555,18 @@
     "status": "unverified",
     "text": "🔎 Scanning {channel} from {start} to {end} ({count} keyword(s))…"
   },
+  "fine_done": {
+    "status": "unverified",
+    "text": "⚖️ Fined {user} {amount} ({reason}). Their balance may now be negative (a debt)."
+  },
+  "fine_no_reason": {
+    "status": "unverified",
+    "text": "no reason"
+  },
+  "fine_usage": {
+    "status": "unverified",
+    "text": "Usage: /fine <user> <amount> [reason] (or reply to a user: /fine <amount> [reason])"
+  },
   "force_leave_failed": {
     "status": "unverified",
     "text": "Failed to leave: {error}"
@@ -427,6 +679,10 @@
     "status": "unverified",
     "text": "Birthdays"
   },
+  "good_not_found": {
+    "status": "unverified",
+    "text": "No good has that code."
+  },
   "govt_no_members": {
     "status": "unverified",
     "text": "No members yet."
@@ -491,9 +747,49 @@
     "status": "unverified",
     "text": "/allow_parties <union> <enable|disable> [role_ids] — enable or disable parties in a union (bot admins)"
   },
+  "help.cmd_autocraft": {
+    "status": "unverified",
+    "text": "/autocraft <good_code> <on|off> — auto-craft each day while energy lasts"
+  },
+  "help.cmd_autosend": {
+    "status": "unverified",
+    "text": "/autosend <good_code> <percent> <user|party> — auto-send a share of a good"
+  },
   "help.cmd_backup": {
     "status": "unverified",
     "text": "/backup — get a database backup (bot admins)"
+  },
+  "help.cmd_balance": {
+    "status": "unverified",
+    "text": "/balance [code] — your balance, energy and profession"
+  },
+  "help.cmd_bank": {
+    "status": "unverified",
+    "text": "/bank <code> — a bank's card: currency, leaders, money supply, accounts"
+  },
+  "help.cmd_bank_add_leader": {
+    "status": "unverified",
+    "text": "/bank-add-leader <code> <user> — add a co-leader to a bank"
+  },
+  "help.cmd_bank_transfer": {
+    "status": "unverified",
+    "text": "/bank-transfer <code> <user> — hand a bank's leadership to another user"
+  },
+  "help.cmd_convert": {
+    "status": "unverified",
+    "text": "/convert <amount> <from> <to> — convert between your accounts"
+  },
+  "help.cmd_craft": {
+    "status": "unverified",
+    "text": "/craft <good_code> — craft one unit of a good, spending energy"
+  },
+  "help.cmd_create_bank": {
+    "status": "unverified",
+    "text": "/create-bank — found a bank and its currency (bot/server admins; interactive)"
+  },
+  "help.cmd_create_good": {
+    "status": "unverified",
+    "text": "/create-good <name> <base_value> <energy_cost> [emoji] — create a craftable good (bank leaders)"
   },
   "help.cmd_edit_party": {
     "status": "unverified",
@@ -527,6 +823,10 @@
     "status": "unverified",
     "text": "/find-without <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages NOT containing the keywords (server admins)"
   },
+  "help.cmd_fine": {
+    "status": "unverified",
+    "text": "/fine <user> <amount> [reason] — fine a user in your bank's currency (bank leaders)"
+  },
   "help.cmd_force_leave": {
     "status": "unverified",
     "text": "/force_leave <platform> <id> — make the bot leave a chat (bot admins)"
@@ -538,6 +838,10 @@
   "help.cmd_help": {
     "status": "unverified",
     "text": "/help — show this command list"
+  },
+  "help.cmd_inventory": {
+    "status": "unverified",
+    "text": "/inventory — your crafted goods"
   },
   "help.cmd_lang": {
     "status": "unverified",
@@ -575,13 +879,37 @@
     "status": "unverified",
     "text": "/locale [code] — localization status, or a language's file"
   },
+  "help.cmd_localizer_add": {
+    "status": "unverified",
+    "text": "/localizer-add <user> — grant Localizer status: localization editing in the control panel (bot admins)"
+  },
+  "help.cmd_localizer_add_tg": {
+    "status": "unverified",
+    "text": "/localizer-add <ID | @username | reply> — grant Localizer status: localization editing in the control panel (bot admins)"
+  },
+  "help.cmd_localizer_rem": {
+    "status": "unverified",
+    "text": "/localizer-rem <user> — revoke a delegated Localizer status (bot admins)"
+  },
+  "help.cmd_localizer_rem_tg": {
+    "status": "unverified",
+    "text": "/localizer-rem <ID | @username | reply> — revoke a delegated Localizer status (bot admins)"
+  },
   "help.cmd_locallang": {
     "status": "unverified",
     "text": "/locallang <code> — set bot language for this channel/topic (ru, uk, pl, en, es, pt)"
   },
+  "help.cmd_open_account": {
+    "status": "unverified",
+    "text": "/open-account <code> — open an account in a bank"
+  },
   "help.cmd_party": {
     "status": "unverified",
     "text": "/party <code|name> — information about a party of this union"
+  },
+  "help.cmd_party_dues": {
+    "status": "unverified",
+    "text": "/party-dues <code> <amount> — set your party's monthly member dues (party leaders)"
   },
   "help.cmd_party_join": {
     "status": "unverified",
@@ -606,6 +934,10 @@
   "help.cmd_party_leave_tg": {
     "status": "unverified",
     "text": "/party_leave — leave your party in this union"
+  },
+  "help.cmd_pay": {
+    "status": "unverified",
+    "text": "/pay <user> <amount> <code> — send money to another user"
   },
   "help.cmd_privacy": {
     "status": "unverified",
@@ -647,9 +979,53 @@
     "status": "unverified",
     "text": "/quizzes_stop — stop the quiz, keeping your progress for 7 days"
   },
+  "help.cmd_rates": {
+    "status": "unverified",
+    "text": "/rates [code] — currency values and conversion rates"
+  },
+  "help.cmd_remadmin": {
+    "status": "unverified",
+    "text": "/remadmin <user> — revoke delegated Server Admin rights (bot admins)"
+  },
+  "help.cmd_remadmin_tg": {
+    "status": "unverified",
+    "text": "/remadmin <ID | @username | reply> — revoke delegated Server Admin rights (bot admins)"
+  },
+  "help.cmd_sell": {
+    "status": "unverified",
+    "text": "/sell <good_code> [qty] — sell a good back to its bank"
+  },
+  "help.cmd_set_earn": {
+    "status": "unverified",
+    "text": "/set-earn <code> <on|off> [rate] — make this channel earn a currency (leaders/admins)"
+  },
+  "help.cmd_set_profession": {
+    "status": "unverified",
+    "text": "/set-profession <user> <good_code> — set a member's profession (bank leaders)"
+  },
+  "help.cmd_set_rate": {
+    "status": "unverified",
+    "text": "/set-rate <code> <rate> — fix a pegged rate with your sole treaty partner"
+  },
+  "help.cmd_set_wage": {
+    "status": "unverified",
+    "text": "/set-wage <profession> <amount> — set the monthly wage for a profession (bank leaders)"
+  },
+  "help.cmd_setadmin": {
+    "status": "unverified",
+    "text": "/setadmin <user> — delegate Server Admin rights for this server to a user (bot admins)"
+  },
+  "help.cmd_setadmin_tg": {
+    "status": "unverified",
+    "text": "/setadmin <ID | @username | reply> — delegate Server Admin rights for this group (bot admins)"
+  },
   "help.cmd_setup": {
     "status": "unverified",
     "text": "/setup <union> <lang> — link this server/group to a union and set the language (bot admins)"
+  },
+  "help.cmd_treaty": {
+    "status": "unverified",
+    "text": "/treaty <code> — propose a currency-conversion treaty (bank leaders)"
   },
   "help.cmd_verify": {
     "status": "unverified",
@@ -675,6 +1051,10 @@
     "status": "unverified",
     "text": "For Bot Admins"
   },
+  "help.section_economy": {
+    "status": "unverified",
+    "text": "Economy"
+  },
   "help.section_everyone": {
     "status": "unverified",
     "text": "For everyone"
@@ -698,6 +1078,18 @@
   "internal_error": {
     "status": "unverified",
     "text": "Internal error: {error}"
+  },
+  "inventory_empty": {
+    "status": "unverified",
+    "text": "Your inventory is empty."
+  },
+  "inventory_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] ×{qty} — unit value {value} (level {level})"
+  },
+  "inventory_title": {
+    "status": "unverified",
+    "text": "Your inventory"
   },
   "lang_flag": {
     "status": "unverified",
@@ -851,6 +1243,34 @@
     "status": "unverified",
     "text": "Unknown language: {lang}. Available: {supported}."
   },
+  "localizer_add_already": {
+    "status": "unverified",
+    "text": "User {user_id} is already a localizer of this bot."
+  },
+  "localizer_add_dm": {
+    "status": "unverified",
+    "text": "You have been granted Localizer status: you can now edit this bot's localization through its control panel."
+  },
+  "localizer_add_done": {
+    "status": "unverified",
+    "text": "User {user_id} is now a localizer of this bot and can edit its localization through the control panel."
+  },
+  "localizer_add_usage": {
+    "status": "unverified",
+    "text": "Usage: /localizer-add <user ID or @username>, or reply to the user's message with the command."
+  },
+  "localizer_rem_done": {
+    "status": "unverified",
+    "text": "User {user_id} is no longer a localizer of this bot."
+  },
+  "localizer_rem_not": {
+    "status": "unverified",
+    "text": "User {user_id} has no delegated localizer status. (Admins are localizers automatically; this command does not remove them.)"
+  },
+  "localizer_rem_usage": {
+    "status": "unverified",
+    "text": "Usage: /localizer-rem <user ID or @username>, or reply to the user's message with the command."
+  },
   "locallang_usage": {
     "status": "unverified",
     "text": "Usage: /locallang <ru|uk|pl|en|es|pt>"
@@ -859,9 +1279,17 @@
     "status": "unverified",
     "text": "You don't have permission to use this command."
   },
+  "open_account_usage": {
+    "status": "unverified",
+    "text": "Usage: /open-account <currency code>"
+  },
   "party_choose": {
     "status": "unverified",
     "text": "You lead several parties. Reply with the number of the party to manage:"
+  },
+  "party_dues_usage": {
+    "status": "unverified",
+    "text": "Usage: /party-dues <currency code> <amount>"
   },
   "party_feature_disabled": {
     "status": "unverified",
@@ -870,6 +1298,10 @@
   "party_field_allies": {
     "status": "unverified",
     "text": "Allied parties"
+  },
+  "party_field_balance": {
+    "status": "unverified",
+    "text": "Accounts"
   },
   "party_field_description": {
     "status": "unverified",
@@ -1015,6 +1447,22 @@
     "status": "unverified",
     "text": "Usage: /party <code or name>"
   },
+  "pay_done": {
+    "status": "unverified",
+    "text": "✅ Sent {amount} to {user}."
+  },
+  "pay_insufficient": {
+    "status": "unverified",
+    "text": "Insufficient funds for this transfer."
+  },
+  "pay_self": {
+    "status": "unverified",
+    "text": "You cannot pay yourself."
+  },
+  "pay_usage": {
+    "status": "unverified",
+    "text": "Usage: /pay <user> <amount> <code> (or reply to a user: /pay <amount> <code>)"
+  },
   "privacy_block_all_off": {
     "status": "unverified",
     "text": "✅ Other users can compare their results with yours again."
@@ -1074,6 +1522,10 @@
   "privacy_title": {
     "status": "unverified",
     "text": "Privacy"
+  },
+  "profession_none": {
+    "status": "unverified",
+    "text": "none"
   },
   "quiz_answer_hint": {
     "status": "unverified",
@@ -1227,6 +1679,46 @@
     "status": "unverified",
     "text": "Quizzes"
   },
+  "rates_line": {
+    "status": "unverified",
+    "text": "1 {a} = {rate} {b}{peg}"
+  },
+  "rates_no_banks": {
+    "status": "unverified",
+    "text": "There are no banks yet."
+  },
+  "rates_none": {
+    "status": "unverified",
+    "text": "{code} has no conversion partners yet."
+  },
+  "rates_pegged": {
+    "status": "unverified",
+    "text": "(pegged)"
+  },
+  "rates_title_all": {
+    "status": "unverified",
+    "text": "Currency values:"
+  },
+  "rates_title_one": {
+    "status": "unverified",
+    "text": "Conversion rates for {code}:"
+  },
+  "rates_value_line": {
+    "status": "unverified",
+    "text": "{name} [{code}]: value {value}"
+  },
+  "remadmin_not_admin": {
+    "status": "unverified",
+    "text": "User {user_id} is not an admin of this server."
+  },
+  "remadmin_success": {
+    "status": "unverified",
+    "text": "User {user_id} is no longer an admin of this server."
+  },
+  "remadmin_usage": {
+    "status": "unverified",
+    "text": "Usage: /remadmin <user ID or @username>, or reply to the user's message with /remadmin."
+  },
   "resume_confirm": {
     "status": "unverified",
     "text": "Resume the party {name}?"
@@ -1250,6 +1742,22 @@
   "rules_menu_title": {
     "status": "unverified",
     "text": "Party rules — {name} [{code}]"
+  },
+  "sell_done": {
+    "status": "unverified",
+    "text": "💰 Sold {qty} ×{name} at {unit} each — {total} total."
+  },
+  "sell_nothing": {
+    "status": "unverified",
+    "text": "You have no {name} to sell."
+  },
+  "sell_usage": {
+    "status": "unverified",
+    "text": "Usage: /sell <good code> [quantity]"
+  },
+  "service_event.bank_created": {
+    "status": "unverified",
+    "text": "🏦 {user} founded bank {name} [{code}] in union {union}."
   },
   "service_event.bot_started": {
     "status": "unverified",
@@ -1282,6 +1790,98 @@
   "service_event.union_created": {
     "status": "unverified",
     "text": "🆕 Union {code} was created by {user}."
+  },
+  "set_earn_no_permission": {
+    "status": "unverified",
+    "text": "Only this bank's leaders or a server admin can set earning channels."
+  },
+  "set_earn_off": {
+    "status": "unverified",
+    "text": "✅ This channel no longer earns any currency."
+  },
+  "set_earn_on": {
+    "status": "unverified",
+    "text": "✅ This channel now earns {code} (rate ×{rate})."
+  },
+  "set_earn_usage": {
+    "status": "unverified",
+    "text": "Usage: /set-earn <code> <on|off> [rate]"
+  },
+  "set_earn_wrong_union": {
+    "status": "unverified",
+    "text": "This server does not belong to that bank's union."
+  },
+  "set_profession_done": {
+    "status": "unverified",
+    "text": "✅ {user}'s profession is now {name}."
+  },
+  "set_profession_usage": {
+    "status": "unverified",
+    "text": "Usage: /set-profession <user> <good code>"
+  },
+  "set_rate_bad": {
+    "status": "unverified",
+    "text": "The rate must be a positive number."
+  },
+  "set_rate_declined": {
+    "status": "unverified",
+    "text": "The peg proposal was declined."
+  },
+  "set_rate_done": {
+    "status": "unverified",
+    "text": "✅ Pegged rate set: 1 {a} = {rate} {b}."
+  },
+  "set_rate_multi": {
+    "status": "unverified",
+    "text": "A manual peg is only allowed when the two banks are each other's only treaty partner."
+  },
+  "set_rate_no_treaty": {
+    "status": "unverified",
+    "text": "You have no treaty with that bank."
+  },
+  "set_rate_offer": {
+    "status": "unverified",
+    "text": "Peg proposal: 1 {a} = {rate} {b}. A leader of {b} may accept."
+  },
+  "set_rate_usage": {
+    "status": "unverified",
+    "text": "Usage: /set-rate <partner code> <rate>"
+  },
+  "set_wage_cleared": {
+    "status": "unverified",
+    "text": "✅ Wage for {name} removed."
+  },
+  "set_wage_done": {
+    "status": "unverified",
+    "text": "✅ Monthly wage for {name} set to {amount}."
+  },
+  "set_wage_no_good": {
+    "status": "unverified",
+    "text": "No good in bank {bank} matches that profession."
+  },
+  "set_wage_usage": {
+    "status": "unverified",
+    "text": "Usage: /set-wage <profession> <amount>"
+  },
+  "setadmin_already": {
+    "status": "unverified",
+    "text": "User {user_id} is already an admin of this server."
+  },
+  "setadmin_dm": {
+    "status": "unverified",
+    "text": "I now recognize you as an administrator of the server {server}."
+  },
+  "setadmin_invalid_id": {
+    "status": "unverified",
+    "text": "Invalid user ID."
+  },
+  "setadmin_success": {
+    "status": "unverified",
+    "text": "User {user_id} has been added as an admin of this server."
+  },
+  "setadmin_usage": {
+    "status": "unverified",
+    "text": "Usage: /setadmin <user ID or @username>, or reply to the user's message with /setadmin."
   },
   "setup_success": {
     "status": "unverified",
@@ -1322,6 +1922,30 @@
   "transfer_done": {
     "status": "unverified",
     "text": "✅ {user} now leads {name}."
+  },
+  "treaty_declined": {
+    "status": "unverified",
+    "text": "The treaty offer was declined."
+  },
+  "treaty_done": {
+    "status": "unverified",
+    "text": "✅ Treaty established: {a} ↔ {b} are now convertible."
+  },
+  "treaty_exists": {
+    "status": "unverified",
+    "text": "These banks already have a treaty."
+  },
+  "treaty_offer": {
+    "status": "unverified",
+    "text": "Bank {proposer} proposes a currency-conversion treaty with {name} [{code}]. A leader of {code} may accept."
+  },
+  "treaty_self": {
+    "status": "unverified",
+    "text": "A bank cannot make a treaty with itself."
+  },
+  "treaty_usage": {
+    "status": "unverified",
+    "text": "Usage: /treaty <currency code>"
   },
   "verify_cooldown": {
     "status": "unverified",

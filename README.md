@@ -1,10 +1,6 @@
 # Democrate
 
-Democrate is a cross-platform coordination bot for unions of wiki communities (confederations). It runs on Discord and Telegram at the same time, keeps a registry of unions, links Discord servers and Telegram groups to them, hosts the political life of each union — parties with leaders, logos, colors and ideologies, and government bodies — runs ideology quizzes with user-controlled privacy, and answers in six languages with per-server and per-channel language settings. Its Discord presence carries the motto **“Unio, progressio et diplomatia”**.
-
-Democrate is the diplomatic companion to [Confederate](https://github.com/HIHRAIM/Confederate) and [Confederate Guard](https://github.com/HIHRAIM/Confederate-Guard) and shares their architecture: local SQLite storage, JSON localization files with community suggestion tooling, and encrypted automatic backups.
-
-> **Roadmap:** message relay between the chats of a union and collecting poll votes through the bot's DMs into forum threads are planned features; the current release covers the union registry, parties, government bodies, quizzes, moderation channel scans and localization.
+Democrate is a cross-platform coordination bot for **unions** of wiki communities that runs on Discord and Telegram. It keeps a registry of unions and the servers/groups bound to them, hosts each union's **political parties** and **government bodies**, verifies users through their **Fandom** profiles, runs ideology **quizzes**, announces **wiki anniversaries**, and powers a cross-community **economy**: banks with their own currencies, message-based earning, craftable goods, salaries, fines, party dues and currency exchange. All replies are localized into six languages (en, ru, uk, pl, es, pt).
 
 ## Requirements
 
@@ -12,12 +8,10 @@ Democrate is the diplomatic companion to [Confederate](https://github.com/HIHRAI
 - A Discord bot token
 - A Telegram bot token
 - SQLite (uses local `dem.db`, no external DB required)
-- Python packages used by the project (see `requirements.txt`):
+- Python packages used by the project:
   - `discord.py`
   - `aiogram`
-  - `aiohttp` (used by `/verify` to reach Fandom's public API)
-
-> **Message Content intent:** the party dialogs (`/add-party`, `/edit-party`, `/edit-party-admin`), the quizzes, the `/privacy` menu and the channel scans (`/find-with`, `/find-without`) read message content, which requires the privileged **Message Content Intent** — enable it for the bot in the Discord Developer Portal, otherwise the bot will not start.
+  - `aiohttp`
 
 ## Setup
 
@@ -35,20 +29,23 @@ Democrate is the diplomatic companion to [Confederate](https://github.com/HIHRAI
 
 3. **Install dependencies**
    ```bash
-   pip install -r requirements.txt
+   pip install discord.py aiogram aiohttp
    ```
 
 4. **Create config file**
    - Copy `src/config.example.py` to `src/config.py`.
-   - Set environment variables (the example config reads tokens from env), or copy `src/.env.example` to `src/.env` and fill it in — the config loads it automatically (already-set environment variables take precedence):
+   - Set environment variables (the config reads tokens from env), or copy `src/.env.example` to `src/.env` and fill it in — the config loads it automatically (already-set environment variables take precedence):
      - `DISCORD_BOT_TOKEN` — your Discord bot token.
      - `TELEGRAM_BOT_TOKEN` — your Telegram bot token.
-     - `BACKUP_KEY` — the encryption key for database backups (keep a copy outside the server; without it backups are unreadable).
-   - Edit `src/config.py`:
-     - `ADMINS["discord"]` and `ADMINS["telegram"]` — sets of numeric user IDs with global bot-admin rights.
-     - `SERVICE_CHATS["discord"]` and `SERVICE_CHATS["telegram"]` — chat IDs where the bot sends startup/shutdown events. Telegram format: `"-1000000000000:0"` (chat\_id:thread\_id); Discord format: numeric channel ID.
-     - `BACKUP_CHATS["discord"]` and `BACKUP_CHATS["telegram"]` — chat IDs where the bot sends automatic database backups every 12 hours. Same format as `SERVICE_CHATS`.
-     - `SUPPORT_CHATS["discord"]` and `SUPPORT_CHATS["telegram"]` — chats that receive localization suggestions submitted via `/loc-suggest` (Discord as an embed, Telegram as a message). Same format as `SERVICE_CHATS`.
+     - `BACKUP_KEY` — passphrase used to encrypt automatic database backups.
+   - Edit `config.py`:
+     - `ADMINS["discord"]` and `ADMINS["telegram"]` — sets of numeric user IDs with global **Bot Admin** rights.
+     - `SERVICE_CHATS` — chats that receive startup/shutdown and administrative events. Telegram format: `"-1000000000000:0"` (chat_id:thread_id); Discord format: numeric channel ID.
+     - `BACKUP_CHATS` — chats that receive encrypted database backups every 12 hours. Same format.
+     - `SUPPORT_CHATS` — chats that receive localization suggestions from `/loc-suggest`. Same format.
+     - `ECONOMY` — the economy's tuning constants (documented inline): message-earning anti-abuse knobs (`min_chars`, `cooldown`, `sqrt_cap`, `hourly_activity_cap`, `currency_per_activity`, `energy_per_activity`), crafting-mastery curve (`alpha`, `beta`, `autocraft_cap`), and foreign-exchange behavior (`fx_daily_clamp`, `fx_activity_weight`, `fx_min_value`, `fx_initial_value`, `convert_fee`).
+
+   > **Message Content intent:** message earning, the interactive dialogs and the numbered menus read ordinary messages, which requires the privileged **Message Content Intent** — enable it for the bot in the Discord Developer Portal, otherwise the bot will not start.
 
 5. **Run the bot**
    ```bash
@@ -57,294 +54,190 @@ Democrate is the diplomatic companion to [Confederate](https://github.com/HIHRAI
 
 ---
 
-## Unions
-
-A **union** is a confederation of wiki communities identified by a short code (2–12 Latin letters/digits) and named in up to six languages. The software ships with an empty registry: Bot Admins create every union at runtime with `/add-unia`, giving its name in at least one supported language. The name shown in replies follows the chat's language (falling back to English, then to any available name).
-
-A Discord server or Telegram group joins a union with `/setup <union> <lang>` (Bot Admins). Until a chat is set up, only `/help` and Bot Admin commands work there — everything else answers with a “not set up yet” notice.
-
----
-
-## Verification
-
-A range of Fandom-activity commands — `/add-party`, `/edit-party`, `/edit-rules`, `/find-with`, `/find-without`, `/party-join` — require the caller to be **verified**, and prompt for it on first use.
-
-- **On Discord**, `/verify <fandom_username>` proves you own a Fandom account: the bot reads the Discord handle you set on that Fandom profile (through Fandom's public API) and checks it against your Discord username. Verification is **global** — once verified, it applies on every server and union.
-- **On Telegram**, you verify by linking your account to a verified Discord account: run `/add-discord <your_discord_name>` on Telegram and `/add-telegram <your_@username>` on Discord within 30 minutes of each other (either order). The link makes you verified on Telegram **as long as the linked Discord account is Fandom-verified**.
-
----
-
-## Parties and government bodies
-
-Each union can host **parties**. They are disabled by default; Bot Admins enable them per union with `/allow-parties`, at the same time listing the Discord role IDs whose holders may found parties. A party is created with the interactive `/add-party` dialog (name → 4-character code → logo; every answer is awaited for 30 minutes) and managed by its founder and leaders through `/edit-party` (rename, recode, logo, embed color, description, ideologies, co-leaders and ownership transfer with consent buttons, suspension, article link) and `/edit-rules`. Anyone can look a party up with `/party` — a fuzzy search with numbered suggestions when nothing matches exactly.
-
-Membership is handled by `/party-join` (request to join; the party's Discord leaders get a DM with **Accept**/**Reject** buttons — one is enough), `/party-leave` (leave unilaterally) and `/party-kick` (a leader removes a member unilaterally). A user belongs to at most one party per union.
-
-**Government bodies** are created per union by Bot Admins with `/add-govt` (body name plus what one/several members are called) and looked up with `/govt`, which lists the members separated by an interpunct, each with their party after a `|`. Commands for party alliances and appointing government members are planned; the database schema and the info cards already account for them.
-
----
-
-## Quizzes
-
-`/quizzes` lists the available quizzes and runs the one you pick — in a channel, a group or the bot's DMs. The first quiz, **WikiCharts**, is adapted from the open-source [WikiCharts test](https://github.com/WikiCharts/wikicharts.github.io): each question shows a topic and a set of statements, you answer `<number>-Mb` for a slight preference or `<number>-Y` for a definite one, and the answers are scored on four axes into a breakdown of ideologies.
-
-- **Pausing.** `/quizzes-stop` parks the run: the answers so far are kept for **7 days**, and starting the same quiz again resumes it at the question you left off. After 7 days the parked progress is discarded and the quiz starts over.
-- **Storing results is opt-in.** Before showing the results the bot asks whether it may remember them. Only the **two most recent** attempts of each quiz are kept, so a result always has at most one predecessor.
-- **Comparing.** `/quizzes-previous [number]` puts your latest result next to the one before it, each labelled with the day it was taken. Called without a number it only works within **30 minutes** of finishing a quiz; afterwards pass the quiz's number from the `/quizzes` list. `/quizzes-compare <user>` compares your latest result with another user's.
-- **One history across platforms.** Once you link your Discord and Telegram accounts (`/add-discord` + `/add-telegram`), both accounts share one quiz history: the two most recent attempts of each quiz, wherever they were taken, and one set of privacy settings.
-- **Privacy.** `/privacy` opens a numbered menu covering everything the bot stores about you: delete all your quiz results, delete the results of one quiz, forbid other users from comparing themselves against you, or forbid it for one quiz only. Options that would do nothing — deleting results nobody stored, choosing among a single quiz — are left out, so the numbering follows what you actually have. `/quizzes-clear` deletes a single stored attempt.
-
-Whatever a user consents to, a stored result is **never kept longer than ten years**.
-
----
-
-## Wiki anniversaries
-
-`/wiki-founday` (Discord, Server Admins) registers a wiki whose birthday the bot then announces **every year**, posting through a webhook named after the chat's language — “Дни рождения”, “Birthdays”, “Urodziny” and so on.
-
-```
-/wiki-founday url:amongus.fandom.com/ru name:Among Us Вики founded:06-15-2018 14:30
-```
-
-`founded` is UTC, `MM-DD-YYYY` or `MM-DD-YYYY HH:MM` (midnight when the time is left out). The optional arguments are the target channel (default: the channel the command was run in), the posting time `at` as `HH:MM` or bare `HH` (default `06:00` UTC), and `wiki_lang`, the wiki's own language (default: the chat's language).
-
-The greeting is written in the past tense when the wiki's founding **time of day** falls before the posting time, and in the future tense when it is still ahead that day:
-
-> Сегодня Among Us Вики исполнилось 2 года!
-> Сегодня Among Us Вики исполнится 5 лет!
-
-Year counts are pluralized per language (`1 год` / `2 года` / `5 лет`, `1 rok` / `2 lata` / `5 lat`, …). When the wiki's language differs from the chat's, its own greeting follows on a second line and the wiki's flag marks both:
-
-> Сегодня Among Us Вікі исполнится 2 года! 🇺🇦
-> 🇺🇦Сьогодні Among Us Вікі виповниться 2 роки!
-> https://amongus.fandom.com/uk
-
-`/wiki-foundays` lists what a server has registered, and `/wiki-founday-remove <url>` stops an announcement. Registering the same wiki url again updates the entry in place.
-
----
-
 ## Commands
 
 Permission roles used below:
 
-- **Everyone** — any user in a set-up server/group.
-- **Server Admins** — the platform's native administrators: on Discord, members with the **Administrator** or **Manage Server** permission; on Telegram, the group's creator and administrators. Nothing is delegated through the bot.
-- **Bot Admins** — global admins defined in `config.py` (`ADMINS`).
-- ✳️ — special access: `/add-party` needs one of the roles configured with `/allow-parties`; `/edit-party`, `/edit-rules` and `/party-kick` are for the party's founder and leaders. (`/edit-party-admin` is the Bot Admin equivalent of `/edit-party` and needs no leadership.)
-- 🔒 — requires [verification](#verification) (first use prompts for `/verify`).
+- **Everyone** — any user in a set-up chat (some commands additionally require [verification](#verification)).
+- **Server Admins** — members with the native Administrator/Manage Server permission (Discord), group creator/administrators (Telegram), plus users delegated with `/setadmin`.
+- **Localizers** — users granted `/localizer-add`: they may edit this bot's localization through the [control panel](https://github.com/HIHRAIM/Confederate-Panel). Delegated Server Admins hold the status implicitly while they remain admins.
+- **Bot Admins** — user IDs listed in `config.py`.
+- **Party Leaders** — a party's founder and appointed leaders.
+- **Bank Leaders** — a bank's appointed leaders (need not be admins).
 
 ### Discord commands
 
 | Command | Purpose | Everyone | Server Admins | Bot Admins |
 |---|---|:---:|:---:|:---:|
-| `/setup <union> <lang>` | Link this server to a union and set its language | ❌ | ❌ | ✅ |
-| `/verify <fandom_username>` | Verify ownership of a Fandom account (checks the Discord handle on your Fandom profile); unlocks the 🔒 commands, globally | ✅ | ✅ | ✅ |
-| `/add-telegram <@username>` | Link your Telegram account (pair with `/add-discord` on Telegram within 30 min) | ✅ | ✅ | ✅ |
-| `/add-unia <code> [name_en] [name_ru] [name_uk] [name_pl] [name_es] [name_pt]` | Create a new union; at least one name is required | ❌ | ❌ | ✅ |
-| `/allow-parties <union> <enable\|disable> [role_ids]` | Enable/disable parties in a union; on `enable`, list the comma-separated role IDs allowed to use `/add-party` | ❌ | ❌ | ✅ |
-| `/add-party [founder_id]` 🔒 | Found a party via an interactive dialog (name → 4-char code → logo; 30 min per answer). Only Bot Admins may specify a founder | ✳️ | ✳️ | ✅ |
-| `/edit-party [option]` 🔒 | Party settings menu (embed with the logo top-right), or run option 1–10 directly: name, code, logo, color, description ⚠️, ideologies ⚠️, add leader, transfer, suspend/resume, article link ⚠️ | ✳️ | ✳️ | ✳️ |
-| `/edit-rules [option]` 🔒 | Party rules menu; option 1 toggles whether members may invite new members (default: no) | ✳️ | ✳️ | ✳️ |
-| `/party <code\|name>` | Party info card (embed in the party's color, logo top-right, “More” link button); fuzzy suggestions with a 30-minute numbered choice when nothing matches | ✅ | ✅ | ✅ |
-| `/party-join <code\|exact name>` 🔒 | Request to join a party; its Discord leaders get a DM with Accept/Reject (one is enough) | ✅ | ✅ | ✅ |
-| `/party-leave` | Leave your party in this union (the founder must transfer or suspend instead) | ✅ | ✅ | ✅ |
-| `/party-kick <id\|username>` | Remove a member from your party | ✳️ | ✳️ | ✳️ |
-| `/edit-party-admin <code\|full name>` | Settings menu (embed) for **any** party of any union, matched exactly by code or full name: the ten `/edit-party` options plus 11 the invite rule, 12 move to another union, 13 delete the party | ❌ | ❌ | ✅ |
-| `/quizzes` | List the quizzes and take the one you pick; resumes a run parked with `/quizzes-stop` | ✅ | ✅ | ✅ |
-| `/quizzes-stop` | Pause the quiz you are taking; the progress is kept for 7 days | ✅ | ✅ | ✅ |
-| `/quizzes-previous [number]` | Compare your latest result of a quiz with the one before it, both labelled with their dates. Without a number, only within 30 minutes of finishing a quiz | ✅ | ✅ | ✅ |
-| `/quizzes-compare <user>` | Compare your latest quiz results with another user's (refused if they forbade it in `/privacy`) | ✅ | ✅ | ✅ |
-| `/quizzes-clear` | Delete one of your saved quiz results | ✅ | ✅ | ✅ |
-| `/privacy` | Numbered menu of the privacy areas you can control: delete quiz results (all, or one quiz), and forbid others from comparing against you (all, or one quiz) | ✅ | ✅ | ✅ |
-| `/add-govt <union> <name> <member> <members>` | Create a government body (name must be unique within the union) | ❌ | ❌ | ✅ |
-| `/govt <name>` | Government body info: members listed with an interpunct, each with their party after a `\|`; fuzzy suggestions mark bodies of other unions | ✅ | ✅ | ✅ |
-| `/find-with <channel_id> <MM-DD-YYYY[ + ND]> <keywords;…>` 🔒 | Scan the channel over the period and reply-mention the author of every message **containing** at least one keyword (embeds are searched too) | ❌ | ✅ | ✅ |
-| `/find-without <channel_id> <MM-DD-YYYY[ + ND]> <keywords;…>` 🔒 | Same scan, but replies to every message **not containing** any of the keywords | ❌ | ✅ | ✅ |
-| `/wiki-founday <url> <name> <MM-DD-YYYY[ HH:MM]> [channel_id] [at] [wiki_lang]` | Congratulate a wiki on its anniversary every year, through a “Birthdays” webhook. Defaults: this channel, 06:00 UTC, this chat's language | ❌ | ✅ | ✅ |
-| `/wiki-foundays` | List this server's wiki anniversaries | ❌ | ✅ | ✅ |
-| `/wiki-founday-remove <url>` | Stop announcing a wiki's anniversary | ❌ | ✅ | ✅ |
-| `/lang <ru\|uk\|pl\|en\|es\|pt>` | Set the default bot language for the whole server (used wherever no `/locallang` override is set) | ❌ | ✅ | ✅ |
-| `/locallang <ru\|uk\|pl\|en\|es\|pt>` | Set bot language for this channel/thread/forum post (overrides the server-wide `/lang`) | ❌ | ✅ | ✅ |
-| `/locale [code]` | Show localization status (bar + verified %), or send a language's localization file (10-min per-server cooldown for the file) | ✅ | ✅ | ✅ |
-| `/loc-compare <code>` | Compare a reply across all languages with status emoji | ✅ | ✅ | ✅ |
-| `/loc-suggest <lang> <code> <text>` | Suggest a localization; sent to the support chats | ✅ | ✅ | ✅ |
-| `/help` | Show command reference | ✅ | ✅ | ✅ |
-| `/loc-reply <code> <text>` | Reply (via DM) to a user's localization suggestion | ❌ | ❌ | ✅ |
-| `/list_chats` | List all Discord servers and Telegram groups known to the bot, with their unions | ❌ | ❌ | ✅ |
-| `/force_leave <platform> <id>` | Force the bot to leave a server/group and clean up DB records | ❌ | ❌ | ✅ |
-| `/backup` | Send the current encrypted database backup file | ❌ | ❌ | ✅ |
+| `/verify <fandom_name>` | Verify by matching your Discord handle on your Fandom profile | ✅ | ✅ | ✅ |
+| `/add-telegram <nickname>` | Link your Telegram account (run `/add-discord` on Telegram within 30 min) | ✅ | ✅ | ✅ |
+| `/party <code\|name>` | A party's card: texts, logo, leaders, members, seats, bank balances | ✅ | ✅ | ✅ |
+| `/govt <name>` | A government body's members with party affiliations | ✅ | ✅ | ✅ |
+| `/add-party [founder]` | Found a party (interactive dialog; requires a union-configured role; verified) | ✅ | ✅ | ✅ |
+| `/edit-party [option]` | Manage your party: texts, logo, color, code, leaders, transfer, suspension | ✅ | ✅ | ✅ |
+| `/edit-rules [option]` | Party rules (member invites toggle) | ✅ | ✅ | ✅ |
+| `/party-join <code\|name>` | Ask to join a party (leaders approve via DM buttons) | ✅ | ✅ | ✅ |
+| `/party-leave` | Leave your party | ✅ | ✅ | ✅ |
+| `/party-kick <member>` | Remove a member from your party (party leaders) | ✅ | ✅ | ✅ |
+| `/quizzes` | Take an ideology quiz (works in DMs too) | ✅ | ✅ | ✅ |
+| `/quizzes-stop` · `/quizzes-clear` · `/quizzes-compare <user>` · `/quizzes-previous [n]` | Pause a quiz / delete stored results / compare with another user / compare with your previous attempt | ✅ | ✅ | ✅ |
+| `/privacy` | Inspect and delete the data the bot keeps about you | ✅ | ✅ | ✅ |
+| `/locale [code]` · `/loc-compare <code>` · `/loc-suggest <lang> <code> <text>` | Localization status / cross-language comparison / suggestions | ✅ | ✅ | ✅ |
+| `/help` | Paged command reference | ✅ | ✅ | ✅ |
+| `/lang <code>` · `/locallang <code>` | Server-wide / per-channel bot language | ❌ | ✅ | ✅ |
+| `/find-with` · `/find-without <channel> <period> <keywords>` | Reply-mention authors of messages (not) containing keywords (verified) | ❌ | ✅ | ✅ |
+| `/wiki-founday <url> <name> <founded> …` · `/wiki-foundays` · `/wiki-founday-remove <url>` | Yearly wiki-anniversary announcements | ❌ | ✅ | ✅ |
+| `/setadmin <user>` · `/remadmin <user>` | Grant/revoke delegated Server Admin rights (ping or ID) | ❌ | ❌ | ✅ |
+| `/localizer-add <user>` · `/localizer-rem <user>` | Grant/revoke Localizer status — localization editing in the control panel (ping, ID or username); DMs the user | ❌ | ❌ | ✅ |
+| `/setup <union> <lang>` | Bind this server to a union | ❌ | ❌ | ✅ |
+| `/add-unia <code> <names…>` | Create a union with localized names | ❌ | ❌ | ✅ |
+| `/allow-parties <union> <enable\|disable> [roles]` | Turn parties on/off in a union | ❌ | ❌ | ✅ |
+| `/add-govt <union> <name> <singular> <plural>` | Create a government body | ❌ | ❌ | ✅ |
+| `/edit-party-admin <party>` | Edit/move/delete any party of any union | ❌ | ❌ | ✅ |
+| `/loc-reply <code> <text>` | Reply to a localization suggestion | ❌ | ❌ | ✅ |
+| `/list_chats` · `/force_leave <platform> <id>` | List all bound chats / force-leave one | ❌ | ❌ | ✅ |
+| `/backup` | Get an encrypted database backup | ❌ | ❌ | ✅ |
+
+#### Discord economy commands
+
+| Command | Purpose | Who |
+|---|---|---|
+| `/create-bank` | Found a bank and its currency (interactive dialog: central server → currency name → 4-char code → emoji) | Bot/Server Admins |
+| `/bank <code>` | A bank's card: currency, union, central server, leaders, money supply, accounts, debt, value | Everyone |
+| `/bank-add-leader <code> <user>` | Offer co-leadership of a bank (consent buttons; Bot Admins appoint directly) | Bank Leaders / Bot Admins |
+| `/bank-transfer <code> <user>` | Offer the bank's leadership (consent buttons; Bot Admins appoint directly) | Bank Leaders / Bot Admins |
+| `/open-account <code>` | Open an account (also opened automatically on first earning) | Verified |
+| `/balance [code]` | Your money, energy and profession — all banks, or one | Verified |
+| `/pay <user> <amount> <code>` | Transfer money to another user (same currency, atomic) | Verified |
+| `/set-earn <code> <on\|off> [rate]` | Make the current channel earn a bank's currency | Bank Leaders / Server Admins / Bot Admins |
+| `/create-good <name> <base_value> <energy_cost> [emoji]` | Create a craftable good owned by your bank | Bank Leaders |
+| `/craft <good_code>` | Spend energy, craft one unit into your inventory | Verified |
+| `/inventory` | Your goods with quantities, unit values and quality levels | Verified |
+| `/sell <good_code> [qty]` | Sell goods back to the bank at the current unit value (the bank mints the proceeds) | Verified |
+| `/autocraft <good_code> <on\|off>` | Auto-craft daily while energy lasts | Verified |
+| `/autosend <good_code> <percent> <user\|party>` | Auto-send a share of a good's stock daily | Verified |
+| `/set-profession <user> <good_code>` | Override a member's profession in your bank | Bank Leaders |
+| `/fine <user> <amount> [reason]` | Fine a user in your bank's currency (balance may go negative — a debt) | Bank Leaders |
+| `/treaty <code>` | Propose a conversion treaty with another bank (their leader accepts via buttons) | Bank Leaders |
+| `/set-rate <code> <rate>` | Fix a pegged rate — only with your bank's **sole** treaty partner | Bank Leaders |
+| `/convert <amount> <from> <to>` | Convert between your own accounts at the current rate (fee applies) | Verified |
+| `/rates [code]` | Currency values, or one bank's conversion rates | Everyone |
+| `/set-wage <profession> <amount>` | Monthly wage for a profession in your bank (0 clears) | Bank Leaders |
+| `/party-dues <code> <amount>` | Your party's monthly member dues in a currency (0 clears) | Party Leaders |
 
 ### Telegram commands
 
-| Command | Purpose | Everyone | Server Admins | Bot Admins |
-|---|---|:---:|:---:|:---:|
-| `/setup <union> <lang>` | Link this group to a union and set its language | ❌ | ❌ | ✅ |
-| `/add_discord <discord_name>` | Link your Discord account (pair with `/add-telegram` on Discord within 30 min); this verifies you on Telegram | ✅ | ✅ | ✅ |
-| `/add_unia <CODE> en=Name \| ru=Название \| …` | Create a new union; at least one `lang=name` pair is required | ❌ | ❌ | ✅ |
-| `/allow_parties <union> <enable\|disable> [role_ids]` | Enable/disable parties in a union (role IDs are Discord roles) | ❌ | ❌ | ✅ |
-| `/add_party` | Points to Discord: parties are founded there, because the required roles can only be checked on Discord | — | — | — |
-| `/edit_party [option]` 🔒 | Party settings menu (with the logo attached), or run option 1–10 directly; leaders are referenced as `@username` or ID, consent is given with inline «Принимаю»/«Не принимаю» buttons | ✳️ | ✳️ | ✳️ |
-| `/edit_rules [option]` 🔒 | Party rules menu; option 1 toggles whether members may invite new members (default: no) | ✳️ | ✳️ | ✳️ |
-| `/party <code\|name>` | Party info card (logo photo + HTML text, “More” URL button); fuzzy suggestions with a 30-minute numbered choice | ✅ | ✅ | ✅ |
-| `/party_join <code\|exact name>` 🔒 | Request to join a party; its Discord leaders get a DM with Accept/Reject | ✅ | ✅ | ✅ |
-| `/party_leave` | Leave your party in this union (the founder must transfer or suspend instead) | ✅ | ✅ | ✅ |
-| `/party_kick <id\|username>` | Remove a Telegram member from your party | ✳️ | ✳️ | ✳️ |
-| `/edit_party_admin <code\|full name>` | Settings menu for **any** party of any union, matched exactly by code or full name: the ten `/edit_party` options plus 11 the invite rule, 12 move to another union, 13 delete the party | ❌ | ❌ | ✅ |
-| `/quizzes` | List the quizzes and take the one you pick; resumes a run parked with `/quizzes_stop` | ✅ | ✅ | ✅ |
-| `/quizzes_stop` | Pause the quiz you are taking; the progress is kept for 7 days | ✅ | ✅ | ✅ |
-| `/quizzes_previous [number]` | Compare your latest result of a quiz with the one before it, both labelled with their dates. Without a number, only within 30 minutes of finishing a quiz | ✅ | ✅ | ✅ |
-| `/quizzes_compare <user>` | Compare your latest quiz results with another user's (refused if they forbade it in `/privacy`) | ✅ | ✅ | ✅ |
-| `/quizzes_clear` | Delete one of your saved quiz results | ✅ | ✅ | ✅ |
-| `/privacy` | Numbered menu of the privacy areas you can control: delete quiz results (all, or one quiz), and forbid others from comparing against you (all, or one quiz) | ✅ | ✅ | ✅ |
-| `/add_govt <UNION> <name> \| <member> \| <members>` | Create a government body (name must be unique within the union) | ❌ | ❌ | ✅ |
-| `/govt <name>` | Government body info: members listed with an interpunct, each with their party after a `\|` | ✅ | ✅ | ✅ |
-| `/lang <ru\|uk\|pl\|en\|es\|pt>` | Set the default bot language for the whole group | ❌ | ✅ | ✅ |
-| `/locallang <ru\|uk\|pl\|en\|es\|pt>` | Set bot language for the current topic (overrides the group-wide `/lang`) | ❌ | ✅ | ✅ |
-| `/locale [code]` | Show localization status, or send a language's localization file (10-min per-group cooldown for the file) | ✅ | ✅ | ✅ |
-| `/loc_compare <code>` | Compare a reply across all languages with status emoji | ✅ | ✅ | ✅ |
-| `/loc_suggest <lang> <code> <text>` | Suggest a localization; sent to the support chats | ✅ | ✅ | ✅ |
-| `/help` | Show command reference (the reply self-deletes after a minute) | ✅ | ✅ | ✅ |
-| `/loc_reply <code> <text>` | Reply (via DM) to a user's localization suggestion | ❌ | ❌ | ✅ |
-| `/list_chats` | List all Discord servers and Telegram groups known to the bot, with their unions | ❌ | ❌ | ✅ |
-| `/force_leave <platform> <id>` | Force the bot to leave a server/group and clean up DB records | ❌ | ❌ | ✅ |
-| `/backup` | Send the current encrypted database backup file (private chat with the bot only) | ❌ | ❌ | ✅ |
+Telegram mirrors the Discord commands (both `/cmd_name` and `/cmd-name` spellings are accepted). Differences:
 
-> Telegram command names use underscores where Discord uses hyphens (`/loc_compare` ↔ `/loc-compare`, `/party_join` ↔ `/party-join`); both spellings are accepted on Telegram.
+| Command | Difference from Discord |
+|---|---|
+| `/add-discord <nickname>` | Telegram's half of account linking (instead of `/verify`; verification is inherited from the linked, Fandom-verified Discord account) |
+| `/add-party` | Points to Discord: parties are founded there because founding is gated by Discord roles |
+| `/create-good <name> \| <base_value> \| <energy_cost> \| [emoji]` | Arguments are separated by `\|` |
+| `/pay <amount> <code>` and `/fine <amount> [reason]` | Can also be used as a **reply** to the target's message (the explicit `<user>` argument is then omitted) |
+| `/find-with`, `/find-without`, `/wiki-founday*` | Discord-only (they operate on Discord channels) |
+| `/lang`, `/locallang` | Available to group administrators, as on Discord |
+| `/setadmin`, `/remadmin`, `/localizer_add`, `/localizer_rem` | Target may be given as an ID, a public `@username`, or by replying to the user's message |
+
+All other commands — `/setup`, `/add-unia`, `/allow-parties`, `/party`, `/govt`, `/edit-party`, `/edit-rules`, `/edit-party-admin`, `/party-join`, `/party-leave`, `/party-kick`, `/add-govt`, `/quizzes*`, `/privacy`, `/locale`, `/loc_compare`, `/loc_suggest`, `/loc_reply`, `/list_chats`, `/force_leave`, `/backup`, `/help`, and the whole economy set (`/create_bank`, `/bank`, `/bank_add_leader`, `/bank_transfer`, `/open_account`, `/balance`, `/pay`, `/set_earn`, `/craft`, `/inventory`, `/sell`, `/autocraft`, `/autosend`, `/set_profession`, `/fine`, `/treaty`, `/set_rate`, `/convert`, `/rates`, `/set_wage`, `/party_dues`) — work the same as on Discord, with the same permissions.
 
 ---
 
 ## Mechanics
 
-### Setup gating
+### Unions and chats
 
-`/setup` (Bot Admins) binds a Discord server or Telegram group to a union and sets its language. The binding is stored per server/group; running `/setup` again re-binds the chat to another union. Until a chat is set up, its members can only use `/help` — the public localization commands answer with a localized “not set up yet” notice, so the bot stays silent-by-default on servers that merely invited it.
-
-### Languages
-
-Replies are localized **per chat**. The language is resolved in this order: the channel/thread/topic's own `/locallang` setting → the server/group-wide default set with `/lang` (or `/setup`) → English. Supported languages: `ru`, `uk`, `pl`, `en`, `es`, `pt`.
+A **union** is a confederation of wiki communities created with `/add-unia` (code + names in any subset of the six languages). `/setup` binds a Discord server or Telegram group to a union and sets its language. Most public commands only work in set-up chats. When the bot leaves a chat, the binding and the chat's language settings are removed.
 
 ### Verification
 
-The Fandom-activity commands (`/add-party`, `/edit-party`, `/edit-rules`, `/find-with`, `/find-without`, `/party-join`) are gated: an unverified caller is told to verify first, and the command does nothing else.
+To use the Fandom-activity commands (parties, the whole economy), users verify once, globally:
 
-On Discord, `/verify <fandom_username>` resolves the Fandom account through two public, unauthenticated Fandom endpoints — the MediaWiki users API (username → numeric id) and the user-attribute service (id → `discordHandle`) — and compares the profile's Discord handle to the caller's Discord username (case-insensitively, ignoring any legacy `#discriminator`). On success the Discord user id is stored as verified. Verification is **global**: it is a property of the account, not of a server or union.
+- **Discord:** `/verify <fandom_username>` fetches that Fandom profile through Fandom's public API and checks that the Discord handle published there matches the caller.
+- **Telegram:** users link their Telegram account to a Fandom-verified Discord account: `/add-telegram <tg_nick>` on Discord + `/add-discord <discord_nick>` on Telegram, both within 30 minutes, each side naming the other.
 
-On Telegram, verification is derived from an account link. `/add-discord <discord_name>` (Telegram) and `/add-telegram <@username>` (Discord) form a mutual handshake: each command records the caller's own username and the other account it claims, and the link is made the moment the two halves reference each other, in either order, within **30 minutes**. A Telegram user counts as verified only while linked to a Discord account that is itself Fandom-verified — so a `/verify` on the Discord side that happens after the link takes effect immediately. Linking needs the Telegram user to have a public `@username`.
+A linked pair is treated as **one person**: one quiz history, one set of privacy settings, one wallet in every bank.
 
 ### Parties
 
-Parties live inside a union and are off until a Bot Admin runs `/allow-parties <union> enable <role_ids>`. Until then **every** party command — `/party`, `/party-join`, `/party-leave`, `/party-kick`, `/edit-party`, `/edit-rules`, `/add-party`, and their Telegram spellings — answers with a localized “parties are disabled in this union”. `/edit-party-admin` is the one exception, so a Bot Admin can still tidy up or delete a party after parties were switched off.
+Parties belong to a union and are enabled per union with `/allow-parties` (with the Discord role IDs whose holders may found them). `/add-party` runs an interactive dialog (name → 4-char code → logo; each answer waited up to 30 minutes). Founders/leaders manage the party through numbered `/edit-party` menus; leadership offers and transfers require the target's consent through «Accept / Decline» buttons on both platforms. Joining goes through `/party-join` with leader approval delivered as DM buttons that survive bot restarts. `/party` shows the card, including the party's bank balances.
 
-Founding (`/add-party`, Discord only) is a dialog in the channel: the bot asks for the name, then a unique 4-character code (Latin letters/digits, sharing one namespace with union codes), then the logo image; each answer is awaited for **30 minutes**, invalid answers are re-asked. A Bot Admin may found a party on someone else's behalf via the `founder` parameter.
+### Governments
 
-`/edit-party` shows a numbered settings menu (options that are still unset — description, ideologies, article link — are marked with ⚠️) or runs one option directly. Adding a co-leader (7) and transferring the party (8) mention the target user — `<@id>` on Discord, `@username` on Telegram — and require them to press «Принимаю»; otherwise the leadership stays unchanged. Suspending (9) asks for confirmation, keeps all data, marks the party as suspended in `/party`, and turns option 9 into “resume”. Descriptions and ideologies keep their links and formatting across platforms: they are stored as Discord markdown and rendered as HTML on Telegram.
+`/add-govt` creates a named body in a union (with its member titles); `/govt` shows a body's members together with their party affiliations. Seats are counted on party cards.
 
-`/party` finds a party by exact code/name, otherwise offers the closest matches (or 3 random parties of the union) as a numbered list and waits 30 minutes for the choice. The info card shows the founder, the current leaders (when they differ from the founder), ideologies, allied parties, the member count, government seats held by party members, the description and a localized “More” button with the article link; on Discord it is an embed in the party's color (default `#245590`) with the logo top-right.
+### Economy
 
-`/edit-party-admin <code|full name>` (Bot Admins) is the same menu for any party of any union, with no leadership check: the argument must match a party code or its full name exactly (case-insensitively). The menu — an embed on Discord, in the party's color — carries the ten `/edit-party` options plus **11** the member-invite rule, **12** moving the party to another union, and **13** deleting the party. The Bot Admin answers with the option number within 30 minutes. Deletion asks for confirmation, then erases the party together with its leaders, members, alliances and open join requests, and reports it to the service chats.
+The economy adds cross-community currencies with a real production cycle behind them. Its tuning constants live in `config.ECONOMY`.
+
+#### Banks and currencies
+
+`/create-bank` (Bot/Server Admins, interactive dialog) creates a **bank**: it is anchored to a **central server** (which must be `/setup`-bound) and thereby to that server's union. A server or union can host any number of banks. The currency has an English name, a 4-character code — unique across the shared namespace of union, party, currency **and** good codes — and an emoji. The creator becomes the bank's first leader; leadership works like party leadership (consent-button offers and transfers, `/bank-add-leader`, `/bank-transfer`), except that Bot Admins may appoint leaders anywhere directly. A bank leader does not need to be any kind of admin.
+
+#### Money, accounts, journal
+
+Money is stored as **integers in minor units** (hundredths) and displayed with two decimals plus the currency emoji and code. Each user (and each party) has at most one account per bank — opened explicitly with `/open-account` or automatically on first earning. Every balance change — earning, `/pay`, `/sell`, `/fine`, `/convert`, wages, dues — goes through atomic operations under the database lock and is recorded in an **append-only transaction journal** (from, to, amount, currency, reason, time).
+
+#### Earning by messages
+
+`/set-earn <code> <on|off> [rate]` marks the current channel/topic as earning a specific bank's currency (the chat must belong to the bank's union) — this is how several banks coexist on one server: each channel chooses which currency it feeds. Unconfigured channels earn nothing.
+
+Each counted message produces one activity value **A = min(√chars, `sqrt_cap`)** — sublinear in length with a ceiling, so long messages are rewarded finitely and one-word spam earns ~0. From A the user is credited **both resources at once**: currency (`A × rate × currency_per_activity`) and **energy** (`A × energy_per_activity`). Anti-abuse: messages shorter than `min_chars`, commands, bot messages and edits are ignored; a per-user `cooldown` runs between counted messages; a rolling **hourly cap** limits total A per user. Only **verified** users earn.
+
+#### Goods, crafting, mastery
+
+Bank leaders create **goods** with `/create-good` (base value in the bank's currency, energy cost, emoji; the good receives its own unique 4-char code). `/craft` spends energy and adds one unit to the inventory. Mastery **m** = units of that good the user has ever produced:
+
+- quality level = `1 + floor(log₂(m+1))`
+- unit value = `base_value × (1 + alpha·√m)`
+- craft cost = `energy_cost × (1 + beta·level)`
+
+— the more you produce, the higher your quality and per-unit value, but crafting gets costlier, keeping value finite. `/sell` sells to the bank at the current unit value — the bank **mints** the proceeds, which is the economy's money source. `/autocraft` crafts daily while energy lasts; `/autosend` moves a percentage of a good's stock daily to a chosen user or party. A user's **profession** in a bank defaults to the good they have produced the most of; a bank leader can override it with `/set-profession`.
+
+#### Fines and debt
+
+`/fine` (bank leaders) debits the target's account in that bank; the balance **may go negative** — a negative balance is the member's debt to the bank. Because balances are signed, incoming money automatically pays debt down first. No interest accrues. The bank's card shows the summed debt outstanding.
+
+#### Currency exchange
+
+`/treaty <code>` proposes a conversion treaty between two banks; a leader of the other bank accepts through consent buttons, making A↔B convertible. Each day the scheduler recomputes every currency's **value** from three factors — goods backing, money supply and message activity:
+
+```
+backing  = period_goods_value / max(money_supply, 1 unit)     # goods crafted this period, at their unit values
+activity = 1 + fx_activity_weight × ln(1 + period_energy)     # message energy earned this period
+value    = clamp(max(backing × activity, fx_min_value))       # moves at most ±fx_daily_clamp per day
+```
+
+The rate A→B = value(A) / value(B). **Manual peg:** if two banks are each other's **only** treaty partner, their leaders may fix the rate by mutual consent with `/set-rate`, overriding the computed one; as soon as a bank has two or more partners only computed rates apply (protecting triangle consistency). `/convert` exchanges between your own accounts at the current rate, minus the `convert_fee` spread (a money sink); `/rates` shows values and rates.
+
+#### Party economy, dues, wages
+
+Parties hold accounts like users; their balances appear in `/party`. `/party-dues <code> <amount>` sets a mandatory monthly member contribution: the monthly scheduler moves it from each member's account to the party's (a shortfall pushes the member into debt to the bank). `/set-wage <profession> <amount>` sets a monthly wage in a bank: the monthly scheduler pays each **verified** account holder the wage of their profession (an emission, balanced by the sinks — fines, dues, conversion fees).
+
+#### Scheduler
+
+By the pattern of the retention/backup loops: a **daily** tick (FX recompute, period-window reset, autocraft, autosend) and a **monthly** tick (wages, party-dues collection). Last-run markers are stored in `bot_settings`, so restarts never skip or double-run a period.
 
 ### Quizzes
 
-`/quizzes` lists the quizzes and runs the chosen one as a dialog in the current channel/chat (DMs included). Each question is a topic with numbered statements; the option order is reshuffled per question so answer position does not bias respondents. An answer is `<number>-Mb` (slight preference) or `<number>-Y` (definite); the trailing “disagree with all” / “don't care” / “previous question” options need only their number. Answers are scored on four axes by a faithful port of the WikiCharts `computeScores.js` vector algorithm.
+`/quizzes` offers ideology quizzes with shuffled options, works in DMs, supports pausing (`/quizzes-stop`, progress kept 7 days). A result is **stored only with the user's consent**, at most the two most recent attempts per quiz; `/quizzes-compare` puts two users' breakdowns side by side (can be forbidden in `/privacy`), `/quizzes-previous` compares your two attempts.
 
-`/quizzes-stop` sets a stop flag that the running dialog races against the next answer: the current question index, the shuffled option orders and the answers so far are stored and kept for **7 days** (pruned daily by the retention loop). Starting the same quiz again resumes it automatically at the parked question — the start prompt is skipped — and finishing or letting the parking expire clears it. Parked progress is per platform; a run parked on Discord is resumed on Discord.
+### Wiki anniversaries
 
-Storing results is opt-in: the bot asks before showing them. Only the **two most recent** attempts of each quiz survive — saving a third drops the oldest. `/quizzes-previous [number]` compares the newest attempt with its predecessor, labelling each with the day it was taken; the number is the quiz's position in the `/quizzes` list, and may be omitted only within **30 minutes** of finishing a quiz. `/quizzes-compare <user>` compares your latest result with another user's.
-
-Linking a Discord and a Telegram account makes them one identity for quizzes: every lookup resolves both user IDs, so the two most recent attempts of each quiz are shared across the platforms (the merge is re-pruned to two at the moment the handshake completes), as is the privacy configuration.
-
-### Privacy controls
-
-`/privacy` builds a numbered menu from what the caller actually has stored, so the numbering shifts with their data:
-
-1. delete all my quiz results — shown when any result is stored;
-2. delete my results for one quiz — shown when more than one quiz was taken; the bot then sends a numbered list of those quizzes;
-3. forbid other users from comparing my quiz results (a toggle; the current state is shown) — shown when any result is stored. While set, `/quizzes-compare` refuses to compare anyone against this user;
-4. forbid comparison for one quiz only — shown when more than one quiz was taken; the bot sends the numbered quiz list, each with its current state.
-
-A user with nothing stored is simply told there is nothing to configure. Both bans are honoured across a user's linked accounts, and `/quizzes-clear` removes a single stored attempt.
-
-### Party membership
-
-`/party-join <code|exact name>` (verified users) sends a join request to the party's **Discord** leaders — the founder is always one of them — as a DM carrying **Accept**/**Reject** buttons; any single leader's answer resolves it, and the requester is notified of the outcome. A user may belong to only one party per union, and the request is refused for a suspended party. The buttons are persistent: they keep working after a bot restart. `/party-leave` removes the caller from their party of the current union (the founder is refused and pointed to transfer/suspension instead). `/party-kick <id|username>` lets a founder or leader remove a plain member — not another leader or the founder — matching the target by id, mention or stored nickname on the leader's own platform.
-
-Everywhere a member is shown, a Discord member seen from Telegram appears as their **nickname**, never a Discord ping (which would not resolve there).
-
-### Government bodies
-
-`/add-govt` (Bot Admins) registers a body per union with a unique name and the localizable titles of its members (singular/plural). `/govt` looks a body up like `/party` does — but suggestions may include bodies of other unions (marked as such), and when nothing is similar the bot simply reports “not found”. The card lists the members separated by an interpunct (`·`), each followed by `| <party name>` when the member belongs to a union party.
-
-### Wiki anniversary scheduling
-
-A background loop wakes once a minute and posts every registration whose anniversary is today, once the posting minute has passed. The year of the last post is stored, so an announcement fires exactly once per year — and if the bot was offline at the appointed minute it still catches up later the same day. A wiki founded on 29 February is congratulated on 28 February in common years. The bot reuses (or creates) its own webhook named after the chat's language in the target channel; without the **Manage Webhooks** permission it falls back to an ordinary message and says so when the anniversary is registered. Leaving a server forgets its anniversaries.
-
-### Channel keyword scans
-
-`/find-with` and `/find-without` (Discord, Server Admins, and verified) walk through a channel's history over a period — `MM-DD-YYYY` for one day or `MM-DD-YYYY + 7D` for a range — and reply to every matching message with a mention of its author. *All* messages are considered: keyword matching (case-insensitive, semicolon-separated keywords) covers the message text **and** every embed (title, description, fields, footer, author). Replies are throttled to about one per second; a summary with the checked/matched counts arrives when the scan finishes.
+`/wiki-founday` registers a wiki's founding date; every year at the configured UTC time the bot posts a localized congratulation (via a webhook where it may manage webhooks) — bilingual when the wiki's language differs from the chat's.
 
 ### Localization
 
-All bot-facing strings live in per-language JSON files under `src/i18n/`. Each entry carries a translation **status**: `verified` (🟩), `unverified` (🟧) or `untranslated` (🟥, a key missing relative to the reference `DEFAULT_LANG`).
+Every reply exists in six languages (en, ru, uk, pl, es, pt) with per-key verification status. `/lang` sets a chat's default, `/locallang` overrides per channel/topic/thread. `/locale` shows per-language progress bars or sends the raw file, `/loc-compare` shows one reply across languages, `/loc-suggest` sends a suggestion to the operator's support chats, answered with `/loc-reply`. Currency names stay in English (as entered), decorated with the currency emoji.
 
-- `/locale` shows each language with an emoji bar and the percentage of verified strings; `/locale <code>` sends that language's JSON file (so the reply codes are visible for use with the other commands).
-- `/loc-compare <code>` compares one reply across all languages with status emoji.
-- `/loc-suggest <lang> <code> <text>` forwards a translation suggestion to `SUPPORT_CHATS`, tagged with a unique dialog code.
-- `/loc-reply <code> <text>` (Bot Admins) DMs the original suggester **and** posts the reply into the support chats, so the team can see how a suggestion was resolved; the dialog code is then removed. Suggestion codes are kept at most **1 year**.
+On Discord the economy speaks entirely in **embeds** (default color `#245590`); Telegram uses HTML formatting. Discord users mentioned in Telegram replies are shown by their stored nickname, never as an unresolvable ping.
 
 ### Service events and automatic backups
 
-Start/stop notices and administrative results — a chat linked with `/setup`, a union created with `/add-unia`, parties enabled/disabled with `/allow-parties`, a party founded with `/add-party`, a party deleted with `/edit-party-admin` — go to the `SERVICE_CHATS` channels, localized per channel. Encrypted database backups (authenticated BLAKE2 keystream, standard library only) are posted to `BACKUP_CHATS` every **12 hours**; `/backup` returns one on demand, and `python src/restore_backup.py <input.db.enc> <output.db>` decrypts it with the `BACKUP_KEY` environment variable.
+Start/stop notices and administrative events (`/setup`, `/add-unia`, `/allow-parties`, party and bank creation/deletion) go to the configured `SERVICE_CHATS`. Every 12 hours (and on `/backup`) the database is sent to `BACKUP_CHATS` — always encrypted with an authenticated BLAKE2 keystream; the key never leaves the operator's `BACKUP_KEY` environment variable. `restore_backup.py` decrypts a backup file back into `dem.db`.
 
 ---
 
 ## Data collection and retention
 
-The bot stores operational data in local SQLite (`dem.db`). The full privacy policy lives in [PRIVACY.md](PRIVACY.md).
-
-### What data is stored
-
-- **Union registry**
-  - Union codes, their localized names, creation timestamps.
-  - Per-union party settings: enabled flag and the Discord role IDs allowed to use `/add-party`.
-- **Chat bindings**
-  - Platform, server/group ID, bound union, the ID of the Bot Admin who ran `/setup`, timestamp.
-- **Language settings**
-  - Per-server/group and per-channel/topic language choices.
-- **Parties**
-  - Name, code, logo image, color, description, ideologies, article link, suspension flag, invite rule.
-  - Founder, leaders and members: platform, user ID and display name at the time of recording; party alliances (schema for upcoming commands).
-- **Government bodies**
-  - Body name and member titles per union; members' platform, user ID and display name.
-- **Verification and account links**
-  - Fandom verifications: Discord user ID, Fandom username/id, the matched Discord handle, timestamp.
-  - Discord↔Telegram account links, and short-lived pending link handshakes.
-- **Join requests**
-  - Open `/party-join` requests: party, requester platform/ID/name, language.
-- **Localization suggestions**
-  - `/loc-suggest` dialog codes: submitter platform/ID/username, target language, reply code, suggested text.
-- **Quizzes** (only with the taker's consent)
-  - Quiz results: platform, user ID, quiz id, language, the computed breakdown and the raw answers, timestamp — at most the two most recent attempts per quiz.
-  - Quiz progress parked by `/quizzes-stop`: platform, user ID, quiz id, language, question index, option orders, answers so far.
-  - Quiz privacy settings from `/privacy`: platform, user ID, the quiz the ban applies to (or all), the ban flag.
-- **Wiki anniversaries**
-  - Server and channel ID, wiki link and name, founding timestamp, posting time, wiki language, the ID of the admin who registered it, and the year it was last announced.
-
-Channel scans (`/find-with`, `/find-without`) read message history transiently to match keywords; nothing from the scanned messages is stored.
-
-### Retention periods
-
-- **Union registry and chat bindings**: kept until changed/removed by an admin, or until the bot leaves the server/group (`/force_leave` also cleans them up).
-- **Language settings**: kept until changed, or removed together with the chat binding.
-- **Parties and government bodies**: kept until changed by their leaders/admins; a suspended party keeps its data until resumed or removed. A member's record is removed on `/party-leave` or `/party-kick`.
-- **Verifications and account links**: kept until superseded (re-verifying or re-linking) or removed by the operator.
-- **Pending link handshakes**: at most **30 minutes**. **Join requests**: cleared once answered (stale ones pruned after 30 days).
-- **Localization-suggestion codes**: up to **1 year**, and removed immediately once answered with `/loc-reply`.
-- **Quiz results**: only the **two most recent** attempts per quiz are kept, and never for longer than **10 years**; the user can remove them at any time with `/quizzes-clear` or `/privacy`. **Quiz progress**: at most **7 days**. **Quiz privacy settings**: until the user changes them.
-- **Wiki anniversaries**: until removed with `/wiki-founday-remove`, or until the bot leaves the server.
-
-### Data usage boundaries
-
-- The bot uses stored data only to operate the union registry, parties, government bodies, verification, permissions, localization and backups.
-- Verification calls out to Fandom's public API (`community.fandom.com`, `services.fandom.com`) to read the Discord handle on the given profile; only the Fandom username you supply is sent.
-- It does not implement analytics/tracking pipelines in this repository.
-- Data is local to the bot runtime environment unless your deployment adds external backup/logging.
+See [PRIVACY.md](PRIVACY.md) for the complete inventory of what the bot stores (including the economy's accounts, transaction journal, goods, inventories, professions, wages, dues, fines/debts, treaties and rates), where data goes, what other users can see, retention periods and the choices users have.

@@ -1,4 +1,12 @@
 {
+  "account_exists": {
+    "status": "unverified",
+    "text": "У вас уже есть счёт в {code}."
+  },
+  "account_opened": {
+    "status": "unverified",
+    "text": "✅ Счёт открыт в {name} [{code}]."
+  },
   "action_cancelled": {
     "status": "verified",
     "text": "Действие отменено."
@@ -91,6 +99,38 @@
     "status": "verified",
     "text": "Использование: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
   },
+  "autocraft_off": {
+    "status": "unverified",
+    "text": "✅ Авто-крафт {name} выключён."
+  },
+  "autocraft_on": {
+    "status": "unverified",
+    "text": "✅ Авто-крафт {name} включён."
+  },
+  "autocraft_usage": {
+    "status": "unverified",
+    "text": "Использование: /autocraft <код товара> <on|off>"
+  },
+  "autosend_bad_percent": {
+    "status": "unverified",
+    "text": "Процент должен быть от 0 до 100."
+  },
+  "autosend_bad_target": {
+    "status": "unverified",
+    "text": "Не удалось определить получателя (пользователя или партию)."
+  },
+  "autosend_off": {
+    "status": "unverified",
+    "text": "✅ Авто-отправка {name} остановлена."
+  },
+  "autosend_on": {
+    "status": "unverified",
+    "text": "✅ {percent}% ваших {name} будет авто-отправляться {target}."
+  },
+  "autosend_usage": {
+    "status": "unverified",
+    "text": "Использование: /autosend <код товара> <процент> <пользователь|партия>"
+  },
   "backup_failed": {
     "status": "verified",
     "text": "Не удалось создать резервную копию: {error}"
@@ -98,6 +138,110 @@
   "backup_private_only": {
     "status": "verified",
     "text": "Используйте эту команду в личном чате с ботом."
+  },
+  "bad_amount": {
+    "status": "unverified",
+    "text": "Неверная сумма. Используйте положительное число, например 12.34."
+  },
+  "balance_debt_mark": {
+    "status": "unverified",
+    "text": "⚠️ (долг)"
+  },
+  "balance_line": {
+    "status": "unverified",
+    "text": "{money} · энергия: {energy} · профессия: {profession}"
+  },
+  "balance_none": {
+    "status": "unverified",
+    "text": "У вас пока нет счетов. Зарабатывайте в зарабатывающем канале или используйте /open-account."
+  },
+  "balance_title": {
+    "status": "unverified",
+    "text": "Ваш баланс"
+  },
+  "bank_admin_need_id": {
+    "status": "unverified",
+    "text": "Не удалось определить пользователя — укажите числовой ID или ответьте на его сообщение."
+  },
+  "bank_choose": {
+    "status": "unverified",
+    "text": "Вы руководите несколькими банками — ответьте числом:"
+  },
+  "bank_consent_not_leader": {
+    "status": "unverified",
+    "text": "Принять это может только руководитель другого банка."
+  },
+  "bank_field_accounts": {
+    "status": "unverified",
+    "text": "Счетов"
+  },
+  "bank_field_central": {
+    "status": "unverified",
+    "text": "Центральный сервер"
+  },
+  "bank_field_debt": {
+    "status": "unverified",
+    "text": "Долговые обязательства"
+  },
+  "bank_field_leaders": {
+    "status": "unverified",
+    "text": "Руководители"
+  },
+  "bank_field_supply": {
+    "status": "unverified",
+    "text": "Денежная масса"
+  },
+  "bank_field_union": {
+    "status": "unverified",
+    "text": "Союз"
+  },
+  "bank_field_value": {
+    "status": "unverified",
+    "text": "Ценность валюты"
+  },
+  "bank_leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} теперь руководитель банка {name}."
+  },
+  "bank_leader_declined": {
+    "status": "unverified",
+    "text": "Предложение со-руководства отклонено."
+  },
+  "bank_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, вам предлагают со-руководство банком {name} [{code}]. Принимаете?"
+  },
+  "bank_leader_usage": {
+    "status": "unverified",
+    "text": "Использование: /bank-add-leader <код> <пользователь>"
+  },
+  "bank_none_led": {
+    "status": "unverified",
+    "text": "Вы не руководите ни одним банком."
+  },
+  "bank_not_found": {
+    "status": "unverified",
+    "text": "Банка с таким кодом валюты нет."
+  },
+  "bank_not_leader": {
+    "status": "unverified",
+    "text": "Это могут делать только руководители банка."
+  },
+  "bank_transfer_declined": {
+    "status": "unverified",
+    "text": "Предложение руководства отклонено."
+  },
+  "bank_transfer_done": {
+    "status": "unverified",
+    "text": "✅ {user} теперь единственный руководитель банка {name}."
+  },
+  "bank_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, вам предлагают руководство банком {name} [{code}]. Принимаете?"
+  },
+  "bank_usage": {
+    "status": "unverified",
+    "text": "Использование: /bank <код валюты>"
   },
   "chat_not_setup": {
     "status": "verified",
@@ -127,6 +271,90 @@
     "status": "verified",
     "text": "{mention}, вам предлагают взять на себя управление партией {name} [{code}]!"
   },
+  "convert_done": {
+    "status": "unverified",
+    "text": "🔁 Конвертировано {amount} → {credited} (курс {rate}, комиссия {fee})."
+  },
+  "convert_no_funds": {
+    "status": "unverified",
+    "text": "Недостаточно средств в исходной валюте."
+  },
+  "convert_not_convertible": {
+    "status": "unverified",
+    "text": "Эти валюты не конвертируемы (нет договора)."
+  },
+  "convert_same": {
+    "status": "unverified",
+    "text": "Исходная и целевая валюты совпадают."
+  },
+  "convert_too_small": {
+    "status": "unverified",
+    "text": "Сумма слишком мала для конвертации."
+  },
+  "convert_usage": {
+    "status": "unverified",
+    "text": "Использование: /convert <сумма> <из кода> <в код>"
+  },
+  "could_not_resolve_user": {
+    "status": "unverified",
+    "text": "Не удалось определить пользователя."
+  },
+  "craft_done": {
+    "status": "unverified",
+    "text": "🔨 Изготовлено 1 ×{name}{emoji} за {cost}. Уровень качества {level}, стоимость единицы {value}."
+  },
+  "craft_no_energy": {
+    "status": "unverified",
+    "text": "Недостаточно энергии: нужно {cost}, у вас {have}."
+  },
+  "craft_usage": {
+    "status": "unverified",
+    "text": "Использование: /craft <код товара>"
+  },
+  "create_bank_ask_chat": {
+    "status": "unverified",
+    "text": "🏦 Основываем банк! Пришлите ID центрального сервера (он должен быть настроен через /setup)."
+  },
+  "create_bank_ask_code": {
+    "status": "unverified",
+    "text": "Пришлите 4-символьный код валюты (латиница и цифры), уникальный среди всех кодов."
+  },
+  "create_bank_ask_emoji": {
+    "status": "unverified",
+    "text": "Пришлите эмодзи для валюты."
+  },
+  "create_bank_ask_name": {
+    "status": "unverified",
+    "text": "Пришлите название валюты (на английском)."
+  },
+  "create_bank_bad_chat": {
+    "status": "unverified",
+    "text": "Это не похоже на ID сервера."
+  },
+  "create_bank_bad_code": {
+    "status": "unverified",
+    "text": "Код неверный или уже занят. Пришлите другой 4-символьный код."
+  },
+  "create_bank_chat_not_setup": {
+    "status": "unverified",
+    "text": "Этот сервер не настроен. Сначала выполните там /setup."
+  },
+  "create_bank_created": {
+    "status": "unverified",
+    "text": "✅ Банк создан: {name} [{code}] {emoji} в союзе {union}. Вы — его первый руководитель."
+  },
+  "create_good_bad": {
+    "status": "unverified",
+    "text": "Неверные значения. Базовая стоимость — положительная сумма, затрата энергии — положительное целое."
+  },
+  "create_good_created": {
+    "status": "unverified",
+    "text": "✅ Товар создан: {name} [{code}] — базовая стоимость {value}, крафт {energy}, банк {bank}."
+  },
+  "create_good_usage": {
+    "status": "unverified",
+    "text": "Использование: /create-good <название> | <база_стоимости> | <затрата_энергии> | [эмодзи]"
+  },
   "delete_party_confirm": {
     "status": "unverified",
     "text": "Удалить партию {name} [{code}]? Все её данные, лидеры, участники и заявки будут стёрты безвозвратно."
@@ -138,6 +366,18 @@
   "dialog_timeout": {
     "status": "verified",
     "text": "⏳ Время вышло — диалог отменён."
+  },
+  "dues_cleared": {
+    "status": "unverified",
+    "text": "✅ Ежемесячный взнос для {name} убран."
+  },
+  "dues_done": {
+    "status": "unverified",
+    "text": "✅ Ежемесячный взнос для {name} — {amount} с участника."
+  },
+  "dues_wrong_union": {
+    "status": "unverified",
+    "text": "Эта валюта относится к другому союзу, чем ваша партия."
   },
   "edit_admin_choose": {
     "status": "unverified",
@@ -315,6 +555,18 @@
     "status": "verified",
     "text": "🔎 Анализирую {channel} с {start} по {end} ({count} ключ. слов)…"
   },
+  "fine_done": {
+    "status": "unverified",
+    "text": "⚖️ {user} оштрафован на {amount} ({reason}). Баланс может стать отрицательным (долг)."
+  },
+  "fine_no_reason": {
+    "status": "unverified",
+    "text": "без причины"
+  },
+  "fine_usage": {
+    "status": "unverified",
+    "text": "Использование: /fine <пользователь> <сумма> [причина] (или ответом: /fine <сумма> [причина])"
+  },
   "force_leave_failed": {
     "status": "verified",
     "text": "Не удалось выйти: {error}"
@@ -427,6 +679,10 @@
     "status": "unverified",
     "text": "Дни рождения"
   },
+  "good_not_found": {
+    "status": "unverified",
+    "text": "Товара с таким кодом нет."
+  },
   "govt_no_members": {
     "status": "verified",
     "text": "Членов пока нет."
@@ -491,9 +747,49 @@
     "status": "verified",
     "text": "/allow_parties <союз> <enable|disable> [id_ролей] — включить или выключить партии в союзе (админы бота)"
   },
+  "help.cmd_autocraft": {
+    "status": "unverified",
+    "text": "/autocraft <код товара> <on|off> — авто-крафт ежедневно, пока хватает энергии"
+  },
+  "help.cmd_autosend": {
+    "status": "unverified",
+    "text": "/autosend <код товара> <процент> <пользователь|партия> — авто-отправка доли товара"
+  },
   "help.cmd_backup": {
     "status": "verified",
     "text": "/backup — получить резервную копию базы данных (админы бота)"
+  },
+  "help.cmd_balance": {
+    "status": "unverified",
+    "text": "/balance [код] — ваш баланс, энергия и профессия"
+  },
+  "help.cmd_bank": {
+    "status": "unverified",
+    "text": "/bank <код> — карточка банка: валюта, руководители, денежная масса, счета"
+  },
+  "help.cmd_bank_add_leader": {
+    "status": "unverified",
+    "text": "/bank-add-leader <код> <пользователь> — добавить со-руководителя банка"
+  },
+  "help.cmd_bank_transfer": {
+    "status": "unverified",
+    "text": "/bank-transfer <код> <пользователь> — передать руководство банком другому"
+  },
+  "help.cmd_convert": {
+    "status": "unverified",
+    "text": "/convert <сумма> <из> <в> — конвертация между своими счетами"
+  },
+  "help.cmd_craft": {
+    "status": "unverified",
+    "text": "/craft <код товара> — изготовить одну единицу товара, тратя энергию"
+  },
+  "help.cmd_create_bank": {
+    "status": "unverified",
+    "text": "/create-bank — основать банк и его валюту (админы бота/сервера; диалог)"
+  },
+  "help.cmd_create_good": {
+    "status": "unverified",
+    "text": "/create-good <название> <база> <энергия> [эмодзи] — создать товар для крафта (руководители банка)"
   },
   "help.cmd_edit_party": {
     "status": "verified",
@@ -527,6 +823,10 @@
     "status": "verified",
     "text": "/find-without <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, не содержащие ключевые слова (админы сервера)"
   },
+  "help.cmd_fine": {
+    "status": "unverified",
+    "text": "/fine <пользователь> <сумма> [причина] — оштрафовать пользователя в валюте банка (руководители)"
+  },
   "help.cmd_force_leave": {
     "status": "verified",
     "text": "/force_leave <платформа> <id> — вывести бота из чата (админы бота)"
@@ -538,6 +838,10 @@
   "help.cmd_help": {
     "status": "verified",
     "text": "/help — показать список команд"
+  },
+  "help.cmd_inventory": {
+    "status": "unverified",
+    "text": "/inventory — ваши изготовленные товары"
   },
   "help.cmd_lang": {
     "status": "verified",
@@ -575,13 +879,37 @@
     "status": "verified",
     "text": "/locale [код] — статус локализации или файл выбранного языка"
   },
+  "help.cmd_localizer_add": {
+    "status": "unverified",
+    "text": "/localizer-add <пользователь> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
+  },
+  "help.cmd_localizer_add_tg": {
+    "status": "unverified",
+    "text": "/localizer-add <ID | @username | ответ> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
+  },
+  "help.cmd_localizer_rem": {
+    "status": "unverified",
+    "text": "/localizer-rem <пользователь> — отозвать делегированный статус локализатора (админы бота)"
+  },
+  "help.cmd_localizer_rem_tg": {
+    "status": "unverified",
+    "text": "/localizer-rem <ID | @username | ответ> — отозвать делегированный статус локализатора (админы бота)"
+  },
   "help.cmd_locallang": {
     "status": "verified",
     "text": "/locallang <код> — установить язык бота для этого канала/темы (ru, uk, pl, en, es, pt)"
   },
+  "help.cmd_open_account": {
+    "status": "unverified",
+    "text": "/open-account <код> — открыть счёт в банке"
+  },
   "help.cmd_party": {
     "status": "verified",
     "text": "/party <код|название> — информация о партии союза"
+  },
+  "help.cmd_party_dues": {
+    "status": "unverified",
+    "text": "/party-dues <код> <сумма> — задать ежемесячный взнос членов партии (лидеры партии)"
   },
   "help.cmd_party_join": {
     "status": "verified",
@@ -606,6 +934,10 @@
   "help.cmd_party_leave_tg": {
     "status": "verified",
     "text": "/party_leave — выйти из своей партии в этом союзе"
+  },
+  "help.cmd_pay": {
+    "status": "unverified",
+    "text": "/pay <пользователь> <сумма> <код> — перевести деньги другому"
   },
   "help.cmd_privacy": {
     "status": "unverified",
@@ -647,9 +979,53 @@
     "status": "unverified",
     "text": "/quizzes_stop — остановить викторину, сохранив прогресс на 7 дней"
   },
+  "help.cmd_rates": {
+    "status": "unverified",
+    "text": "/rates [код] — ценности валют и курсы конвертации"
+  },
+  "help.cmd_remadmin": {
+    "status": "unverified",
+    "text": "/remadmin <пользователь> — отозвать делегированные права админа сервера (админы бота)"
+  },
+  "help.cmd_remadmin_tg": {
+    "status": "unverified",
+    "text": "/remadmin <ID | @username | ответ> — отозвать делегированные права админа группы (админы бота)"
+  },
+  "help.cmd_sell": {
+    "status": "unverified",
+    "text": "/sell <код товара> [кол-во] — продать товар банку"
+  },
+  "help.cmd_set_earn": {
+    "status": "unverified",
+    "text": "/set-earn <код> <on|off> [ставка] — сделать канал зарабатывающим валюту (руководители/админы)"
+  },
+  "help.cmd_set_profession": {
+    "status": "unverified",
+    "text": "/set-profession <пользователь> <код товара> — задать профессию участника (руководители банка)"
+  },
+  "help.cmd_set_rate": {
+    "status": "unverified",
+    "text": "/set-rate <код> <курс> — зафиксировать пег с единственным партнёром по договору"
+  },
+  "help.cmd_set_wage": {
+    "status": "unverified",
+    "text": "/set-wage <профессия> <сумма> — задать ежемесячную зарплату для профессии (руководители банка)"
+  },
+  "help.cmd_setadmin": {
+    "status": "unverified",
+    "text": "/setadmin <пользователь> — делегировать пользователю права админа этого сервера (админы бота)"
+  },
+  "help.cmd_setadmin_tg": {
+    "status": "unverified",
+    "text": "/setadmin <ID | @username | ответ> — делегировать права админа этой группы (админы бота)"
+  },
   "help.cmd_setup": {
     "status": "verified",
     "text": "/setup <союз> <язык> — привязать сервер/группу к союзу и задать язык (админы бота)"
+  },
+  "help.cmd_treaty": {
+    "status": "unverified",
+    "text": "/treaty <код> — предложить договор о конвертации валют (руководители банка)"
   },
   "help.cmd_verify": {
     "status": "verified",
@@ -675,6 +1051,10 @@
     "status": "verified",
     "text": "Для админов бота"
   },
+  "help.section_economy": {
+    "status": "unverified",
+    "text": "Экономика"
+  },
   "help.section_everyone": {
     "status": "verified",
     "text": "Для всех"
@@ -698,6 +1078,18 @@
   "internal_error": {
     "status": "verified",
     "text": "Внутренняя ошибка: {error}"
+  },
+  "inventory_empty": {
+    "status": "unverified",
+    "text": "Ваш инвентарь пуст."
+  },
+  "inventory_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] ×{qty} — стоимость единицы {value} (уровень {level})"
+  },
+  "inventory_title": {
+    "status": "unverified",
+    "text": "Ваш инвентарь"
   },
   "lang_flag": {
     "status": "unverified",
@@ -851,6 +1243,34 @@
     "status": "verified",
     "text": "Неизвестный язык: {lang}. Доступны: {supported}."
   },
+  "localizer_add_already": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} уже является локализатором этого бота."
+  },
+  "localizer_add_dm": {
+    "status": "unverified",
+    "text": "Вам выдан статус локализатора: теперь Вы можете редактировать локализацию этого бота через его панель управления."
+  },
+  "localizer_add_done": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} теперь локализатор этого бота и может редактировать его локализацию через панель управления."
+  },
+  "localizer_add_usage": {
+    "status": "unverified",
+    "text": "Использование: /localizer-add <ID или @username>, либо ответьте командой на сообщение пользователя."
+  },
+  "localizer_rem_done": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} больше не локализатор этого бота."
+  },
+  "localizer_rem_not": {
+    "status": "unverified",
+    "text": "У пользователя {user_id} нет делегированного статуса локализатора. (Админы являются локализаторами автоматически, и эта команда их не снимает.)"
+  },
+  "localizer_rem_usage": {
+    "status": "unverified",
+    "text": "Использование: /localizer-rem <ID или @username>, либо ответьте командой на сообщение пользователя."
+  },
   "locallang_usage": {
     "status": "verified",
     "text": "Использование: /locallang <ru|uk|pl|en|es|pt>"
@@ -859,9 +1279,17 @@
     "status": "verified",
     "text": "У вас нет прав для использования этой команды."
   },
+  "open_account_usage": {
+    "status": "unverified",
+    "text": "Использование: /open-account <код валюты>"
+  },
   "party_choose": {
     "status": "verified",
     "text": "Вы управляете несколькими партиями. Отправьте номер нужной партии:"
+  },
+  "party_dues_usage": {
+    "status": "unverified",
+    "text": "Использование: /party-dues <код валюты> <сумма>"
   },
   "party_feature_disabled": {
     "status": "verified",
@@ -870,6 +1298,10 @@
   "party_field_allies": {
     "status": "verified",
     "text": "Союзные партии"
+  },
+  "party_field_balance": {
+    "status": "unverified",
+    "text": "Счета"
   },
   "party_field_description": {
     "status": "verified",
@@ -1015,6 +1447,22 @@
     "status": "verified",
     "text": "Использование: /party <код или название>"
   },
+  "pay_done": {
+    "status": "unverified",
+    "text": "✅ Отправлено {amount} пользователю {user}."
+  },
+  "pay_insufficient": {
+    "status": "unverified",
+    "text": "Недостаточно средств для перевода."
+  },
+  "pay_self": {
+    "status": "unverified",
+    "text": "Нельзя переводить самому себе."
+  },
+  "pay_usage": {
+    "status": "unverified",
+    "text": "Использование: /pay <пользователь> <сумма> <код> (или ответом: /pay <сумма> <код>)"
+  },
   "privacy_block_all_off": {
     "status": "unverified",
     "text": "✅ Теперь другие пользователи снова могут сравнивать свои результаты с вашими."
@@ -1074,6 +1522,10 @@
   "privacy_title": {
     "status": "unverified",
     "text": "Конфиденциальность"
+  },
+  "profession_none": {
+    "status": "unverified",
+    "text": "нет"
   },
   "quiz_answer_hint": {
     "status": "verified",
@@ -1227,6 +1679,46 @@
     "status": "verified",
     "text": "Викторины"
   },
+  "rates_line": {
+    "status": "unverified",
+    "text": "1 {a} = {rate} {b}{peg}"
+  },
+  "rates_no_banks": {
+    "status": "unverified",
+    "text": "Банков пока нет."
+  },
+  "rates_none": {
+    "status": "unverified",
+    "text": "У {code} пока нет партнёров по конвертации."
+  },
+  "rates_pegged": {
+    "status": "unverified",
+    "text": "(пег)"
+  },
+  "rates_title_all": {
+    "status": "unverified",
+    "text": "Ценности валют:"
+  },
+  "rates_title_one": {
+    "status": "unverified",
+    "text": "Курсы конвертации для {code}:"
+  },
+  "rates_value_line": {
+    "status": "unverified",
+    "text": "{name} [{code}]: ценность {value}"
+  },
+  "remadmin_not_admin": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} не является администратором этого сервера."
+  },
+  "remadmin_success": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} лишён статуса администратора этого сервера."
+  },
+  "remadmin_usage": {
+    "status": "unverified",
+    "text": "Использование: /remadmin <ID или @username>, либо ответьте командой /remadmin на сообщение пользователя."
+  },
   "resume_confirm": {
     "status": "verified",
     "text": "Возобновить партию {name}?"
@@ -1250,6 +1742,22 @@
   "rules_menu_title": {
     "status": "verified",
     "text": "Правила партии — {name} [{code}]"
+  },
+  "sell_done": {
+    "status": "unverified",
+    "text": "💰 Продано {qty} ×{name} по {unit} за штуку — всего {total}."
+  },
+  "sell_nothing": {
+    "status": "unverified",
+    "text": "У вас нет {name} для продажи."
+  },
+  "sell_usage": {
+    "status": "unverified",
+    "text": "Использование: /sell <код товара> [количество]"
+  },
+  "service_event.bank_created": {
+    "status": "unverified",
+    "text": "🏦 {user} основал банк {name} [{code}] в союзе {union}."
   },
   "service_event.bot_started": {
     "status": "verified",
@@ -1282,6 +1790,98 @@
   "service_event.union_created": {
     "status": "verified",
     "text": "🆕 Создан новый союз {code} участником {user}."
+  },
+  "set_earn_no_permission": {
+    "status": "unverified",
+    "text": "Настраивать зарабатывающие каналы могут только руководители банка или админ сервера."
+  },
+  "set_earn_off": {
+    "status": "unverified",
+    "text": "✅ Этот канал больше не зарабатывает валюту."
+  },
+  "set_earn_on": {
+    "status": "unverified",
+    "text": "✅ Этот канал теперь зарабатывает {code} (ставка ×{rate})."
+  },
+  "set_earn_usage": {
+    "status": "unverified",
+    "text": "Использование: /set-earn <код> <on|off> [ставка]"
+  },
+  "set_earn_wrong_union": {
+    "status": "unverified",
+    "text": "Этот сервер не относится к союзу этого банка."
+  },
+  "set_profession_done": {
+    "status": "unverified",
+    "text": "✅ Профессия {user} теперь — {name}."
+  },
+  "set_profession_usage": {
+    "status": "unverified",
+    "text": "Использование: /set-profession <пользователь> <код товара>"
+  },
+  "set_rate_bad": {
+    "status": "unverified",
+    "text": "Курс должен быть положительным числом."
+  },
+  "set_rate_declined": {
+    "status": "unverified",
+    "text": "Предложение пега отклонено."
+  },
+  "set_rate_done": {
+    "status": "unverified",
+    "text": "✅ Зафиксирован курс: 1 {a} = {rate} {b}."
+  },
+  "set_rate_multi": {
+    "status": "unverified",
+    "text": "Ручной пег возможен, только если банки — единственные партнёры друг друга по договору."
+  },
+  "set_rate_no_treaty": {
+    "status": "unverified",
+    "text": "У вас нет договора с этим банком."
+  },
+  "set_rate_offer": {
+    "status": "unverified",
+    "text": "Предложение пега: 1 {a} = {rate} {b}. Принять может руководитель {b}."
+  },
+  "set_rate_usage": {
+    "status": "unverified",
+    "text": "Использование: /set-rate <код партнёра> <курс>"
+  },
+  "set_wage_cleared": {
+    "status": "unverified",
+    "text": "✅ Зарплата для {name} убрана."
+  },
+  "set_wage_done": {
+    "status": "unverified",
+    "text": "✅ Ежемесячная зарплата для {name} — {amount}."
+  },
+  "set_wage_no_good": {
+    "status": "unverified",
+    "text": "В банке {bank} нет товара, соответствующего этой профессии."
+  },
+  "set_wage_usage": {
+    "status": "unverified",
+    "text": "Использование: /set-wage <профессия> <сумма>"
+  },
+  "setadmin_already": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} уже является администратором этого сервера."
+  },
+  "setadmin_dm": {
+    "status": "unverified",
+    "text": "Теперь я признаю Вас администратором сервера {server}."
+  },
+  "setadmin_invalid_id": {
+    "status": "unverified",
+    "text": "Неверный ID пользователя."
+  },
+  "setadmin_success": {
+    "status": "unverified",
+    "text": "Пользователь {user_id} добавлен в администраторы этого сервера."
+  },
+  "setadmin_usage": {
+    "status": "unverified",
+    "text": "Использование: /setadmin <ID или @username>, либо ответьте командой /setadmin на сообщение пользователя."
   },
   "setup_success": {
     "status": "verified",
@@ -1322,6 +1922,30 @@
   "transfer_done": {
     "status": "verified",
     "text": "✅ {user} теперь управляет партией {name}."
+  },
+  "treaty_declined": {
+    "status": "unverified",
+    "text": "Предложение договора отклонено."
+  },
+  "treaty_done": {
+    "status": "unverified",
+    "text": "✅ Договор заключён: {a} ↔ {b} теперь конвертируемы."
+  },
+  "treaty_exists": {
+    "status": "unverified",
+    "text": "У этих банков уже есть договор."
+  },
+  "treaty_offer": {
+    "status": "unverified",
+    "text": "Банк {proposer} предлагает договор о конвертации валют с {name} [{code}]. Принять может руководитель {code}."
+  },
+  "treaty_self": {
+    "status": "unverified",
+    "text": "Банк не может заключить договор с самим собой."
+  },
+  "treaty_usage": {
+    "status": "unverified",
+    "text": "Использование: /treaty <код валюты>"
   },
   "verify_cooldown": {
     "status": "verified",

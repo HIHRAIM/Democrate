@@ -1,3 +1,4 @@
+import random
 import sqlite3
 import threading
 import time
@@ -64,6 +65,25 @@ def init():
     CREATE TABLE IF NOT EXISTS chat_settings (
         chat_id TEXT PRIMARY KEY,
         lang TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS server_admins (
+        platform TEXT NOT NULL,
+        server_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        username TEXT,
+        added_by TEXT,
+        added_at INTEGER,
+        PRIMARY KEY (platform, server_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS localizers (
+        platform TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        username TEXT,
+        added_by TEXT,
+        added_at INTEGER,
+        PRIMARY KEY (platform, user_id)
     );
 
     CREATE TABLE IF NOT EXISTS loc_suggestions (
@@ -233,6 +253,148 @@ def init():
         ON wiki_foundays (guild_id, url);
     """)
     conn.commit()
+    init_economy()
+
+def get_setting(key, default=None):
+    row = cur.execute("SELECT value FROM bot_settings WHERE key=?", (key,)).fetchone()
+    return row["value"] if row else default
+
+def set_setting(key, value):
+    cur.execute(
+        "INSERT INTO bot_settings (key, value) VALUES (?,?)"
+        " ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        (key, str(value))
+    )
+    conn.commit()
+
+def init_economy():
+    """Schema for the cross-community economy: banks and their currencies,
+    accounts and the append-only transaction journal, goods/inventory/mastery,
+    per-channel earning, FX treaties, wages and party dues, and the autocraft /
+    autosend automation. Kept in its own script so the party/quiz core above
+    stays readable."""
+    cur.executescript("""
+    CREATE TABLE IF NOT EXISTS banks (
+        code TEXT PRIMARY KEY,
+        union_code TEXT,
+        central_chat TEXT,
+        currency_name TEXT,
+        emoji TEXT,
+        value REAL DEFAULT 1.0,
+        period_goods_value INTEGER DEFAULT 0,
+        period_energy INTEGER DEFAULT 0,
+        created_at INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS bank_leaders (
+        bank_code TEXT,
+        platform TEXT,
+        user_id TEXT,
+        display_name TEXT,
+        PRIMARY KEY (bank_code, platform, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bank_code TEXT,
+        owner_type TEXT,
+        owner_platform TEXT,
+        owner_id TEXT,
+        balance INTEGER DEFAULT 0,
+        energy INTEGER DEFAULT 0,
+        display_name TEXT,
+        created_at INTEGER,
+        UNIQUE (bank_code, owner_type, owner_platform, owner_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bank_code TEXT,
+        from_type TEXT, from_platform TEXT, from_id TEXT,
+        to_type TEXT, to_platform TEXT, to_id TEXT,
+        amount INTEGER,
+        reason TEXT,
+        created_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_tx_bank ON transactions (bank_code, created_at);
+
+    CREATE TABLE IF NOT EXISTS goods (
+        code TEXT PRIMARY KEY,
+        bank_code TEXT,
+        name TEXT,
+        base_value INTEGER,
+        energy_cost INTEGER,
+        emoji TEXT,
+        created_at INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS inventory (
+        owner_type TEXT, owner_platform TEXT, owner_id TEXT,
+        good_code TEXT,
+        qty INTEGER DEFAULT 0,
+        PRIMARY KEY (owner_type, owner_platform, owner_id, good_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS mastery (
+        owner_type TEXT, owner_platform TEXT, owner_id TEXT,
+        good_code TEXT,
+        produced INTEGER DEFAULT 0,
+        PRIMARY KEY (owner_type, owner_platform, owner_id, good_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS professions (
+        owner_type TEXT, owner_platform TEXT, owner_id TEXT,
+        bank_code TEXT,
+        good_code TEXT,
+        PRIMARY KEY (owner_type, owner_platform, owner_id, bank_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS earn_channels (
+        platform TEXT,
+        chan_key TEXT,
+        bank_code TEXT,
+        rate REAL DEFAULT 1.0,
+        PRIMARY KEY (platform, chan_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS treaties (
+        bank_a TEXT,
+        bank_b TEXT,
+        pegged_rate REAL,
+        created_at INTEGER,
+        PRIMARY KEY (bank_a, bank_b)
+    );
+
+    CREATE TABLE IF NOT EXISTS wages (
+        bank_code TEXT,
+        good_code TEXT,
+        amount INTEGER,
+        PRIMARY KEY (bank_code, good_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS party_dues (
+        party_code TEXT,
+        bank_code TEXT,
+        amount INTEGER,
+        PRIMARY KEY (party_code, bank_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS autocraft (
+        owner_type TEXT, owner_platform TEXT, owner_id TEXT,
+        good_code TEXT,
+        enabled INTEGER DEFAULT 0,
+        PRIMARY KEY (owner_type, owner_platform, owner_id, good_code)
+    );
+
+    CREATE TABLE IF NOT EXISTS autosend (
+        owner_type TEXT, owner_platform TEXT, owner_id TEXT,
+        good_code TEXT,
+        percent INTEGER,
+        target_type TEXT, target_platform TEXT, target_id TEXT,
+        PRIMARY KEY (owner_type, owner_platform, owner_id, good_code)
+    );
+    """)
+    conn.commit()
 
 def add_union(code, names):
     """Create a union with its localized names ({lang: name} dict).
@@ -312,6 +474,62 @@ def remove_chat(prefix):
     )
     cur.execute("DELETE FROM wiki_foundays WHERE guild_id=?", (prefix,))
     conn.commit()
+
+def add_server_admin(platform, server_id, user_id, username=None, added_by=None):
+    """Delegate bot server-admin rights to a user (set with /setadmin).
+    The username, when known, is kept for the control panel's username login."""
+    cur.execute(
+        "INSERT INTO server_admins (platform, server_id, user_id, username, added_by, added_at)"
+        " VALUES (?,?,?,?,?,strftime('%s','now'))"
+        " ON CONFLICT(platform, server_id, user_id) DO UPDATE SET"
+        " username=COALESCE(excluded.username, server_admins.username)",
+        (platform, str(server_id), str(user_id), username,
+         str(added_by) if added_by is not None else None)
+    )
+    conn.commit()
+
+def remove_server_admin(platform, server_id, user_id):
+    cur.execute(
+        "DELETE FROM server_admins WHERE platform=? AND server_id=? AND user_id=?",
+        (platform, str(server_id), str(user_id))
+    )
+    conn.commit()
+
+def is_server_admin(platform, server_id, user_id):
+    return cur.execute(
+        "SELECT 1 FROM server_admins WHERE platform=? AND server_id=? AND user_id=?",
+        (platform, str(server_id), str(user_id))
+    ).fetchone() is not None
+
+def add_localizer(platform, user_id, username=None, added_by=None):
+    """Grant localizer status (set with /localizer-add): the user may edit
+    this bot's localization through the control panel.  The username, when
+    known, is kept for the panel's username login."""
+    cur.execute(
+        "INSERT INTO localizers (platform, user_id, username, added_by, added_at)"
+        " VALUES (?,?,?,?,strftime('%s','now'))"
+        " ON CONFLICT(platform, user_id) DO UPDATE SET"
+        " username=COALESCE(excluded.username, localizers.username)",
+        (platform, str(user_id), username,
+         str(added_by) if added_by is not None else None)
+    )
+    conn.commit()
+
+def remove_localizer(platform, user_id):
+    """Revoke a delegated localizer status.  Returns True when a row existed
+    (admins are localizers implicitly and have no row to remove)."""
+    removed = cur.execute(
+        "DELETE FROM localizers WHERE platform=? AND user_id=?",
+        (platform, str(user_id))
+    ).rowcount
+    conn.commit()
+    return removed > 0
+
+def is_localizer(platform, user_id):
+    return cur.execute(
+        "SELECT 1 FROM localizers WHERE platform=? AND user_id=?",
+        (platform, str(user_id))
+    ).fetchone() is not None
 
 def set_chat_lang(chat_id, lang_code):
     cur.execute(
@@ -410,10 +628,8 @@ def get_party_settings(union_code):
     return bool(row["enabled"]), roles
 
 def party_code_taken(code):
-    """Party codes share a namespace with union codes."""
-    if union_exists(code):
-        return True
-    return cur.execute("SELECT 1 FROM parties WHERE code=?", (code,)).fetchone() is not None
+    """Party codes share one namespace with union, currency and good codes."""
+    return code_taken(code)
 
 def create_party(code, union_code, name, founder_platform, founder_id, founder_name,
                  logo=None, logo_mime=None):
@@ -468,11 +684,15 @@ def update_party_union(code, union_code):
     conn.commit()
 
 def delete_party(code):
-    """Remove a party and everything attached to it."""
+    """Remove a party and everything attached to it (including its economy
+    footprint: bank account, monthly dues, and any autosend targeting it)."""
     cur.execute("DELETE FROM party_leaders WHERE party_code=?", (code,))
     cur.execute("DELETE FROM party_members WHERE party_code=?", (code,))
     cur.execute("DELETE FROM party_allies WHERE party_code=? OR ally_code=?", (code, code))
     cur.execute("DELETE FROM join_requests WHERE party_code=?", (code,))
+    cur.execute("DELETE FROM accounts WHERE owner_type='party' AND owner_id=?", (code,))
+    cur.execute("DELETE FROM party_dues WHERE party_code=?", (code,))
+    cur.execute("DELETE FROM autosend WHERE target_type='party' AND target_id=?", (code,))
     cur.execute("DELETE FROM parties WHERE code=?", (code,))
     conn.commit()
 
@@ -1007,3 +1227,542 @@ def register_link_attempt(platform, user_id, username, claimed_other):
             prune_quiz_results("discord", discord_id)
             return "linked", discord_id, telegram_id
     return "pending", None, None
+
+_CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+def _now():
+    return int(time.time())
+
+def canonical_user(platform, user_id):
+    """The identity that owns a person's money: their Discord account when the
+    two are linked, otherwise the platform account itself. Mirrors verification,
+    so a linked Telegram user and their Discord account share one wallet."""
+    uid = str(user_id)
+    if platform == "telegram":
+        row = get_link_by_telegram(uid)
+        if row and row["discord_id"]:
+            return "user", "discord", str(row["discord_id"])
+        return "user", "telegram", uid
+    return "user", "discord", uid
+
+def party_owner(code):
+    return "party", "", str(code)
+
+def _bank_owner(code):
+    return "bank", "", str(code)
+
+def is_owner_verified(owner_type, owner_platform, owner_id):
+    """Whether a *user* owner is verified (parties never are)."""
+    if owner_type != "user":
+        return False
+    if owner_platform == "discord":
+        return is_discord_verified(owner_id)
+    if owner_platform == "telegram":
+        return is_telegram_verified(owner_id)
+    return False
+
+def currency_code_taken(code):
+    return cur.execute("SELECT 1 FROM banks WHERE code=?", (code,)).fetchone() is not None
+
+def good_code_taken(code):
+    return cur.execute("SELECT 1 FROM goods WHERE code=?", (code,)).fetchone() is not None
+
+def code_taken(code):
+    """A 4-char code must be unique across unions, parties, currencies and goods."""
+    if union_exists(code) or currency_code_taken(code) or good_code_taken(code):
+        return True
+    return cur.execute("SELECT 1 FROM parties WHERE code=?", (code,)).fetchone() is not None
+
+def generate_code():
+    """A fresh 4-char code free across the whole shared namespace."""
+    for _ in range(10000):
+        code = "".join(random.choice(_CODE_ALPHABET) for _ in range(4))
+        if not code_taken(code):
+            return code
+    return None
+
+def create_bank(code, union_code, central_chat, currency_name, emoji,
+                leader_platform, leader_id, leader_name):
+    from config import ECONOMY
+    with _db_lock:
+        cur.execute(
+            "INSERT INTO banks (code, union_code, central_chat, currency_name, emoji,"
+            " value, period_goods_value, period_energy, created_at)"
+            " VALUES (?,?,?,?,?,?,0,0,?)",
+            (code, union_code, str(central_chat), currency_name, emoji,
+             float(ECONOMY["fx_initial_value"]), _now()))
+        cur.execute(
+            "INSERT OR REPLACE INTO bank_leaders (bank_code, platform, user_id, display_name)"
+            " VALUES (?,?,?,?)",
+            (code, leader_platform, str(leader_id), leader_name))
+        conn.commit()
+
+def get_bank(code):
+    return cur.execute("SELECT * FROM banks WHERE code=?", (code,)).fetchone()
+
+def get_all_banks():
+    return cur.execute("SELECT * FROM banks ORDER BY code").fetchall()
+
+def get_banks_in_union(union_code):
+    return cur.execute(
+        "SELECT * FROM banks WHERE union_code=? ORDER BY code", (union_code,)).fetchall()
+
+def get_banks_in_chat(chat_id):
+    return cur.execute(
+        "SELECT * FROM banks WHERE central_chat=? ORDER BY code", (str(chat_id),)).fetchall()
+
+def set_bank_value(code, value):
+    cur.execute("UPDATE banks SET value=? WHERE code=?", (float(value), code))
+    conn.commit()
+
+def add_period_energy(code, delta):
+    cur.execute("UPDATE banks SET period_energy=period_energy+? WHERE code=?",
+                (int(delta), code))
+    conn.commit()
+
+def add_period_goods_value(code, delta):
+    cur.execute("UPDATE banks SET period_goods_value=period_goods_value+? WHERE code=?",
+                (int(delta), code))
+    conn.commit()
+
+def reset_bank_periods(code):
+    cur.execute("UPDATE banks SET period_goods_value=0, period_energy=0 WHERE code=?", (code,))
+    conn.commit()
+
+def get_bank_leaders(code):
+    return cur.execute("SELECT * FROM bank_leaders WHERE bank_code=?", (code,)).fetchall()
+
+def add_bank_leader(code, platform, user_id, display_name):
+    cur.execute(
+        "INSERT OR REPLACE INTO bank_leaders (bank_code, platform, user_id, display_name)"
+        " VALUES (?,?,?,?)",
+        (code, platform, str(user_id), display_name))
+    conn.commit()
+
+def set_bank_leader(code, platform, user_id, display_name):
+    """Transfer: the new user becomes the bank's only leader."""
+    with _db_lock:
+        cur.execute("DELETE FROM bank_leaders WHERE bank_code=?", (code,))
+        cur.execute(
+            "INSERT OR REPLACE INTO bank_leaders (bank_code, platform, user_id, display_name)"
+            " VALUES (?,?,?,?)",
+            (code, platform, str(user_id), display_name))
+        conn.commit()
+
+def remove_bank_leader(code, platform, user_id):
+    cur.execute(
+        "DELETE FROM bank_leaders WHERE bank_code=? AND platform=? AND user_id=?",
+        (code, platform, str(user_id)))
+    conn.commit()
+
+def is_bank_leader(code, platform, user_id):
+    return cur.execute(
+        "SELECT 1 FROM bank_leaders WHERE bank_code=? AND platform=? AND user_id=?",
+        (code, platform, str(user_id))).fetchone() is not None
+
+def user_led_banks(platform, user_id):
+    return cur.execute(
+        "SELECT b.* FROM banks b JOIN bank_leaders l ON l.bank_code=b.code"
+        " WHERE l.platform=? AND l.user_id=? ORDER BY b.code",
+        (platform, str(user_id))).fetchall()
+
+def get_account(bank_code, owner_type, owner_platform, owner_id):
+    return cur.execute(
+        "SELECT * FROM accounts WHERE bank_code=? AND owner_type=? AND owner_platform=?"
+        " AND owner_id=?",
+        (bank_code, owner_type, owner_platform, str(owner_id))).fetchone()
+
+def ensure_account(bank_code, owner_type, owner_platform, owner_id, display_name=None):
+    """Return the account id, opening the account (balance 0) on first use."""
+    with _db_lock:
+        row = get_account(bank_code, owner_type, owner_platform, owner_id)
+        if row:
+            if display_name and row["display_name"] != display_name:
+                cur.execute("UPDATE accounts SET display_name=? WHERE id=?",
+                            (display_name, row["id"]))
+                conn.commit()
+            return row["id"]
+        c = cur.execute(
+            "INSERT INTO accounts (bank_code, owner_type, owner_platform, owner_id,"
+            " balance, energy, display_name, created_at) VALUES (?,?,?,?,0,0,?,?)",
+            (bank_code, owner_type, owner_platform, str(owner_id), display_name, _now()))
+        conn.commit()
+        return c.lastrowid
+
+def account_exists(bank_code, owner_type, owner_platform, owner_id):
+    return get_account(bank_code, owner_type, owner_platform, owner_id) is not None
+
+def get_owner_accounts(owner_type, owner_platform, owner_id):
+    """Every account an owner holds, across all banks."""
+    return cur.execute(
+        "SELECT * FROM accounts WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+        " ORDER BY bank_code",
+        (owner_type, owner_platform, str(owner_id))).fetchall()
+
+def get_bank_accounts(bank_code, users_only=False):
+    sql = "SELECT * FROM accounts WHERE bank_code=?"
+    if users_only:
+        sql += " AND owner_type='user'"
+    return cur.execute(sql, (bank_code,)).fetchall()
+
+def bank_money_supply(bank_code):
+    row = cur.execute(
+        "SELECT COALESCE(SUM(balance),0) AS s FROM accounts WHERE bank_code=?",
+        (bank_code,)).fetchone()
+    return row["s"] or 0
+
+def bank_debt(bank_code):
+    """Total of all negative balances, as a positive number."""
+    row = cur.execute(
+        "SELECT COALESCE(SUM(balance),0) AS s FROM accounts WHERE bank_code=? AND balance<0",
+        (bank_code,)).fetchone()
+    return -(row["s"] or 0)
+
+def bank_account_count(bank_code):
+    row = cur.execute(
+        "SELECT COUNT(*) AS c FROM accounts WHERE bank_code=?", (bank_code,)).fetchone()
+    return row["c"] or 0
+
+def _record_tx(bank_code, from_owner, to_owner, amount, reason):
+    ft, fp, fi = from_owner
+    tt, tp, ti = to_owner
+    cur.execute(
+        "INSERT INTO transactions (bank_code, from_type, from_platform, from_id,"
+        " to_type, to_platform, to_id, amount, reason, created_at)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (bank_code, ft, fp, str(fi), tt, tp, str(ti), int(amount), reason, _now()))
+
+def _adjust(account_id, delta):
+    cur.execute("UPDATE accounts SET balance=balance+? WHERE id=?", (int(delta), account_id))
+
+def mint(bank_code, owner, amount, reason, display_name=None):
+    """The bank issues `amount` to an owner (message rewards, sales, wages)."""
+    if amount <= 0:
+        return
+    ot, op, oi = owner
+    with _db_lock:
+        acc = ensure_account(bank_code, ot, op, oi, display_name)
+        _adjust(acc, amount)
+        _record_tx(bank_code, _bank_owner(bank_code), owner, amount, reason)
+        conn.commit()
+
+def burn(bank_code, owner, amount, reason, allow_negative=True):
+    """An owner pays the bank (fines, dues, fees, purchases). With
+    allow_negative=False the debit is refused unless funds cover it; the return
+    value says whether it happened."""
+    if amount <= 0:
+        return False
+    ot, op, oi = owner
+    with _db_lock:
+        acc_row = get_account(bank_code, ot, op, oi)
+        if not allow_negative and (not acc_row or acc_row["balance"] < amount):
+            return False
+        acc = acc_row["id"] if acc_row else ensure_account(bank_code, ot, op, oi)
+        _adjust(acc, -amount)
+        _record_tx(bank_code, owner, _bank_owner(bank_code), amount, reason)
+        conn.commit()
+        return True
+
+def transfer(bank_code, from_owner, to_owner, amount, reason,
+             allow_negative=False, to_display=None):
+    """Move `amount` between two owners of the *same* currency, atomically.
+    Returns False when the sender lacks funds (and allow_negative is off)."""
+    if amount <= 0:
+        return False
+    fo_t, fo_p, fo_i = from_owner
+    with _db_lock:
+        from_acc = get_account(bank_code, fo_t, fo_p, fo_i)
+        if not from_acc:
+            return False
+        if not allow_negative and from_acc["balance"] < amount:
+            return False
+        to_t, to_p, to_i = to_owner
+        to_acc = ensure_account(bank_code, to_t, to_p, to_i, to_display)
+        _adjust(from_acc["id"], -amount)
+        _adjust(to_acc, amount)
+        _record_tx(bank_code, from_owner, to_owner, amount, reason)
+        conn.commit()
+        return True
+
+def get_transactions(bank_code=None, owner=None, limit=20):
+    if owner is not None:
+        ot, op, oi = owner
+        return cur.execute(
+            "SELECT * FROM transactions WHERE (from_type=? AND from_platform=? AND from_id=?)"
+            " OR (to_type=? AND to_platform=? AND to_id=?) ORDER BY id DESC LIMIT ?",
+            (ot, op, str(oi), ot, op, str(oi), limit)).fetchall()
+    if bank_code is not None:
+        return cur.execute(
+            "SELECT * FROM transactions WHERE bank_code=? ORDER BY id DESC LIMIT ?",
+            (bank_code, limit)).fetchall()
+    return cur.execute(
+        "SELECT * FROM transactions ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+
+def get_energy(bank_code, owner):
+    ot, op, oi = owner
+    acc = get_account(bank_code, ot, op, oi)
+    return acc["energy"] if acc else 0
+
+def add_energy(bank_code, owner, delta, display_name=None):
+    ot, op, oi = owner
+    with _db_lock:
+        acc = ensure_account(bank_code, ot, op, oi, display_name)
+        cur.execute("UPDATE accounts SET energy=energy+? WHERE id=?", (int(delta), acc))
+        conn.commit()
+
+def spend_energy(bank_code, owner, amount):
+    ot, op, oi = owner
+    with _db_lock:
+        acc = get_account(bank_code, ot, op, oi)
+        if not acc or acc["energy"] < amount:
+            return False
+        cur.execute("UPDATE accounts SET energy=energy-? WHERE id=?", (int(amount), acc["id"]))
+        conn.commit()
+        return True
+
+def create_good(bank_code, name, base_value, energy_cost, emoji):
+    code = generate_code()
+    if code is None:
+        return None
+    cur.execute(
+        "INSERT INTO goods (code, bank_code, name, base_value, energy_cost, emoji, created_at)"
+        " VALUES (?,?,?,?,?,?,?)",
+        (code, bank_code, name, int(base_value), int(energy_cost), emoji, _now()))
+    conn.commit()
+    return code
+
+def get_good(code):
+    return cur.execute("SELECT * FROM goods WHERE code=?", (code,)).fetchone()
+
+def get_bank_goods(bank_code):
+    return cur.execute(
+        "SELECT * FROM goods WHERE bank_code=? ORDER BY name", (bank_code,)).fetchall()
+
+def find_bank_good(bank_code, query):
+    q = (query or "").strip()
+    for g in get_bank_goods(bank_code):
+        if g["code"].lower() == q.lower() or g["name"].lower() == q.lower():
+            return g
+    return None
+
+def get_inventory_qty(owner, good_code):
+    ot, op, oi = owner
+    row = cur.execute(
+        "SELECT qty FROM inventory WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+        " AND good_code=?", (ot, op, str(oi), good_code)).fetchone()
+    return row["qty"] if row else 0
+
+def add_inventory(owner, good_code, delta):
+    ot, op, oi = owner
+    with _db_lock:
+        cur.execute(
+            "INSERT INTO inventory (owner_type, owner_platform, owner_id, good_code, qty)"
+            " VALUES (?,?,?,?,?)"
+            " ON CONFLICT(owner_type, owner_platform, owner_id, good_code)"
+            " DO UPDATE SET qty=qty+excluded.qty",
+            (ot, op, str(oi), good_code, int(delta)))
+        conn.commit()
+
+def get_inventory(owner):
+    ot, op, oi = owner
+    return cur.execute(
+        "SELECT i.good_code, i.qty, g.name, g.emoji, g.bank_code FROM inventory i"
+        " JOIN goods g ON g.code=i.good_code"
+        " WHERE i.owner_type=? AND i.owner_platform=? AND i.owner_id=? AND i.qty>0"
+        " ORDER BY g.name", (ot, op, str(oi))).fetchall()
+
+def get_produced(owner, good_code):
+    ot, op, oi = owner
+    row = cur.execute(
+        "SELECT produced FROM mastery WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+        " AND good_code=?", (ot, op, str(oi), good_code)).fetchone()
+    return row["produced"] if row else 0
+
+def add_produced(owner, good_code, delta):
+    ot, op, oi = owner
+    with _db_lock:
+        cur.execute(
+            "INSERT INTO mastery (owner_type, owner_platform, owner_id, good_code, produced)"
+            " VALUES (?,?,?,?,?)"
+            " ON CONFLICT(owner_type, owner_platform, owner_id, good_code)"
+            " DO UPDATE SET produced=produced+excluded.produced",
+            (ot, op, str(oi), good_code, int(delta)))
+        conn.commit()
+
+def get_bank_mastery(owner, bank_code):
+    """(good_code, produced) rows for the owner across a bank's goods, most
+    produced first — the basis for the auto profession."""
+    ot, op, oi = owner
+    return cur.execute(
+        "SELECT m.good_code, m.produced FROM mastery m JOIN goods g ON g.code=m.good_code"
+        " WHERE m.owner_type=? AND m.owner_platform=? AND m.owner_id=? AND g.bank_code=?"
+        " AND m.produced>0 ORDER BY m.produced DESC, m.good_code",
+        (ot, op, str(oi), bank_code)).fetchall()
+
+def set_profession(owner, bank_code, good_code):
+    ot, op, oi = owner
+    if good_code is None:
+        cur.execute(
+            "DELETE FROM professions WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+            " AND bank_code=?", (ot, op, str(oi), bank_code))
+    else:
+        cur.execute(
+            "INSERT INTO professions (owner_type, owner_platform, owner_id, bank_code, good_code)"
+            " VALUES (?,?,?,?,?)"
+            " ON CONFLICT(owner_type, owner_platform, owner_id, bank_code)"
+            " DO UPDATE SET good_code=excluded.good_code",
+            (ot, op, str(oi), bank_code, good_code))
+    conn.commit()
+
+def get_profession(owner, bank_code):
+    """The good defining the owner's profession in a bank: the leader's override
+    if any, otherwise the good they have produced most of. Returns a good_code or
+    None."""
+    ot, op, oi = owner
+    row = cur.execute(
+        "SELECT good_code FROM professions WHERE owner_type=? AND owner_platform=?"
+        " AND owner_id=? AND bank_code=?", (ot, op, str(oi), bank_code)).fetchone()
+    if row and row["good_code"]:
+        return row["good_code"]
+    top = get_bank_mastery(owner, bank_code)
+    return top[0]["good_code"] if top else None
+
+def set_earn_channel(platform, chan_key, bank_code, rate):
+    cur.execute(
+        "INSERT INTO earn_channels (platform, chan_key, bank_code, rate) VALUES (?,?,?,?)"
+        " ON CONFLICT(platform, chan_key) DO UPDATE SET bank_code=excluded.bank_code,"
+        " rate=excluded.rate",
+        (platform, str(chan_key), bank_code, float(rate)))
+    conn.commit()
+
+def remove_earn_channel(platform, chan_key):
+    c = cur.execute("DELETE FROM earn_channels WHERE platform=? AND chan_key=?",
+                    (platform, str(chan_key)))
+    conn.commit()
+    return c.rowcount > 0
+
+def get_earn_channel(platform, chan_key):
+    return cur.execute(
+        "SELECT * FROM earn_channels WHERE platform=? AND chan_key=?",
+        (platform, str(chan_key))).fetchone()
+
+def _pair(a, b):
+    return (a, b) if a <= b else (b, a)
+
+def add_treaty(a, b):
+    x, y = _pair(a, b)
+    cur.execute(
+        "INSERT OR IGNORE INTO treaties (bank_a, bank_b, pegged_rate, created_at)"
+        " VALUES (?,?,NULL,?)", (x, y, _now()))
+    conn.commit()
+
+def get_treaty(a, b):
+    x, y = _pair(a, b)
+    return cur.execute("SELECT * FROM treaties WHERE bank_a=? AND bank_b=?", (x, y)).fetchone()
+
+def has_treaty(a, b):
+    return get_treaty(a, b) is not None
+
+def remove_treaty(a, b):
+    x, y = _pair(a, b)
+    cur.execute("DELETE FROM treaties WHERE bank_a=? AND bank_b=?", (x, y))
+    conn.commit()
+
+def treaty_partners(code):
+    rows = cur.execute(
+        "SELECT bank_b AS p FROM treaties WHERE bank_a=?"
+        " UNION SELECT bank_a AS p FROM treaties WHERE bank_b=?", (code, code)).fetchall()
+    return [r["p"] for r in rows]
+
+def set_pegged_rate(a, b, rate):
+    """Pin the pair's rate. `rate` is units of `b` per one unit of `a`; it is
+    stored in the canonical (bank_a<=bank_b) orientation. Pass rate=None to clear."""
+    x, y = _pair(a, b)
+    stored = None
+    if rate is not None:
+        stored = float(rate) if a == x else 1.0 / float(rate)
+    cur.execute("UPDATE treaties SET pegged_rate=? WHERE bank_a=? AND bank_b=?",
+                (stored, x, y))
+    conn.commit()
+
+def set_wage(bank_code, good_code, amount):
+    if amount is None:
+        cur.execute("DELETE FROM wages WHERE bank_code=? AND good_code=?", (bank_code, good_code))
+    else:
+        cur.execute(
+            "INSERT INTO wages (bank_code, good_code, amount) VALUES (?,?,?)"
+            " ON CONFLICT(bank_code, good_code) DO UPDATE SET amount=excluded.amount",
+            (bank_code, good_code, int(amount)))
+    conn.commit()
+
+def get_wage(bank_code, good_code):
+    row = cur.execute(
+        "SELECT amount FROM wages WHERE bank_code=? AND good_code=?",
+        (bank_code, good_code)).fetchone()
+    return row["amount"] if row else 0
+
+def get_bank_wages(bank_code):
+    return cur.execute(
+        "SELECT w.good_code, w.amount, g.name, g.emoji FROM wages w"
+        " JOIN goods g ON g.code=w.good_code WHERE w.bank_code=? ORDER BY g.name",
+        (bank_code,)).fetchall()
+
+def banks_with_wages():
+    rows = cur.execute("SELECT DISTINCT bank_code FROM wages").fetchall()
+    return [r["bank_code"] for r in rows]
+
+def set_party_dues(party_code, bank_code, amount):
+    if amount is None or amount <= 0:
+        cur.execute("DELETE FROM party_dues WHERE party_code=? AND bank_code=?",
+                    (party_code, bank_code))
+    else:
+        cur.execute(
+            "INSERT INTO party_dues (party_code, bank_code, amount) VALUES (?,?,?)"
+            " ON CONFLICT(party_code, bank_code) DO UPDATE SET amount=excluded.amount",
+            (party_code, bank_code, int(amount)))
+    conn.commit()
+
+def get_party_dues(party_code):
+    return cur.execute(
+        "SELECT d.bank_code, d.amount, b.currency_name, b.emoji FROM party_dues d"
+        " JOIN banks b ON b.code=d.bank_code WHERE d.party_code=?", (party_code,)).fetchall()
+
+def all_party_dues():
+    return cur.execute("SELECT * FROM party_dues").fetchall()
+
+def set_autocraft(owner, good_code, enabled):
+    ot, op, oi = owner
+    cur.execute(
+        "INSERT INTO autocraft (owner_type, owner_platform, owner_id, good_code, enabled)"
+        " VALUES (?,?,?,?,?)"
+        " ON CONFLICT(owner_type, owner_platform, owner_id, good_code)"
+        " DO UPDATE SET enabled=excluded.enabled",
+        (ot, op, str(oi), good_code, 1 if enabled else 0))
+    conn.commit()
+
+def get_autocraft_all():
+    return cur.execute("SELECT * FROM autocraft WHERE enabled=1").fetchall()
+
+def set_autosend(owner, good_code, percent, target):
+    ot, op, oi = owner
+    if percent is None or percent <= 0:
+        cur.execute(
+            "DELETE FROM autosend WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+            " AND good_code=?", (ot, op, str(oi), good_code))
+        conn.commit()
+        return
+    tt, tp, ti = target
+    cur.execute(
+        "INSERT INTO autosend (owner_type, owner_platform, owner_id, good_code, percent,"
+        " target_type, target_platform, target_id) VALUES (?,?,?,?,?,?,?,?)"
+        " ON CONFLICT(owner_type, owner_platform, owner_id, good_code) DO UPDATE SET"
+        " percent=excluded.percent, target_type=excluded.target_type,"
+        " target_platform=excluded.target_platform, target_id=excluded.target_id",
+        (ot, op, str(oi), good_code, int(percent), tt, tp, str(ti)))
+    conn.commit()
+
+def get_autosend(owner, good_code):
+    ot, op, oi = owner
+    return cur.execute(
+        "SELECT * FROM autosend WHERE owner_type=? AND owner_platform=? AND owner_id=?"
+        " AND good_code=?", (ot, op, str(oi), good_code)).fetchone()
