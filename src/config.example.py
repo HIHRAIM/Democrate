@@ -90,4 +90,75 @@ ECONOMY = {
     "fx_initial_value": 1.0,
     # Conversion spread taken as a sink on /convert (2 %).
     "convert_fee": 0.02,
+
+    # ── Timed production ──
+    # Energy cost of one unit of a base-category good (🥕🧼👘💊🧺).
+    "base_good_energy": 8,
+    # One manual /craft run: duration = produce_base_sec * category_time_mult
+    # * (1 + produce_level_time * (level - 1)), clamped to
+    # [produce_min_sec, produce_max_sec] (the ~5-minute ceiling).
+    "produce_base_sec": 45,
+    "produce_min_sec": 10,
+    "produce_max_sec": 300,
+    "produce_level_time": 0.15,
+    # Units per run = category_yield * (1 + produce_level_yield * (level - 1)).
+    "produce_level_yield": 0.10,
+    # 24/7 autoproduction speed as a share of the manual tempo (< 1: the line
+    # runs day and night but slower than a working person).
+    "auto_efficiency": 0.5,
+    # Per-category tempo and batch size ("default" covers uncategorised goods).
+    "category_time_mult": {
+        "food": 0.8, "hygiene": 0.9, "wardrobe": 1.2,
+        "pharmacy": 1.5, "household": 1.0, "default": 1.0,
+    },
+    "category_yield": {
+        "food": 3, "hygiene": 2, "wardrobe": 1,
+        "pharmacy": 1, "household": 2, "default": 1,
+    },
+
+    # ── Provision (weekly server supply metric) ──
+    # Weekly per-person need, in units, per category (before the weight).
+    "prov_units_per_person": 5.0,
+    # Daily per-person need used by the consumption tick, which eats that much
+    # out of the warehouses of the server's enterprises every day and pays for
+    # what it takes. Defaults to prov_units_per_person / 7 when absent, so the
+    # week's demand matches the weekly figure above; raise it to make servers
+    # hungrier than they produce.
+    "prov_daily_units_per_person": 5.0 / 7.0,
+    # Provision weight bonus per quality level above 1 for categorised
+    # user-created goods (base goods always count at 1.0).
+    "prov_quality_bonus": 0.25,
+    # Category score ceiling once custom goods feed it (base-only production
+    # is always capped at 1.0 — "acceptable").
+    "prov_max_score": 2.0,
+    # Provision multiplier bonus while the previous month's task is completed.
+    "prov_task_bonus": 0.10,
+    # How much of each category a person is assumed to need, relative to food.
+    "prov_category_weight": {
+        "food": 1.0, "hygiene": 0.7, "wardrobe": 0.5,
+        "pharmacy": 0.6, "household": 0.7,
+    },
+
+    # ── Monthly server tasks ──
+    # Required quantity = max(task_min_qty, last month's output * task_growth).
+    "task_growth": 1.10,
+    "task_min_qty": 20,
+    # How many of the server's own goods join the task as optional items.
+    "task_optional_goods": 3,
+
+    # ── Enterprise export logistics ──
+    # An export is a shipment that spends time in transit before it arrives.
+    # Its duration is chosen by the "distance" between the two enterprises'
+    # servers: same server/group (local) is near-instant; different servers of
+    # the same union take transport_cross_server_sec; different unions take
+    # transport_cross_union_sec (which MUST be greater than cross-server).
+    # transport_per_unit_sec optionally lengthens a shipment by its size.
+    "transport_local_sec": 5,
+    "transport_cross_server_sec": 300,      # ~5 minutes within a union
+    "transport_cross_union_sec": 1800,      # ~30 minutes between unions
+    "transport_per_unit_sec": 0,            # extra seconds per unit shipped
+    # Perishable categories lose this fraction of the batch per hour in transit
+    # (compounding), so hauling food far is wasteful while durable goods
+    # (wardrobe, hygiene, household — absent here) never spoil.
+    "transport_perish_rate": {"food": 0.35, "pharmacy": 0.25},
 }

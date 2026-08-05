@@ -11,13 +11,37 @@
     "status": "unverified",
     "text": "Дію скасовано."
   },
+  "add_ent_ask_code": {
+    "status": "unverified",
+    "text": "Введіть унікальний 4-символьний код (літери та цифри)."
+  },
+  "add_ent_ask_desc": {
+    "status": "unverified",
+    "text": "Надішліть опис або «-», щоб пропустити."
+  },
+  "add_ent_ask_logo": {
+    "status": "unverified",
+    "text": "Надішліть зображення-логотип або «-», щоб пропустити."
+  },
+  "add_ent_ask_name": {
+    "status": "unverified",
+    "text": "Введіть назву підприємства."
+  },
+  "add_ent_bad_code": {
+    "status": "unverified",
+    "text": "Код невірний або вже зайнятий — введіть інший."
+  },
+  "add_ent_created": {
+    "status": "unverified",
+    "text": "✅ Підприємство «{name}» [{code}] засновано. Ви — його лідер."
+  },
   "add_govt_created": {
     "status": "unverified",
-    "text": "✅ Урядовий орган «{name}» створено в союзі {union} (член: {singular}; члени: {plural})."
+    "text": "✅ Орган управління «{name}» створено в союзі {union} (член: {singular}; члени: {plural})."
   },
   "add_govt_exists": {
     "status": "unverified",
-    "text": "Урядовий орган із такою назвою вже існує в союзі."
+    "text": "Орган управління з такою назвою вже існує в союзі."
   },
   "add_govt_usage": {
     "status": "unverified",
@@ -99,6 +123,22 @@
     "status": "unverified",
     "text": "Використання: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
   },
+  "auto_export_offer": {
+    "status": "unverified",
+    "text": "📦 {source} пропонує {target} щотижневу поставку: {qty} × {emoji}{name} за {price}. Лідер підприємства-отримувача має підтвердити нижче."
+  },
+  "auto_export_removed": {
+    "status": "unverified",
+    "text": "Щотижневий експорт «{name}» до {target} скасовано."
+  },
+  "auto_export_set": {
+    "status": "unverified",
+    "text": "✅ Щотижневий експорт налаштовано: {qty} × {emoji}{name} → {target}, {price}."
+  },
+  "auto_export_usage": {
+    "status": "unverified",
+    "text": "Використання: /auto_export <код товару> <к-сть|off> <підприємство-отримувач> [ціна] [валюта] [ваше підприємство]"
+  },
   "autocraft_off": {
     "status": "unverified",
     "text": "✅ Авто-крафт {name} вимкнено."
@@ -109,7 +149,7 @@
   },
   "autocraft_usage": {
     "status": "unverified",
-    "text": "Використання: /autocraft <код товару> <on|off>"
+    "text": "Використання: /autocraft <код товару> <on|off> [підприємство]"
   },
   "autosend_bad_percent": {
     "status": "unverified",
@@ -129,7 +169,7 @@
   },
   "autosend_usage": {
     "status": "unverified",
-    "text": "Використання: /autosend <код товару> <відсоток> <користувач|партія>"
+    "text": "Використання: /autosend <код товару> <відсоток> <користувач|партія|підприємство>"
   },
   "backup_failed": {
     "status": "unverified",
@@ -243,6 +283,26 @@
     "status": "unverified",
     "text": "Використання: /bank <код валюти>"
   },
+  "category_food": {
+    "status": "unverified",
+    "text": "Продукти харчування"
+  },
+  "category_household": {
+    "status": "unverified",
+    "text": "Побутове приладдя"
+  },
+  "category_hygiene": {
+    "status": "unverified",
+    "text": "Засоби гігієни"
+  },
+  "category_pharmacy": {
+    "status": "unverified",
+    "text": "Аптечні препарати"
+  },
+  "category_wardrobe": {
+    "status": "unverified",
+    "text": "Гардероб"
+  },
   "chat_not_setup": {
     "status": "unverified",
     "text": "Цей чат ще не налаштовано. Спочатку адмін бота має прив'язати його до союзу командою /setup."
@@ -309,7 +369,7 @@
   },
   "craft_usage": {
     "status": "unverified",
-    "text": "Використання: /craft <код товару>"
+    "text": "Використання: /craft <код товару> [підприємство]"
   },
   "create_bank_ask_chat": {
     "status": "unverified",
@@ -347,13 +407,29 @@
     "status": "unverified",
     "text": "Невірні значення. Базова вартість — додатна сума, витрата енергії — додатне ціле."
   },
+  "create_good_bad_category": {
+    "status": "unverified",
+    "text": "Невідома категорія. Доступні: {categories}."
+  },
+  "create_good_category_note": {
+    "status": "unverified",
+    "text": "Товар прив'язано до категорії {category}: його якість підвищуватиме забезпеченість сервера."
+  },
   "create_good_created": {
     "status": "unverified",
     "text": "✅ Товар створено: {name} [{code}] — базова вартість {value}, крафт {energy}, банк {bank}."
   },
+  "create_good_need_bank": {
+    "status": "unverified",
+    "text": "У цьому союзі кілька банків — вкажіть код валюти."
+  },
   "create_good_usage": {
     "status": "unverified",
-    "text": "Використання: /create-good <назва> | <база_вартості> | <витрата_енергії> | [емодзі]"
+    "text": "Використання: /create_good <назва> | <базова вартість> | <витрати енергії> | [емодзі] | [категорія] | [валюта] | [підприємство]"
+  },
+  "create_good_wrong_union": {
+    "status": "unverified",
+    "text": "Ця валюта належить іншому союзу."
   },
   "delete_party_confirm": {
     "status": "unverified",
@@ -447,6 +523,170 @@
     "status": "unverified",
     "text": "Надішліть код союзу, до якого переноситься партія."
   },
+  "edit_bank_ask_central": {
+    "status": "unverified",
+    "text": "Надішліть ID нового центрального сервера (він має бути прив'язаний командою /setup)."
+  },
+  "edit_bank_ask_code": {
+    "status": "unverified",
+    "text": "Надішліть новий чотирисимвольний код валюти."
+  },
+  "edit_bank_ask_emoji": {
+    "status": "unverified",
+    "text": "Надішліть нове емодзі валюти."
+  },
+  "edit_bank_ask_leader": {
+    "status": "unverified",
+    "text": "Кого? Надішліть ID користувача, згадку або @username."
+  },
+  "edit_bank_ask_name": {
+    "status": "unverified",
+    "text": "Введіть нову назву валюти."
+  },
+  "edit_bank_bad_central": {
+    "status": "unverified",
+    "text": "Цей чат не налаштовано. Спочатку прив'яжіть його командою /setup."
+  },
+  "edit_bank_bad_code": {
+    "status": "unverified",
+    "text": "Код зайнято або він хибний. Надішліть 4 символи, не зайняті ні союзом, ні партією, ні валютою, ні товаром."
+  },
+  "edit_bank_choose": {
+    "status": "unverified",
+    "text": "Яким банком хочете керувати? Надішліть номер:"
+  },
+  "edit_bank_code_changed": {
+    "status": "unverified",
+    "text": "✅ Код валюти змінено: {old} → {code}. Усі рахунки, товари й договори тепер використовують новий."
+  },
+  "edit_bank_confirm_delete": {
+    "status": "unverified",
+    "text": "⚠️ Це видалить банк, його рахунки, журнал операцій і всі товари, оцінені в його валюті. Вантажі в дорозі повернуться відправнику. Надішліть {code}, щоб підтвердити."
+  },
+  "edit_bank_deleted": {
+    "status": "unverified",
+    "text": "🗑 Банк {name} [{code}] видалено."
+  },
+  "edit_bank_done": {
+    "status": "unverified",
+    "text": "✅ Готово."
+  },
+  "edit_bank_menu_header": {
+    "status": "unverified",
+    "text": "Керування банком {name} [{code}]. Надішліть номер:"
+  },
+  "edit_bank_no_permission": {
+    "status": "unverified",
+    "text": "Редагувати банк можуть лише його лідери та адміни бота."
+  },
+  "edit_bank_opt_add_leader": {
+    "status": "unverified",
+    "text": "Додати лідера"
+  },
+  "edit_bank_opt_central": {
+    "status": "unverified",
+    "text": "Змінити центральний сервер"
+  },
+  "edit_bank_opt_code": {
+    "status": "unverified",
+    "text": "Змінити код валюти"
+  },
+  "edit_bank_opt_delete": {
+    "status": "unverified",
+    "text": "Видалити банк"
+  },
+  "edit_bank_opt_emoji": {
+    "status": "unverified",
+    "text": "Змінити емодзі валюти"
+  },
+  "edit_bank_opt_name": {
+    "status": "unverified",
+    "text": "Перейменувати валюту"
+  },
+  "edit_bank_opt_transfer": {
+    "status": "unverified",
+    "text": "Передати банк"
+  },
+  "edit_bank_specify": {
+    "status": "unverified",
+    "text": "Вкажіть банк: /edit-bank <пункт> <код валюти>."
+  },
+  "edit_ent_ask_desc": {
+    "status": "unverified",
+    "text": "Надішліть новий опис («-» — видалити)."
+  },
+  "edit_ent_ask_leader": {
+    "status": "unverified",
+    "text": "Кого? Надішліть ID користувача, згадку або @username."
+  },
+  "edit_ent_ask_logo": {
+    "status": "unverified",
+    "text": "Надішліть нове зображення-логотип."
+  },
+  "edit_ent_ask_name": {
+    "status": "unverified",
+    "text": "Введіть нову назву."
+  },
+  "edit_ent_ask_salary_bank": {
+    "status": "unverified",
+    "text": "Введіть код валюти, в якій виплачуються зарплати."
+  },
+  "edit_ent_ask_salary_period": {
+    "status": "unverified",
+    "text": "Введіть період виплат: weekly (щотижня) або monthly (щомісяця)."
+  },
+  "edit_ent_bad_value": {
+    "status": "unverified",
+    "text": "Невірне значення."
+  },
+  "edit_ent_confirm_delete": {
+    "status": "unverified",
+    "text": "⚠️ Будуть видалені підприємство, його рахунки та склад. Введіть {code} для підтвердження."
+  },
+  "edit_ent_deleted": {
+    "status": "unverified",
+    "text": "Підприємство «{name}» видалено."
+  },
+  "edit_ent_done": {
+    "status": "unverified",
+    "text": "✅ Готово."
+  },
+  "edit_ent_menu_header": {
+    "status": "unverified",
+    "text": "Керування «{name}». Дайте відповідь номером:"
+  },
+  "edit_ent_opt_add_leader": {
+    "status": "unverified",
+    "text": "Додати лідера"
+  },
+  "edit_ent_opt_delete": {
+    "status": "unverified",
+    "text": "Видалити підприємство"
+  },
+  "edit_ent_opt_description": {
+    "status": "unverified",
+    "text": "Змінити опис"
+  },
+  "edit_ent_opt_logo": {
+    "status": "unverified",
+    "text": "Змінити логотип"
+  },
+  "edit_ent_opt_name": {
+    "status": "unverified",
+    "text": "Перейменувати"
+  },
+  "edit_ent_opt_salary_bank": {
+    "status": "unverified",
+    "text": "Валюта зарплат"
+  },
+  "edit_ent_opt_salary_period": {
+    "status": "unverified",
+    "text": "Період зарплат (weekly/monthly)"
+  },
+  "edit_ent_opt_transfer": {
+    "status": "unverified",
+    "text": "Передати підприємство"
+  },
   "edit_invalid_article": {
     "status": "unverified",
     "text": "Це не схоже на посилання. Надішліть URL, що починається з http(s)://."
@@ -522,6 +762,230 @@
   "edit_union_changed": {
     "status": "unverified",
     "text": "✅ Партію {name} перенесено до союзу {union}."
+  },
+  "ent_assign_cleared": {
+    "status": "unverified",
+    "text": "{user} більше не обіймає посаду."
+  },
+  "ent_assign_done": {
+    "status": "unverified",
+    "text": "✅ {user} тепер обіймає посаду «{position}»."
+  },
+  "ent_assign_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_assign <користувач> | <посада> [| <підприємство>] — або дайте відповідь на повідомлення працівника; «-» знімає посаду."
+  },
+  "ent_choose": {
+    "status": "unverified",
+    "text": "Яке підприємство? Дайте відповідь номером."
+  },
+  "ent_consent_not_leader": {
+    "status": "unverified",
+    "text": "Відповісти може лише лідер цього підприємства."
+  },
+  "ent_field_balance": {
+    "status": "unverified",
+    "text": "Баланс"
+  },
+  "ent_field_goods": {
+    "status": "unverified",
+    "text": "Склад"
+  },
+  "ent_field_leaders": {
+    "status": "unverified",
+    "text": "Лідери"
+  },
+  "ent_field_positions": {
+    "status": "unverified",
+    "text": "Посади"
+  },
+  "ent_field_salary": {
+    "status": "unverified",
+    "text": "Зарплати"
+  },
+  "ent_field_server": {
+    "status": "unverified",
+    "text": "Сервер"
+  },
+  "ent_field_transit": {
+    "status": "unverified",
+    "text": "В дорозі ({count})"
+  },
+  "ent_field_workers": {
+    "status": "unverified",
+    "text": "Працівники ({count})"
+  },
+  "ent_join_already": {
+    "status": "unverified",
+    "text": "Ви вже працюєте на цьому підприємстві."
+  },
+  "ent_join_approved": {
+    "status": "unverified",
+    "text": "✅ {user} тепер працює на підприємстві «{name}»."
+  },
+  "ent_join_declined": {
+    "status": "unverified",
+    "text": "Запит відхилено."
+  },
+  "ent_join_request": {
+    "status": "unverified",
+    "text": "{user} просить прийняти його на підприємство «{name}» [{code}]. Відповісти може лідер."
+  },
+  "ent_join_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_join <код>"
+  },
+  "ent_kick_done": {
+    "status": "unverified",
+    "text": "{user} більше не працює на підприємстві «{name}»."
+  },
+  "ent_kick_not_member": {
+    "status": "unverified",
+    "text": "Цей користувач не є працівником підприємства."
+  },
+  "ent_kick_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_kick <користувач> [код] — або дайте відповідь на повідомлення працівника."
+  },
+  "ent_leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} тепер лідер підприємства «{name}»."
+  },
+  "ent_leader_declined": {
+    "status": "unverified",
+    "text": "Пропозицію керівництва відхилено."
+  },
+  "ent_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, вам пропонують спів-керівництво підприємством «{name}» [{code}]."
+  },
+  "ent_leave_done": {
+    "status": "unverified",
+    "text": "Ви пішли з підприємства «{name}»."
+  },
+  "ent_leave_none": {
+    "status": "unverified",
+    "text": "Ви не працюєте на жодному відповідному підприємстві."
+  },
+  "ent_list_empty": {
+    "status": "unverified",
+    "text": "На цьому сервері поки немає підприємств."
+  },
+  "ent_list_header": {
+    "status": "unverified",
+    "text": "Підприємства цього сервера"
+  },
+  "ent_none_led": {
+    "status": "unverified",
+    "text": "Ви не керуєте жодним підприємством."
+  },
+  "ent_not_leader": {
+    "status": "unverified",
+    "text": "Це можуть робити лише лідери підприємства."
+  },
+  "ent_not_worker": {
+    "status": "unverified",
+    "text": "Ви не працюєте на цьому підприємстві."
+  },
+  "ent_position_cleared": {
+    "status": "unverified",
+    "text": "Посаду «{position}» видалено."
+  },
+  "ent_position_done": {
+    "status": "unverified",
+    "text": "✅ Посада «{position}»: зарплата {salary}."
+  },
+  "ent_position_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_position <назва> | <зарплата> [| <підприємство>] — зарплата: 12.34, 5% або 0."
+  },
+  "ent_salary_cleared": {
+    "status": "unverified",
+    "text": "Особисту зарплату {user} видалено."
+  },
+  "ent_salary_done": {
+    "status": "unverified",
+    "text": "✅ Особиста зарплата {user}: {salary}."
+  },
+  "ent_salary_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_salary <користувач> <зарплата> [підприємство] — зарплата: 12.34, 5% або 0; працює і відповідь на повідомлення."
+  },
+  "ent_sell_usage": {
+    "status": "unverified",
+    "text": "Використання: /ent_sell <код товару> [к-сть] [підприємство]"
+  },
+  "ent_transfer_declined": {
+    "status": "unverified",
+    "text": "Передачу відхилено."
+  },
+  "ent_transfer_done": {
+    "status": "unverified",
+    "text": "✅ Підприємство «{name}» тепер належить {user}."
+  },
+  "ent_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, вам пропонують прийняти підприємство «{name}» [{code}]."
+  },
+  "enterprise_not_found": {
+    "status": "unverified",
+    "text": "Підприємство не знайдено."
+  },
+  "export_arrived": {
+    "status": "unverified",
+    "text": "📦 {qty} × {emoji}{name} прибули до {target} від {source}."
+  },
+  "export_arrived_perished": {
+    "status": "unverified",
+    "text": "📦 {qty} × {emoji}{name} прибули до {target} від {source} ({lost} зіпсувалося в дорозі)."
+  },
+  "export_bad_target": {
+    "status": "unverified",
+    "text": "Підприємство-отримувача не знайдено."
+  },
+  "export_declined": {
+    "status": "unverified",
+    "text": "Пропозицію експорту відхилено."
+  },
+  "export_dispatched": {
+    "status": "unverified",
+    "text": "📦 Відправлено {qty} × {emoji}{name}: {source} → {target}. Прибуття за {eta} ({distance})."
+  },
+  "export_done": {
+    "status": "unverified",
+    "text": "✅ Експортовано {qty} × {emoji}{name}: {source} → {target}."
+  },
+  "export_free": {
+    "status": "unverified",
+    "text": "безоплатно"
+  },
+  "export_need_currency": {
+    "status": "unverified",
+    "text": "Вкажіть валюту ціни."
+  },
+  "export_no_bank": {
+    "status": "unverified",
+    "text": "Невідома валюта ціни."
+  },
+  "export_no_funds": {
+    "status": "unverified",
+    "text": "Підприємству-отримувачу бракує коштів."
+  },
+  "export_no_goods": {
+    "status": "unverified",
+    "text": "На складі підприємства немає стільки товару."
+  },
+  "export_offer": {
+    "status": "unverified",
+    "text": "📦 {source} пропонує {target}: {qty} × {emoji}{name} за {price}. Лідер підприємства-отримувача має підтвердити нижче."
+  },
+  "export_same": {
+    "status": "unverified",
+    "text": "Підприємство не може експортувати саме собі."
+  },
+  "export_usage": {
+    "status": "unverified",
+    "text": "Використання: /export <код товару> <к-сть> <підприємство-отримувач> [ціна] [валюта] [ваше підприємство]"
   },
   "find_channel_not_found": {
     "status": "unverified",
@@ -679,9 +1143,49 @@
     "status": "unverified",
     "text": "Дні народження"
   },
+  "fx_log_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}]: {value} {change}"
+  },
+  "fx_log_title": {
+    "status": "unverified",
+    "text": "Вартість валют оновлено"
+  },
+  "give_done": {
+    "status": "unverified",
+    "text": "✅ Передано {qty} × {emoji}{name} користувачу {user}."
+  },
+  "give_good_usage": {
+    "status": "unverified",
+    "text": "Використання: /give_good <користувач> <код товару> [к-сть] — або дайте відповідь на повідомлення користувача: /give_good <код товару> [к-сть]."
+  },
+  "give_no_goods": {
+    "status": "unverified",
+    "text": "У вашому інвентарі бракує товару (є {have})."
+  },
+  "give_self": {
+    "status": "unverified",
+    "text": "Не можна передати товар самому собі."
+  },
   "good_not_found": {
     "status": "unverified",
     "text": "Товару з таким кодом немає."
+  },
+  "goods_header": {
+    "status": "unverified",
+    "text": "Доступні товари"
+  },
+  "goods_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] — {category}, {value}, {energy}"
+  },
+  "goods_line_base": {
+    "status": "unverified",
+    "text": "{emoji} {name} [{code}] — базова категорія, {energy}"
+  },
+  "goods_none": {
+    "status": "unverified",
+    "text": "Тут поки немає доступних товарів."
   },
   "govt_no_members": {
     "status": "unverified",
@@ -689,11 +1193,11 @@
   },
   "govt_not_found": {
     "status": "unverified",
-    "text": "Уряд не знайдено."
+    "text": "Орган управління не знайдено."
   },
   "govt_not_found_suggest": {
     "status": "unverified",
-    "text": "Уряд не знайдено. Можливо, ви шукали якийсь із цих? Надішліть номер протягом 30 хвилин:"
+    "text": "Орган управління не знайдено. Можливо, ви шукали якийсь із цих? Надішліть номер протягом 30 хвилин:"
   },
   "govt_other_union_mark": {
     "status": "unverified",
@@ -715,13 +1219,17 @@
     "status": "unverified",
     "text": "/add_discord <нік_discord> — зв'язати ваш акаунт Discord (завершіть через /add-telegram у Discord)"
   },
+  "help.cmd_add_enterprise": {
+    "status": "unverified",
+    "text": "/add-enterprise — заснувати підприємство на цьому сервері (інтерактивний діалог; для верифікованих)"
+  },
   "help.cmd_add_govt": {
     "status": "unverified",
-    "text": "/add-govt <союз> <назва> <член> <члени> — створити урядовий орган (адміни бота)"
+    "text": "/add-govt <союз> <назва> <член> <члени> — створити орган управління (адміни бота)"
   },
   "help.cmd_add_govt_tg": {
     "status": "unverified",
-    "text": "/add_govt <союз> <назва> <член> <члени> — створити урядовий орган (адміни бота)"
+    "text": "/add_govt <союз> <назва> <член> <члени> — створити орган управління (адміни бота)"
   },
   "help.cmd_add_party": {
     "status": "unverified",
@@ -747,13 +1255,17 @@
     "status": "unverified",
     "text": "/allow_parties <союз> <enable|disable> [id_ролей] — увімкнути або вимкнути партії в союзі (адміни бота)"
   },
+  "help.cmd_auto_export": {
+    "status": "unverified",
+    "text": "/auto-export <товар> <к-сть|off> <підприємство> [ціна] [валюта] — регулярна щотижнева доставка (лідер отримувача підтверджує один раз)"
+  },
   "help.cmd_autocraft": {
     "status": "unverified",
-    "text": "/autocraft <код товару> <on|off> — авто-крафт щодня, доки вистачає енергії"
+    "text": "/autocraft <товар> <on|off> [підприємство] — безперервне виробництво 24/7, повільніше за ручне"
   },
   "help.cmd_autosend": {
     "status": "unverified",
-    "text": "/autosend <код товару> <відсоток> <користувач|партія> — авто-надсилання частки товару"
+    "text": "/autosend <товар> <відсоток> <користувач|партія|підприємство> — щодня надсилати частку запасу товару"
   },
   "help.cmd_backup": {
     "status": "verified",
@@ -781,7 +1293,7 @@
   },
   "help.cmd_craft": {
     "status": "unverified",
-    "text": "/craft <код товару> — виготовити одну одиницю товару, витрачаючи енергію"
+    "text": "/craft <товар> [підприємство] — запустити виробництво партії; готовність за кілька хвилин"
   },
   "help.cmd_create_bank": {
     "status": "unverified",
@@ -789,7 +1301,19 @@
   },
   "help.cmd_create_good": {
     "status": "unverified",
-    "text": "/create-good <назва> <база> <енергія> [емодзі] — створити товар для крафта (керівники банку)"
+    "text": "/create-good <назва> <вартість> <енергія> [емодзі] [категорія] [валюта] [підприємство] — створити свій товар або товар підприємства"
+  },
+  "help.cmd_edit_bank": {
+    "status": "unverified",
+    "text": "/edit-bank [пункт] [код] — керування банком: назва валюти, емодзі, код, центральний сервер, лідери, видалення"
+  },
+  "help.cmd_edit_bank_tg": {
+    "status": "unverified",
+    "text": "/edit_bank [пункт] [код] — керування банком: назва валюти, емодзі, код, центральний сервер, лідери, видалення"
+  },
+  "help.cmd_edit_enterprise": {
+    "status": "unverified",
+    "text": "/edit-enterprise [пункт] [код] — керування підприємством: тексти, логотип, лідери, зарплати, видалення"
   },
   "help.cmd_edit_party": {
     "status": "unverified",
@@ -815,6 +1339,42 @@
     "status": "unverified",
     "text": "/edit_rules [пункт] — правила партії (засновники та лідери)"
   },
+  "help.cmd_ent_assign": {
+    "status": "unverified",
+    "text": "/ent-assign <користувач> <посада> — призначити працівника на посаду (лідери)"
+  },
+  "help.cmd_ent_join": {
+    "status": "unverified",
+    "text": "/ent-join <код> — попроситися на підприємство (схвалюють його лідери)"
+  },
+  "help.cmd_ent_kick": {
+    "status": "unverified",
+    "text": "/ent-kick <користувач> [код] — звільнити працівника (лідери підприємства)"
+  },
+  "help.cmd_ent_leave": {
+    "status": "unverified",
+    "text": "/ent-leave [код] — піти з підприємства"
+  },
+  "help.cmd_ent_position": {
+    "status": "unverified",
+    "text": "/ent-position <назва> <зарплата> — посада та її зарплата: сума або відсоток від продажів (лідери)"
+  },
+  "help.cmd_ent_salary": {
+    "status": "unverified",
+    "text": "/ent-salary <користувач> <зарплата> — особиста зарплата працівника (лідери)"
+  },
+  "help.cmd_ent_sell": {
+    "status": "unverified",
+    "text": "/ent-sell <товар> [к-сть] — продати товари підприємства банку (лідери)"
+  },
+  "help.cmd_enterprise": {
+    "status": "unverified",
+    "text": "/enterprise [код] — картка підприємства або список підприємств сервера"
+  },
+  "help.cmd_export": {
+    "status": "unverified",
+    "text": "/export <товар> <к-сть> <підприємство> [ціна] [валюта] — відправити товари іншому підприємству (лідер отримувача підтверджує; доставка займає час)"
+  },
   "help.cmd_find_with": {
     "status": "unverified",
     "text": "/find-with <id_каналу> <MM-DD-YYYY[ + 7D]> <слова;…> — відповісти згадкою на повідомлення, що містять ключові слова (адміни сервера)"
@@ -831,9 +1391,17 @@
     "status": "verified",
     "text": "/force_leave <платформа> <id> — вивести бота з чату (адміни бота)"
   },
+  "help.cmd_give_good": {
+    "status": "unverified",
+    "text": "/give-good <користувач> <товар> [к-сть] — передати товари іншому користувачу"
+  },
+  "help.cmd_goods": {
+    "status": "unverified",
+    "text": "/goods — товари, доступні тут для виробництва"
+  },
   "help.cmd_govt": {
     "status": "unverified",
-    "text": "/govt <назва> — інформація про урядовий орган союзу"
+    "text": "/govt <назва> — інформація про орган управління союзу"
   },
   "help.cmd_help": {
     "status": "verified",
@@ -1019,9 +1587,21 @@
     "status": "unverified",
     "text": "/setadmin <ID | @username | відповідь> — делегувати права адміна цієї групи (адміни бота)"
   },
+  "help.cmd_setlogs": {
+    "status": "unverified",
+    "text": "/setlogs [канал] [день] [ГГ:ХХ] [пояс] — канал економічних логів: оновлення курсів і щотижнева статистика (адміністратори сервера)"
+  },
+  "help.cmd_settasks": {
+    "status": "unverified",
+    "text": "/settasks [канал] [ГГ:ХХ] [пояс] — канал щомісячного виробничого завдання (адміністратори сервера)"
+  },
   "help.cmd_setup": {
     "status": "unverified",
     "text": "/setup <союз> <мова> — прив'язати сервер/групу до союзу та встановити мову (адміни бота)"
+  },
+  "help.cmd_transit": {
+    "status": "unverified",
+    "text": "/transit [код] — вантажі підприємства, які ще в дорозі"
   },
   "help.cmd_treaty": {
     "status": "unverified",
@@ -1054,6 +1634,10 @@
   "help.section_economy": {
     "status": "unverified",
     "text": "Економіка"
+  },
+  "help.section_enterprises": {
+    "status": "unverified",
+    "text": "Підприємства"
   },
   "help.section_everyone": {
     "status": "verified",
@@ -1325,7 +1909,7 @@
   },
   "party_field_seats": {
     "status": "unverified",
-    "text": "Місця в урядових органах"
+    "text": "Місця в органах управління"
   },
   "party_join_accept": {
     "status": "unverified",
@@ -1523,9 +2107,45 @@
     "status": "unverified",
     "text": "Конфіденційність"
   },
+  "production_busy": {
+    "status": "unverified",
+    "text": "Ви вже щось виробляєте — буде готово за {time} хв."
+  },
+  "production_dest_enterprise": {
+    "status": "unverified",
+    "text": "товар на складі підприємства [{code}]"
+  },
+  "production_dest_inventory": {
+    "status": "unverified",
+    "text": "товар в особистому інвентарі"
+  },
+  "production_done": {
+    "status": "unverified",
+    "text": "✅ {user} виробив(ла) {qty} × {emoji}{name} (рівень якості {level}) — {dest}."
+  },
+  "production_started": {
+    "status": "unverified",
+    "text": "🏭 Виробництво запущено: {name}{emoji} — партія з {qty} шт., буде готова за {duration} хв, витрати {cost}."
+  },
   "profession_none": {
     "status": "unverified",
     "text": "немає"
+  },
+  "provision_level_acceptable": {
+    "status": "unverified",
+    "text": "прийнятна"
+  },
+  "provision_level_excellent": {
+    "status": "unverified",
+    "text": "відмінна"
+  },
+  "provision_level_good": {
+    "status": "unverified",
+    "text": "добра"
+  },
+  "provision_level_insufficient": {
+    "status": "unverified",
+    "text": "недостатня"
   },
   "quiz_answer_hint": {
     "status": "unverified",
@@ -1679,6 +2299,10 @@
     "status": "unverified",
     "text": "Вікторини"
   },
+  "rate_limited": {
+    "status": "unverified",
+    "text": "Забагато спроб — спробуйте пізніше."
+  },
   "rates_line": {
     "status": "unverified",
     "text": "1 {a} = {rate} {b}{peg}"
@@ -1743,9 +2367,25 @@
     "status": "unverified",
     "text": "Правила партії — {name} [{code}]"
   },
+  "salary_percent": {
+    "status": "unverified",
+    "text": "{percent}% від продажів"
+  },
+  "salary_period_monthly": {
+    "status": "unverified",
+    "text": "щомісяця"
+  },
+  "salary_period_weekly": {
+    "status": "unverified",
+    "text": "щотижня"
+  },
   "sell_done": {
     "status": "unverified",
     "text": "💰 Продано {qty} ×{name} по {unit} за штуку — усього {total}."
+  },
+  "sell_not_sellable": {
+    "status": "unverified",
+    "text": "«{name}» не має ринкової вартості й не продається банку."
   },
   "sell_nothing": {
     "status": "unverified",
@@ -1759,6 +2399,10 @@
     "status": "unverified",
     "text": "🏦 {user} заснував банк {name} [{code}] у союзі {union}."
   },
+  "service_event.bank_deleted": {
+    "status": "unverified",
+    "text": "🏦 {user} видалив банк {name} [{code}]."
+  },
   "service_event.bot_started": {
     "status": "verified",
     "text": "🤖 Бота запущено."
@@ -1766,6 +2410,14 @@
   "service_event.bot_stopped": {
     "status": "verified",
     "text": "🛑 Бота зупинено."
+  },
+  "service_event.enterprise_created": {
+    "status": "unverified",
+    "text": "🏭 Підприємство «{name}» [{code}] засновано користувачем {user}."
+  },
+  "service_event.enterprise_deleted": {
+    "status": "unverified",
+    "text": "🏭 Підприємство «{name}» [{code}] видалено користувачем {user}."
   },
   "service_event.parties_disabled": {
     "status": "unverified",
@@ -1883,6 +2535,46 @@
     "status": "unverified",
     "text": "Використання: /setadmin <ID або @username>, або дайте відповідь командою /setadmin на повідомлення користувача."
   },
+  "setchannel_bad_channel": {
+    "status": "unverified",
+    "text": "Такого каналу на цьому сервері не знайдено."
+  },
+  "setchannel_bad_time": {
+    "status": "unverified",
+    "text": "Невірний час: використовуйте формат ГГ:ХХ."
+  },
+  "setchannel_bad_tz": {
+    "status": "unverified",
+    "text": "Невірний часовий пояс: вкажіть зсув від UTC, наприклад UTC+3 або -05:30."
+  },
+  "setchannel_bad_weekday": {
+    "status": "unverified",
+    "text": "Невірний день тижня: вкажіть 1–7 (1 = понеділок) або англійську назву (mon…sun)."
+  },
+  "setlogs_done": {
+    "status": "unverified",
+    "text": "✅ Канал економічних логів призначено: {channel}. {schedule}"
+  },
+  "setlogs_removed": {
+    "status": "unverified",
+    "text": "Канал економічних логів відв'язано."
+  },
+  "setlogs_schedule": {
+    "status": "unverified",
+    "text": "Щотижнева статистика: {weekday} о {time} ({tz})."
+  },
+  "settasks_done": {
+    "status": "unverified",
+    "text": "✅ Канал щомісячних завдань призначено: {channel}. {schedule}"
+  },
+  "settasks_removed": {
+    "status": "unverified",
+    "text": "Канал щомісячних завдань відв'язано."
+  },
+  "settasks_schedule": {
+    "status": "unverified",
+    "text": "Публікація завдання: 1-го числа кожного місяця о {time} ({tz})."
+  },
   "setup_success": {
     "status": "unverified",
     "text": "✅ Чат прив'язано до союзу {union} ({code}). Мова: {lang_name} ({lang})."
@@ -1903,6 +2595,50 @@
     "status": "unverified",
     "text": "так"
   },
+  "stats_bank_line": {
+    "status": "unverified",
+    "text": "{emoji}{code}: грошова маса {supply}, вартість {value}"
+  },
+  "stats_base_only_mark": {
+    "status": "unverified",
+    "text": "(лише базові товари)"
+  },
+  "stats_category_line": {
+    "status": "unverified",
+    "text": "{category}: {percent}"
+  },
+  "stats_gdp_line": {
+    "status": "unverified",
+    "text": "ВВП за тиждень (зважений за вартістю валют): {gdp}"
+  },
+  "stats_good_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}]: ×{qty}"
+  },
+  "stats_goods_header": {
+    "status": "unverified",
+    "text": "Товарів вироблено за тиждень: {total}"
+  },
+  "stats_provision_total": {
+    "status": "unverified",
+    "text": "{emoji} Забезпеченість: {percent} — {level}"
+  },
+  "stats_shortage_mark": {
+    "status": "unverified",
+    "text": "(не вистачило {qty})"
+  },
+  "stats_task_bonus": {
+    "status": "unverified",
+    "text": "Включає бонус за виконане завдання минулого місяця."
+  },
+  "stats_task_line": {
+    "status": "unverified",
+    "text": "Завдання місяця: виконано {done}/{total} обов'язкових пунктів"
+  },
+  "stats_title": {
+    "status": "unverified",
+    "text": "Щотижнева статистика сервера"
+  },
   "suspend_confirm": {
     "status": "unverified",
     "text": "Призупинити партію {name}? Інформація про неї збережеться, у /party вона буде позначена як призупинена, лідер зможе відновити її пізніше."
@@ -1910,6 +2646,34 @@
   "suspend_done": {
     "status": "unverified",
     "text": "⏸️ Партію {name} призупинено."
+  },
+  "task_footer": {
+    "status": "unverified",
+    "text": "Обов'язкову частину потрібно виробити на цьому сервері/групі; решта — за бажанням. Прогрес видно в щотижневій статистиці."
+  },
+  "task_intro": {
+    "status": "unverified",
+    "text": "Цього місяця серверу потрібно виробити:"
+  },
+  "task_item_mandatory": {
+    "status": "unverified",
+    "text": "• {item} — {qty} шт. (обов'язково)"
+  },
+  "task_item_optional": {
+    "status": "unverified",
+    "text": "• {item} — {qty} шт. (необов'язково)"
+  },
+  "task_prev_done": {
+    "status": "unverified",
+    "text": "✅ Завдання минулого місяця виконано! Діє бонус до забезпеченості."
+  },
+  "task_prev_failed": {
+    "status": "unverified",
+    "text": "❌ Завдання минулого місяця не виконано."
+  },
+  "task_title": {
+    "status": "unverified",
+    "text": "Завдання сервера на {month}"
   },
   "too_many_requests": {
     "status": "unverified",
@@ -1922,6 +2686,34 @@
   "transfer_done": {
     "status": "unverified",
     "text": "✅ {user} тепер керує партією {name}."
+  },
+  "transit_empty": {
+    "status": "unverified",
+    "text": "У «{name}» немає вантажів у дорозі."
+  },
+  "transit_line_in": {
+    "status": "unverified",
+    "text": "⬅️ {emoji}{name} ×{qty} ← {other}, {eta}"
+  },
+  "transit_line_out": {
+    "status": "unverified",
+    "text": "➡️ {emoji}{name} ×{qty} → {other}, {eta}"
+  },
+  "transit_title": {
+    "status": "unverified",
+    "text": "Вантажі в дорозі — {name} [{code}]"
+  },
+  "transport_cross_server": {
+    "status": "unverified",
+    "text": "усередині союзу"
+  },
+  "transport_cross_union": {
+    "status": "unverified",
+    "text": "між союзами"
+  },
+  "transport_local": {
+    "status": "unverified",
+    "text": "локальна"
   },
   "treaty_declined": {
     "status": "unverified",
@@ -1982,5 +2774,33 @@
   "verify_usage": {
     "status": "unverified",
     "text": "Використання: /verify <ваш нік на fandom.com>"
+  },
+  "weekday_0": {
+    "status": "unverified",
+    "text": "понеділок"
+  },
+  "weekday_1": {
+    "status": "unverified",
+    "text": "вівторок"
+  },
+  "weekday_2": {
+    "status": "unverified",
+    "text": "середа"
+  },
+  "weekday_3": {
+    "status": "unverified",
+    "text": "четвер"
+  },
+  "weekday_4": {
+    "status": "unverified",
+    "text": "п'ятниця"
+  },
+  "weekday_5": {
+    "status": "unverified",
+    "text": "субота"
+  },
+  "weekday_6": {
+    "status": "unverified",
+    "text": "неділя"
   }
 }

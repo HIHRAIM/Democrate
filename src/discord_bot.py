@@ -13,6 +13,7 @@ from discord import app_commands, ui, ButtonStyle
 
 import db
 import economy
+import olympiad
 import quizzes
 import utils
 from config import SUPPORT_CHATS
@@ -26,6 +27,8 @@ from utils import (
     format_quiz_date, resolve_previous_quiz, privacy_actions, privacy_option_labels,
     normalize_wiki_url, parse_founday_datetime, parse_founday_time,
     utc_from_epoch, is_founday_today, founday_message,
+    parse_tz_offset, format_tz_offset, parse_weekday, weekday_name,
+    category_label, good_display_name,
 )
 from message_relay import clean_display_name
 import fandom
@@ -68,6 +71,7 @@ class DemBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
+        _apply_olympiad_commands()
         await self.tree.sync()
         self.loop.create_task(self.status_loop())
         self.loop.create_task(self.backup_loop())
@@ -190,8 +194,6 @@ async def on_message(message: discord.Message):
             return
         earn = db.get_earn_channel("discord", message.channel.id)
         if not earn:
-            return
-        if not is_verified("discord", message.author.id):
             return
         economy.earn_from_message("discord", message.author.id, str(message.author),
                                   earn["bank_code"], len(content), earn["rate"])
@@ -460,7 +462,7 @@ async def lang_command(interaction: discord.Interaction, code: str):
 
     if interaction.guild is None:
         try:
-            set_chat_lang(_chat_key(interaction), code)
+            set_chat_lang(_chat_key(interaction), code, is_dm=True)
         except Exception:
             await interaction.response.send_message(
                 localized("loc_unknown_lang", lang, lang=code, supported=", ".join(sorted(SUPPORTED_LANGS))),
@@ -499,7 +501,7 @@ async def locallang_command(interaction: discord.Interaction, code: str):
 
     if interaction.guild is None:
         try:
-            set_chat_lang(chat_key, code)
+            set_chat_lang(chat_key, code, is_dm=True)
         except Exception:
             await interaction.response.send_message(
                 localized("loc_unknown_lang", lang, lang=code, supported=", ".join(sorted(SUPPORTED_LANGS))),
@@ -852,6 +854,7 @@ HELP_SECTIONS = [
     ("section_admins", [
         "cmd_lang", "cmd_locallang", "cmd_find_with", "cmd_find_without",
         "cmd_wiki_founday", "cmd_wiki_foundays", "cmd_wiki_founday_remove",
+        "cmd_setlogs", "cmd_settasks",
     ]),
     ("section_bot_admins", [
         "cmd_setup", "cmd_setadmin", "cmd_remadmin",
@@ -861,12 +864,19 @@ HELP_SECTIONS = [
         "cmd_backup",
     ]),
     ("section_economy", [
-        "cmd_create_bank", "cmd_bank", "cmd_bank_add_leader", "cmd_bank_transfer",
+        "cmd_create_bank", "cmd_bank", "cmd_edit_bank", "cmd_bank_add_leader",
+        "cmd_bank_transfer",
         "cmd_open_account", "cmd_balance", "cmd_pay", "cmd_set_earn",
-        "cmd_create_good", "cmd_craft", "cmd_inventory", "cmd_sell",
-        "cmd_autocraft", "cmd_autosend", "cmd_set_profession", "cmd_fine",
-        "cmd_treaty", "cmd_set_rate", "cmd_convert", "cmd_rates",
+        "cmd_create_good", "cmd_goods", "cmd_craft", "cmd_inventory", "cmd_sell",
+        "cmd_give_good", "cmd_autocraft", "cmd_autosend", "cmd_set_profession",
+        "cmd_fine", "cmd_treaty", "cmd_set_rate", "cmd_convert", "cmd_rates",
         "cmd_set_wage", "cmd_party_dues",
+    ]),
+    ("section_enterprises", [
+        "cmd_add_enterprise", "cmd_enterprise", "cmd_edit_enterprise",
+        "cmd_ent_join", "cmd_ent_leave", "cmd_ent_kick",
+        "cmd_ent_position", "cmd_ent_assign", "cmd_ent_salary",
+        "cmd_ent_sell", "cmd_export", "cmd_auto_export", "cmd_transit",
     ]),
 ]
 
@@ -890,11 +900,15 @@ def _chunk_lines(lines, limit=EMBED_FIELD_LIMIT):
 
 def _help_pages(lang):
     """One page per section. A section too long for a single embed field is
-    spread over several fields on the same page."""
+    spread over several fields on the same page. The Olympiad page lists only
+    /setolympiad while no Olympiad is running — the rest of its commands are not
+    registered then, so listing them would point at nothing."""
     pages = []
     for title_key, keys in HELP_SECTIONS:
         blocks = _chunk_lines([localized_help(k, lang) for k in keys])
         pages.append((localized_help(title_key, lang), blocks))
+    lines = [olympiad.text(k, lang) for k in olympiad_help_keys()]
+    pages.append((olympiad.text("section_title", lang), _chunk_lines(lines)))
     return pages
 
 def _help_embed(lang, pages, index):
@@ -2107,8 +2121,10 @@ async def _wait_message_or_stop(channel_id, user_id, stop_event, timeout=DIALOG_
         return "timeout", None
 
 class _QuizButtons(ui.View):
-    """A row of buttons only the quiz-taker may press; `wait_click` resolves with
-    the pressed button's value (or None on timeout)."""
+    """A row of buttons only one person may press; `wait_click` resolves with the
+    pressed button's value (or None on timeout), `wait_value` waits without a
+    deadline of its own so the caller can race it against something else. Used by
+    the quizzes and by the Olympiad dialogs."""
 
     def __init__(self, user_id, lang, buttons, timeout=DIALOG_TIMEOUT):
         super().__init__(timeout=timeout)
@@ -2141,6 +2157,10 @@ class _QuizButtons(ui.View):
             await asyncio.wait_for(self._event.wait(), timeout=self.timeout)
         except asyncio.TimeoutError:
             pass
+        return self.value
+
+    async def wait_value(self):
+        await self._event.wait()
         return self.value
 
 def _quiz_question_embed(quiz_id, lang, qindex, order, allow_prev, total):
@@ -2917,8 +2937,6 @@ async def _offer_bank_leadership(interaction, bank, lang, target_id, transfer):
 
 async def _bank_leadership_cmd(interaction, code, user, transfer):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     bank = db.get_bank(code.strip().upper())
     if not bank:
         await _ereply(interaction, "bank_not_found", lang)
@@ -2957,12 +2975,126 @@ async def bank_add_leader_cmd(interaction: discord.Interaction, code: str, user:
 async def bank_transfer_cmd(interaction: discord.Interaction, code: str, user: str):
     await _bank_leadership_cmd(interaction, code, user, transfer=True)
 
-@bot.tree.command(name="open-account", description="open an account in a bank (verified users)")
+_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "add_leader",
+                      "transfer", "delete")
+
+async def _resolve_edit_bank(interaction, lang, query=None):
+    """The bank the caller may edit: any of them for a Bot Admin, only one they
+    lead otherwise. Without a code it is the single bank they lead, or a
+    numbered choice when they lead several."""
+    admin = is_admin("discord", interaction.user.id)
+    if query:
+        bank = db.get_bank(query.strip().upper())
+        if not bank:
+            await _ereply(interaction, "bank_not_found", lang)
+            return None
+        if not (admin or db.is_bank_leader(bank["code"], "discord", interaction.user.id)):
+            await _ereply(interaction, "edit_bank_no_permission", lang)
+            return None
+        return bank
+    led = [b for b in db.get_all_banks()
+           if db.is_bank_leader(b["code"], "discord", interaction.user.id)]
+    if not led:
+        await _ereply(interaction, "edit_bank_specify" if admin
+                      else "edit_bank_no_permission", lang)
+        return None
+    if len(led) == 1:
+        return led[0]
+    return await _numbered_choice(interaction, lang,
+                                  localized("edit_bank_choose", lang), led,
+                                  lambda b: _bank_line(b, lang))
+
+@bot.tree.command(name="edit-bank", description="manage a bank: currency name, emoji, code, central server, leaders")
+@app_commands.describe(option="Menu item number",
+                       code="Currency code (bot admins, or when you lead several banks)")
+async def edit_bank_cmd(interaction: discord.Interaction, option: int = None,
+                        code: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    bank = await _resolve_edit_bank(interaction, lang, code)
+    if bank is None:
+        return
+    if option is None or not 1 <= option <= len(_EDIT_BANK_OPTIONS):
+        items = [localized(f"edit_bank_opt_{key}", lang) for key in _EDIT_BANK_OPTIONS]
+        chosen = await _numbered_choice(
+            interaction, lang,
+            localized("edit_bank_menu_header", lang, name=bank["currency_name"],
+                      code=bank["code"]),
+            list(enumerate(items)), lambda it: it[1])
+        if chosen is None:
+            return
+        action = _EDIT_BANK_OPTIONS[chosen[0]]
+    else:
+        action = _EDIT_BANK_OPTIONS[option - 1]
+
+    channel = interaction.channel
+    if action == "name":
+        msg = await _dialog_text(interaction, lang, localized("edit_bank_ask_name", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        db.update_bank_field(bank["code"], "currency_name",
+                             clean_display_name(msg.content, max_len=40))
+        await channel.send(embed=_econ_embed(localized("edit_bank_done", lang)))
+    elif action == "emoji":
+        msg = await _dialog_text(interaction, lang, localized("edit_bank_ask_emoji", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        parts = (msg.content or "").strip().split()
+        db.update_bank_field(bank["code"], "emoji", parts[0][:16] if parts else "")
+        await channel.send(embed=_econ_embed(localized("edit_bank_done", lang)))
+    elif action == "code":
+        new_code = await _dialog_text(interaction, lang, localized("edit_bank_ask_code", lang),
+                                      validator=_currency_code_validator,
+                                      error_key="edit_bank_bad_code", as_embed=True)
+        if new_code is None:
+            return
+        old_code = bank["code"]
+        db.rename_bank_code(old_code, new_code)
+        await channel.send(embed=_econ_embed(
+            localized("edit_bank_code_changed", lang, old=old_code, code=new_code)))
+    elif action == "central":
+        msg = await _dialog_text(interaction, lang, localized("edit_bank_ask_central", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        chat = db.get_chat((msg.content or "").strip())
+        if not chat:
+            await channel.send(embed=_econ_embed(localized("edit_bank_bad_central", lang)))
+            return
+        db.set_bank_central_chat(bank["code"], chat["chat_id"], chat["union_code"])
+        await channel.send(embed=_econ_embed(localized("edit_bank_done", lang)))
+    elif action in ("add_leader", "transfer"):
+        msg = await _dialog_text(interaction, lang, localized("edit_bank_ask_leader", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        target_id = _parse_user_ref((msg.content or "").strip())
+        if target_id is None:
+            await channel.send(embed=_econ_embed(localized("edit_invalid_user", lang)))
+            return
+        await _offer_bank_leadership(interaction, bank, lang, target_id,
+                                     action == "transfer")
+    elif action == "delete":
+        msg = await _dialog_text(interaction, lang,
+                                 localized("edit_bank_confirm_delete", lang, code=bank["code"]),
+                                 as_embed=True)
+        if msg is None:
+            return
+        if (msg.content or "").strip().upper() != bank["code"]:
+            await channel.send(embed=_econ_embed(localized("action_cancelled", lang)))
+            return
+        db.delete_bank(bank["code"])
+        await channel.send(embed=_econ_embed(
+            localized("edit_bank_deleted", lang, name=bank["currency_name"],
+                      code=bank["code"])))
+        await send_service_event("bank_deleted", name=bank["currency_name"],
+                                 code=bank["code"], user=str(interaction.user))
+
+@bot.tree.command(name="open-account", description="open an account in a bank")
 @app_commands.describe(code="Currency code")
 async def open_account_cmd(interaction: discord.Interaction, code: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     bank = db.get_bank(code.strip().upper())
     if not bank:
         await _ereply(interaction, "bank_not_found", lang)
@@ -2975,12 +3107,10 @@ async def open_account_cmd(interaction: discord.Interaction, code: str):
     await _ereply(interaction, "account_opened", lang, ephemeral=False,
                   name=bank["currency_name"], code=bank["code"])
 
-@bot.tree.command(name="balance", description="your balance and energy (verified users)")
+@bot.tree.command(name="balance", description="your balance and energy")
 @app_commands.describe(code="Currency code (omit for all your accounts)")
 async def balance_cmd(interaction: discord.Interaction, code: str = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     owner = db.canonical_user("discord", interaction.user.id)
     if code:
         bank = db.get_bank(code.strip().upper())
@@ -3012,12 +3142,10 @@ async def balance_cmd(interaction: discord.Interaction, code: str = None):
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed, ephemeral=True)
 
-@bot.tree.command(name="pay", description="send money to another user (verified users)")
+@bot.tree.command(name="pay", description="send money to another user")
 @app_commands.describe(user="Recipient ID or mention", amount="Amount, e.g. 12.34", code="Currency code")
 async def pay_cmd(interaction: discord.Interaction, user: str, amount: str, code: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     bank = db.get_bank(code.strip().upper())
     if not bank:
         await _ereply(interaction, "bank_not_found", lang)
@@ -3067,26 +3195,70 @@ async def set_earn_cmd(interaction: discord.Interaction, code: str, action: str,
     action = action.strip().lower()
     if action in ("off", "disable", "0", "false", "no"):
         db.remove_earn_channel("discord", interaction.channel_id)
-        await _ereply(interaction, "set_earn_off", lang, ephemeral=False)
+        await _ereply(interaction, "set_earn_off", lang)
         return
     if action not in ("on", "enable", "1", "true", "yes"):
         await _ereply(interaction, "set_earn_usage", lang)
         return
     r = max(0.0, min(float(rate), 100.0))
     db.set_earn_channel("discord", interaction.channel_id, bank["code"], r)
-    await _ereply(interaction, "set_earn_on", lang, ephemeral=False, code=bank["code"], rate=f"{r:g}")
+    await _ereply(interaction, "set_earn_on", lang, code=bank["code"], rate=f"{r:g}")
 
-@bot.tree.command(name="create-good", description="create a craftable good for your bank (bank leaders)")
-@app_commands.describe(name="Good name", base_value="Base value in the bank's currency, e.g. 5.00",
-                       energy_cost="Energy cost per craft", emoji="Optional emoji")
+def _resolve_good_bank(chat, currency):
+    """The bank a new good is denominated in: the named one (it must belong to
+    the chat's union) or the union's only bank. Returns (bank, error_key)."""
+    banks = db.get_banks_in_union(chat["union_code"])
+    if currency:
+        bank = db.get_bank(currency.strip().upper())
+        if not bank:
+            return None, "bank_not_found"
+        if bank["union_code"] != chat["union_code"]:
+            return None, "create_good_wrong_union"
+        return bank, None
+    if len(banks) == 1:
+        return banks[0], None
+    return None, "create_good_need_bank"
+
+def _normalize_category(raw):
+    """(category|None, ok). Base-category key, case-insensitive; '-' clears."""
+    s = (raw or "").strip().lower()
+    if not s or s == "-":
+        return None, True
+    return (s, True) if s in db.GOOD_CATEGORIES else (None, False)
+
+@bot.tree.command(name="create-good", description="create a good you or your enterprise will produce")
+@app_commands.describe(name="Good name", base_value="Base value in the chosen currency, e.g. 5.00",
+                       energy_cost="Energy cost per unit", emoji="Optional emoji",
+                       category="Base category the good counts toward",
+                       currency="Currency code (required when the union has several banks)",
+                       enterprise="Enterprise code, when the good belongs to your enterprise")
 async def create_good_cmd(interaction: discord.Interaction, name: str, base_value: str,
-                          energy_cost: int, emoji: str = None):
+                          energy_cost: int, emoji: str = None, category: str = None,
+                          currency: str = None, enterprise: str = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
+    chat = db.get_chat(str(interaction.guild_id)) if interaction.guild_id else None
+    if not chat:
+        await _ereply(interaction, "chat_not_setup", lang)
         return
-    bank = await _resolve_led_bank(interaction, lang)
-    if bank is None:
+    bank, err = _resolve_good_bank(chat, currency)
+    if err:
+        await _ereply(interaction, err, lang)
         return
+    cat, ok = _normalize_category(category)
+    if not ok:
+        await _ereply(interaction, "create_good_bad_category", lang,
+                      categories=", ".join(db.GOOD_CATEGORIES))
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    if enterprise:
+        ent = db.find_enterprise(enterprise)
+        if not ent:
+            await _ereply(interaction, "enterprise_not_found", lang)
+            return
+        if not db.is_enterprise_leader(ent["code"], "discord", interaction.user.id):
+            await _ereply(interaction, "ent_not_leader", lang)
+            return
+        owner = db.enterprise_owner(ent["code"])
     base = economy.parse_amount(base_value)
     if base is None or energy_cost <= 0:
         await _ereply(interaction, "create_good_bad", lang)
@@ -3094,39 +3266,79 @@ async def create_good_cmd(interaction: discord.Interaction, name: str, base_valu
     nm = clean_display_name(name, max_len=40)
     parts = (emoji or "").strip().split()
     em = parts[0][:16] if parts else ""
-    gcode = db.create_good(bank["code"], nm, base, energy_cost, em)
+    gcode = db.create_good(bank["code"], nm, base, energy_cost, em, owner=owner, category=cat)
     await _ereply(interaction, "create_good_created", lang, ephemeral=False, name=nm, code=gcode,
                   value=economy.format_money(base, bank), energy=economy.format_energy(energy_cost),
                   bank=bank["code"])
+    if cat:
+        await interaction.channel.send(embed=_econ_embed(
+            localized("create_good_category_note", lang, category=category_label(cat, lang))))
 
-@bot.tree.command(name="craft", description="craft one unit of a good, spending energy (verified users)")
-@app_commands.describe(good_code="Good code (4 characters)")
-async def craft_cmd(interaction: discord.Interaction, good_code: str):
+def _fmt_duration(seconds):
+    seconds = max(int(seconds), 0)
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+def _fmt_eta(seconds):
+    """mm:ss for short waits, h:mm:ss once a shipment runs into hours."""
+    seconds = max(int(seconds), 0)
+    if seconds >= 3600:
+        return f"{seconds // 3600}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+def _distance_label(distance, lang):
+    return localized(f"transport_{distance}", lang)
+
+def _resolve_production_target(platform, user_id, guild_key, enterprise_query):
+    """(owner, server, error_key) of a production request: the caller's own
+    inventory and the current server — or the enterprise and its home server
+    when one is named (the caller must work there)."""
+    if enterprise_query:
+        ent = db.find_enterprise(enterprise_query)
+        if not ent:
+            return None, None, "enterprise_not_found"
+        if not db.is_enterprise_worker(ent["code"], platform, user_id):
+            return None, None, "ent_not_worker"
+        return db.enterprise_owner(ent["code"]), (ent["platform"], ent["server_id"]), None
+    owner = db.canonical_user(platform, user_id)
+    server = (platform, str(guild_key)) if guild_key else (None, None)
+    return owner, server, None
+
+@bot.tree.command(name="craft", description="start producing a good — the batch arrives in a few minutes")
+@app_commands.describe(good_code="Good code (4 characters)",
+                       enterprise="Enterprise code to produce for (its workers only)")
+async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise: str = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
         return
-    owner = db.canonical_user("discord", interaction.user.id)
-    status, info = economy.craft(owner, good)
+    owner, server, err = _resolve_production_target(
+        "discord", interaction.user.id, interaction.guild_id, enterprise)
+    if err:
+        await _ereply(interaction, err, lang)
+        return
+    worker = db.canonical_user("discord", interaction.user.id)
+    notify = ("discord", str(interaction.channel_id))
+    status, info = economy.start_production(worker, good, owner, server, notify, lang,
+                                            starter_display=str(interaction.user))
+    if status == "busy":
+        await _ereply(interaction, "production_busy", lang,
+                      time=_fmt_duration(info["finish_at"] - int(datetime.now(timezone.utc).timestamp())))
+        return
     if status == "no_energy":
         await _ereply(interaction, "craft_no_energy", lang,
                       cost=economy.format_energy(info["cost"]),
                       have=economy.format_energy(info["have"]))
         return
-    bank = db.get_bank(good["bank_code"])
     emoji = f" {good['emoji']}" if good["emoji"] else ""
-    await _ereply(interaction, "craft_done", lang, ephemeral=False,
-                  name=good["name"], emoji=emoji, cost=economy.format_energy(info["cost"]),
-                  value=economy.format_money(info["value"], bank), level=info["level"])
+    await _ereply(interaction, "production_started", lang, ephemeral=False,
+                  name=good_display_name(good, lang), emoji=emoji, qty=info["qty"],
+                  duration=_fmt_duration(info["duration"]),
+                  cost=economy.format_energy(info["cost"]))
 
-@bot.tree.command(name="inventory", description="your crafted goods (verified users)")
+@bot.tree.command(name="inventory", description="your crafted goods")
 async def inventory_cmd(interaction: discord.Interaction):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     owner = db.canonical_user("discord", interaction.user.id)
     inv = db.get_inventory(owner)
     if not inv:
@@ -3139,7 +3351,8 @@ async def inventory_cmd(interaction: discord.Interaction):
         bank = db.get_bank(row["bank_code"])
         val = economy.format_money(economy.unit_value(good, m), bank) if good and bank else "—"
         emoji = f"{row['emoji']} " if row["emoji"] else ""
-        lines.append(localized("inventory_line", lang, emoji=emoji, name=row["name"],
+        lines.append(localized("inventory_line", lang, emoji=emoji,
+                               name=good_display_name(good, lang) if good else row["name"],
                                code=row["good_code"], qty=row["qty"], value=val,
                                level=economy.mastery_level(m)))
     embed = discord.Embed(title=localized("inventory_title", lang),
@@ -3147,12 +3360,10 @@ async def inventory_cmd(interaction: discord.Interaction):
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed, ephemeral=True)
 
-@bot.tree.command(name="sell", description="sell a good back to its bank (verified users)")
+@bot.tree.command(name="sell", description="sell a good back to its bank")
 @app_commands.describe(good_code="Good code", qty="How many (default: all)")
 async def sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
@@ -3161,6 +3372,10 @@ async def sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = 
     have = db.get_inventory_qty(owner, good["code"])
     want = qty if (qty and qty > 0) else have
     status, info = economy.sell(owner, good, want)
+    if status == "not_sellable":
+        await _ereply(interaction, "sell_not_sellable", lang,
+                      name=good_display_name(good, lang))
+        return
     if status == "nothing":
         await _ereply(interaction, "sell_nothing", lang, name=good["name"])
         return
@@ -3169,29 +3384,33 @@ async def sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = 
                   name=good["name"], unit=economy.format_money(info["unit"], bank),
                   total=economy.format_money(info["total"], bank))
 
-@bot.tree.command(name="autocraft", description="auto-craft a good each day when energy allows (verified users)")
-@app_commands.describe(good_code="Good code", action="on | off")
-async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action: str):
+@bot.tree.command(name="autocraft", description="produce a good 24/7, slower than by hand")
+@app_commands.describe(good_code="Good code", action="on | off",
+                       enterprise="Enterprise code to produce for (its workers only)")
+async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action: str,
+                        enterprise: str = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
         return
-    owner = db.canonical_user("discord", interaction.user.id)
+    owner, server, err = _resolve_production_target(
+        "discord", interaction.user.id, interaction.guild_id, enterprise)
+    if err:
+        await _ereply(interaction, err, lang)
+        return
+    worker = db.canonical_user("discord", interaction.user.id)
     on = action.strip().lower() in ("on", "enable", "1", "true", "yes")
-    db.set_autocraft(owner, good["code"], on)
+    db.set_autocraft(owner, good["code"], on,
+                     starter=(worker[1], worker[2]), server=server)
     await _ereply(interaction, "autocraft_on" if on else "autocraft_off", lang,
-                  ephemeral=False, name=good["name"])
+                  ephemeral=False, name=good_display_name(good, lang))
 
-@bot.tree.command(name="autosend", description="auto-send a share of a good to a user or party (verified users)")
+@bot.tree.command(name="autosend", description="auto-send a share of a good to a user or party")
 @app_commands.describe(good_code="Good code", percent="Percent 0-100 (0 to stop)",
                        target="Recipient: a user ID/mention or a party code")
 async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent: int, target: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
@@ -3201,8 +3420,11 @@ async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent
         return
     owner = db.canonical_user("discord", interaction.user.id)
     party = db.get_party(target.strip().upper())
+    ent = db.get_enterprise(target.strip().upper())
     if party:
         tgt, tname = db.party_owner(party["code"]), f"{party['name']} [{party['code']}]"
+    elif ent:
+        tgt, tname = db.enterprise_owner(ent["code"]), f"{ent['name']} [{ent['code']}]"
     else:
         tid = _parse_user_ref(target)
         if tid is None:
@@ -3221,8 +3443,6 @@ async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent
 @app_commands.describe(user="Member ID or mention", good_code="Good code that becomes their profession")
 async def set_profession_cmd(interaction: discord.Interaction, user: str, good_code: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
@@ -3243,8 +3463,6 @@ async def set_profession_cmd(interaction: discord.Interaction, user: str, good_c
 @app_commands.describe(user="User ID or mention", amount="Amount, e.g. 10.00", reason="Optional reason")
 async def fine_cmd(interaction: discord.Interaction, user: str, amount: str, reason: str = None):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     bank = await _resolve_led_bank(interaction, lang)
     if bank is None:
         return
@@ -3266,8 +3484,6 @@ async def fine_cmd(interaction: discord.Interaction, user: str, amount: str, rea
 @app_commands.describe(code="Currency code of the other bank")
 async def treaty_cmd(interaction: discord.Interaction, code: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     other = db.get_bank(code.strip().upper())
     if not other:
         await _ereply(interaction, "bank_not_found", lang)
@@ -3301,8 +3517,6 @@ async def treaty_cmd(interaction: discord.Interaction, code: str):
                        rate="Units of the partner currency per 1 unit of yours")
 async def set_rate_cmd(interaction: discord.Interaction, code: str, rate: float):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     other = db.get_bank(code.strip().upper())
     if not other:
         await _ereply(interaction, "bank_not_found", lang)
@@ -3333,12 +3547,10 @@ async def set_rate_cmd(interaction: discord.Interaction, code: str, rate: float)
         localized("set_rate_offer", lang, a=mine["code"], rate=f"{rate:g}", b=other["code"])),
         view=_LeaderConsentView(lang, other["code"], on_accept, on_decline))
 
-@bot.tree.command(name="convert", description="convert between your accounts at the current rate (verified users)")
+@bot.tree.command(name="convert", description="convert between your accounts at the current rate")
 @app_commands.describe(amount="Amount in the source currency", from_code="Source currency", to_code="Target currency")
 async def convert_cmd(interaction: discord.Interaction, amount: str, from_code: str, to_code: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     minor = economy.parse_amount(amount)
     if minor is None:
         await _ereply(interaction, "bad_amount", lang)
@@ -3397,8 +3609,6 @@ async def rates_cmd(interaction: discord.Interaction, code: str = None):
 @app_commands.describe(profession="Good code or name defining the profession", amount="Monthly wage (0 to clear)")
 async def set_wage_cmd(interaction: discord.Interaction, profession: str, amount: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     bank = await _resolve_led_bank(interaction, lang)
     if bank is None:
         return
@@ -3422,8 +3632,6 @@ async def set_wage_cmd(interaction: discord.Interaction, profession: str, amount
 @app_commands.describe(code="Currency code", amount="Monthly dues per member (0 to clear)")
 async def party_dues_cmd(interaction: discord.Interaction, code: str, amount: str):
     lang = get_chat_lang(_chat_key(interaction))
-    if not await _require_verified(interaction, lang):
-        return
     party = await _resolve_led_party(interaction, lang)
     if party is None:
         return
@@ -3445,3 +3653,1322 @@ async def party_dues_cmd(interaction: discord.Interaction, code: str, amount: st
     db.set_party_dues(party["code"], bank["code"], minor)
     await _ereply(interaction, "dues_done", lang, ephemeral=False, name=party["name"],
                   amount=economy.format_money(minor, bank))
+
+async def _set_channel_cmd(interaction, kind, chat_id, weekday, post_time, tz):
+    """Shared body of /setlogs and /settasks: server admins bind (or unbind with
+    'off') the channel and optionally tune the schedule."""
+    lang = get_chat_lang(_chat_key(interaction))
+    if interaction.guild is None:
+        await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
+        return
+    if not (is_admin("discord", interaction.user.id) or is_server_admin(interaction)):
+        await _ereply(interaction, "no_permission", lang)
+        return
+    server_id = str(interaction.guild_id)
+    if not db.is_setup(server_id):
+        await _ereply(interaction, "chat_not_setup", lang)
+        return
+    if chat_id and chat_id.strip().lower() in ("off", "remove", "disable"):
+        db.remove_chat_channel("discord", server_id, kind)
+        await _ereply(interaction, f"set{kind}_removed", lang, ephemeral=False)
+        return
+    raw = (chat_id or str(interaction.channel_id)).strip()
+    channel = None
+    if raw.isdigit():
+        channel = interaction.guild.get_channel(int(raw))
+        if channel is None:
+            try:
+                channel = await bot.fetch_channel(int(raw))
+            except Exception:
+                channel = None
+    if channel is None or getattr(channel, "guild", None) is None \
+            or channel.guild.id != interaction.guild_id:
+        await _ereply(interaction, "setchannel_bad_channel", lang)
+        return
+    wd = None
+    if weekday is not None:
+        try:
+            wd = parse_weekday(weekday)
+        except ValueError:
+            await _ereply(interaction, "setchannel_bad_weekday", lang)
+            return
+    hour = minute = None
+    if post_time is not None:
+        try:
+            hour, minute = parse_founday_time(post_time)
+        except ValueError:
+            await _ereply(interaction, "setchannel_bad_time", lang)
+            return
+    offset = None
+    if tz is not None:
+        try:
+            offset = parse_tz_offset(tz)
+        except ValueError:
+            await _ereply(interaction, "setchannel_bad_tz", lang)
+            return
+    db.set_chat_channel("discord", server_id, kind, channel.id,
+                        weekday=wd, hour=hour, minute=minute, tz_offset=offset)
+    row = db.get_chat_channel("discord", server_id, kind)
+    when = f"{row['hour']:02d}:{row['minute']:02d}"
+    tz_disp = format_tz_offset(row["tz_offset"])
+    if kind == "logs":
+        schedule = localized("setlogs_schedule", lang,
+                             weekday=weekday_name(row["weekday"], lang),
+                             time=when, tz=tz_disp)
+    else:
+        schedule = localized("settasks_schedule", lang, time=when, tz=tz_disp)
+    await _ereply(interaction, f"set{kind}_done", lang, ephemeral=False,
+                  channel=f"<#{channel.id}>", schedule=schedule)
+
+@bot.tree.command(name="setlogs", description="set this server's economic log channel (server admins)")
+@app_commands.describe(chat_id="Channel ID (default: this channel; 'off' unbinds)",
+                       weekday="Weekly statistics day: 1-7 (1 = Monday) or a name",
+                       post_time="Weekly statistics time, HH:MM",
+                       tz="Timezone as a UTC offset, e.g. UTC+3")
+async def setlogs_cmd(interaction: discord.Interaction, chat_id: str = None,
+                      weekday: str = None, post_time: str = None, tz: str = None):
+    await _set_channel_cmd(interaction, "logs", chat_id, weekday, post_time, tz)
+
+@bot.tree.command(name="settasks", description="set this server's monthly-task channel (server admins)")
+@app_commands.describe(chat_id="Channel ID (default: this channel; 'off' unbinds)",
+                       post_time="Posting time on the 1st, HH:MM",
+                       tz="Timezone as a UTC offset, e.g. UTC+3")
+async def settasks_cmd(interaction: discord.Interaction, chat_id: str = None,
+                       post_time: str = None, tz: str = None):
+    await _set_channel_cmd(interaction, "tasks", chat_id, None, post_time, tz)
+
+class _EntConsentView(ui.View):
+    """Accept/decline buttons that any leader of `ent_code` (or a Bot Admin) may
+    press — join requests and priced export offers."""
+
+    def __init__(self, lang, ent_code, on_accept, on_decline):
+        super().__init__(timeout=DIALOG_TIMEOUT)
+        self.lang = lang
+        self.ent_code = ent_code
+        self._on_accept = on_accept
+        self._on_decline = on_decline
+        accept = ui.Button(label=localized("consent_accept", lang), style=ButtonStyle.success)
+        decline = ui.Button(label=localized("consent_decline", lang), style=ButtonStyle.danger)
+        accept.callback = self._make_cb(True)
+        decline.callback = self._make_cb(False)
+        self.add_item(accept)
+        self.add_item(decline)
+
+    def _make_cb(self, accepted):
+        async def callback(interaction2: discord.Interaction):
+            if not (db.is_enterprise_leader(self.ent_code, "discord", interaction2.user.id)
+                    or is_admin("discord", interaction2.user.id)):
+                await interaction2.response.send_message(
+                    localized("ent_consent_not_leader", self.lang), ephemeral=True)
+                return
+            for item in self.children:
+                item.disabled = True
+            self.stop()
+            try:
+                await interaction2.response.edit_message(view=self)
+            except Exception:
+                pass
+            await (self._on_accept if accepted else self._on_decline)(interaction2)
+        return callback
+
+def _ent_line(ent):
+    return f"{ent['name']} [{ent['code']}]"
+
+async def _resolve_led_enterprise(interaction, lang, query=None):
+    """The enterprise the caller leads: the named one, the only one, or a
+    numbered choice among several."""
+    if query:
+        ent = db.find_enterprise(query)
+        if not ent:
+            await _ereply(interaction, "enterprise_not_found", lang)
+            return None
+        if not (db.is_enterprise_leader(ent["code"], "discord", interaction.user.id)
+                or is_admin("discord", interaction.user.id)):
+            await _ereply(interaction, "ent_not_leader", lang)
+            return None
+        return ent
+    ents = db.user_led_enterprises("discord", interaction.user.id)
+    if not ents:
+        await _ereply(interaction, "ent_none_led", lang)
+        return None
+    if len(ents) == 1:
+        return ents[0]
+    return await _numbered_choice(interaction, lang, localized("ent_choose", lang),
+                                  ents, _ent_line)
+
+@bot.tree.command(name="add-enterprise", description="found an enterprise on this server (interactive dialog)")
+async def add_enterprise_cmd(interaction: discord.Interaction):
+    lang = get_chat_lang(_chat_key(interaction))
+    if interaction.guild is None:
+        await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
+        return
+    if not db.is_setup(str(interaction.guild_id)):
+        await _ereply(interaction, "chat_not_setup", lang)
+        return
+    if not rate_limit_ok(f"addent|discord|{interaction.user.id}", 3, 86400):
+        await _ereply(interaction, "rate_limited", lang)
+        return
+    name_msg = await _dialog_text(interaction, lang, localized("add_ent_ask_name", lang),
+                                  as_embed=True)
+    if name_msg is None:
+        return
+    name = clean_display_name(name_msg.content, max_len=60)
+    code = await _dialog_text(interaction, lang, localized("add_ent_ask_code", lang),
+                              validator=_party_code_validator, error_key="add_ent_bad_code",
+                              as_embed=True)
+    if code is None:
+        return
+    desc_msg = await _dialog_text(interaction, lang, localized("add_ent_ask_desc", lang),
+                                  as_embed=True)
+    if desc_msg is None:
+        return
+    description = (desc_msg.content or "").strip()
+    description = None if description == "-" else description[:500]
+    await interaction.channel.send(embed=_econ_embed(localized("add_ent_ask_logo", lang)))
+    logo = logo_mime = None
+    for _ in range(5):
+        msg = await _wait_message(interaction.channel_id, interaction.user.id)
+        if msg is None:
+            await interaction.channel.send(embed=_econ_embed(localized("dialog_timeout", lang)))
+            return
+        if (msg.content or "").strip() == "-":
+            break
+        got = await _extract_logo(msg)
+        if got:
+            logo, logo_mime = got
+            break
+        await interaction.channel.send(embed=_econ_embed(localized("add_party_invalid_logo", lang)))
+    db.create_enterprise(code, name, "discord", interaction.guild_id,
+                         "discord", interaction.user.id, str(interaction.user),
+                         description=description, logo=logo, logo_mime=logo_mime)
+    await interaction.channel.send(embed=_econ_embed(
+        localized("add_ent_created", lang, name=name, code=code)))
+    await send_service_event("enterprise_created", name=name, code=code,
+                             user=str(interaction.user))
+
+def _build_enterprise_embed(ent, lang, viewer_platform="discord"):
+    embed = discord.Embed(title=f"{ent['name']} [{ent['code']}]",
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    if ent["description"]:
+        embed.description = ent["description"][:2000]
+    guild = bot.get_guild(int(ent["server_id"])) if ent["platform"] == "discord" else None
+    embed.add_field(name=localized("ent_field_server", lang),
+                    value=(guild.name if guild else str(ent["server_id"])), inline=True)
+    leaders = db.get_enterprise_leaders(ent["code"])
+    embed.add_field(
+        name=localized("ent_field_leaders", lang),
+        value=", ".join(format_stored_user(viewer_platform, l["platform"], l["user_id"],
+                                           l["display_name"]) for l in leaders) or "—",
+        inline=False)
+    members = db.get_enterprise_members(ent["code"])
+    if members:
+        lines = []
+        for m in members[:15]:
+            pos = f" — {m['position']}" if m["position"] else ""
+            lines.append(format_stored_user(viewer_platform, m["platform"], m["user_id"],
+                                            m["display_name"]) + pos)
+        more = len(members) - 15
+        if more > 0:
+            lines.append(f"… +{more}")
+        embed.add_field(name=localized("ent_field_workers", lang, count=len(members)),
+                        value="\n".join(lines)[:1024], inline=False)
+    balances = []
+    for acc in db.get_owner_accounts(*db.enterprise_owner(ent["code"])):
+        bank = db.get_bank(acc["bank_code"])
+        if bank:
+            balances.append(economy.format_money(acc["balance"], bank))
+    if balances:
+        embed.add_field(name=localized("ent_field_balance", lang),
+                        value="\n".join(balances)[:1024], inline=True)
+    period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
+    salary_bank = ent["salary_bank"] or "—"
+    embed.add_field(name=localized("ent_field_salary", lang),
+                    value=f"{period} · {salary_bank}", inline=True)
+    positions = db.get_enterprise_positions(ent["code"])
+    if positions:
+        plines = []
+        for p in positions:
+            if p["percent"] is not None:
+                sal = localized("salary_percent", lang, percent=f"{p['percent']:g}")
+            else:
+                sal = economy.format_amount(p["amount"] or 0)
+            plines.append(f"{p['position']}: {sal}")
+        embed.add_field(name=localized("ent_field_positions", lang),
+                        value="\n".join(plines)[:1024], inline=False)
+    inv = db.get_inventory(db.enterprise_owner(ent["code"]))
+    if inv:
+        glines = []
+        for row in inv[:8]:
+            emoji = f"{row['emoji']} " if row["emoji"] else ""
+            good = db.get_good(row["good_code"])
+            nm = good_display_name(good, lang) if good else row["name"]
+            glines.append(f"{emoji}{nm} [{row['good_code']}] ×{row['qty']}")
+        embed.add_field(name=localized("ent_field_goods", lang),
+                        value="\n".join(glines)[:1024], inline=False)
+    transit = db.get_enterprise_shipments(ent["code"])
+    if transit:
+        embed.add_field(name=localized("ent_field_transit", lang, count=len(transit)),
+                        value="\n".join(_transit_lines(ent["code"], transit[:8], lang))[:1024],
+                        inline=False)
+    return embed
+
+def _transit_lines(ent_code, shipments, lang):
+    """Render in-transit shipments from the point of view of `ent_code`: a ➡️
+    line for cargo it is sending, a ⬅️ line for cargo coming in."""
+    now = int(datetime.now(timezone.utc).timestamp())
+    lines = []
+    for s in shipments:
+        good = db.get_good(s["good_code"])
+        emoji = f"{good['emoji']} " if good and good["emoji"] else ""
+        name = good_display_name(good, lang) if good else s["good_code"]
+        eta = _fmt_eta(max(int(s["arrive_at"]) - now, 0))
+        if s["from_ent"] == ent_code:
+            other = db.get_enterprise(s["to_ent"])
+            key, label = "transit_line_out", (_ent_line(other) if other else s["to_ent"])
+        else:
+            other = db.get_enterprise(s["from_ent"])
+            key, label = "transit_line_in", (_ent_line(other) if other else s["from_ent"])
+        lines.append(localized(key, lang, emoji=emoji, name=name, qty=s["qty"],
+                               other=label, eta=eta))
+    return lines
+
+@bot.tree.command(name="enterprise", description="an enterprise's card, or this server's enterprises")
+@app_commands.describe(query="Enterprise code or name (omit to list this server's enterprises)")
+async def enterprise_cmd(interaction: discord.Interaction, query: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if not query:
+        ents = db.get_server_enterprises("discord", str(interaction.guild_id)) \
+            if interaction.guild_id else []
+        if not ents:
+            await _ereply(interaction, "ent_list_empty", lang)
+            return
+        lines = [_ent_line(e) for e in ents]
+        await _say(interaction, embed=_econ_embed("\n".join(lines)[:4000],
+                                                  title=localized("ent_list_header", lang)))
+        return
+    ent = db.find_enterprise(query)
+    if not ent:
+        await _ereply(interaction, "enterprise_not_found", lang)
+        return
+    embed = _build_enterprise_embed(ent, lang)
+    if ent["logo"]:
+        ext = _LOGO_EXT.get(ent["logo_mime"], "png")
+        file = discord.File(io.BytesIO(ent["logo"]), filename=f"logo.{ext}")
+        embed.set_thumbnail(url=f"attachment://logo.{ext}")
+        await _say(interaction, embed=embed, file=file)
+    else:
+        await _say(interaction, embed=embed)
+
+_EDIT_ENT_OPTIONS = ("name", "description", "logo", "add_leader", "transfer",
+                     "salary_bank", "salary_period", "delete")
+
+@bot.tree.command(name="edit-enterprise", description="manage your enterprise (founder and leaders)")
+@app_commands.describe(option="Menu item number", enterprise="Enterprise code (when you lead several)")
+async def edit_enterprise_cmd(interaction: discord.Interaction, option: int = None,
+                              enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    if option is None or not 1 <= option <= len(_EDIT_ENT_OPTIONS):
+        items = [localized(f"edit_ent_opt_{key}", lang) for key in _EDIT_ENT_OPTIONS]
+        chosen = await _numbered_choice(
+            interaction, lang,
+            localized("edit_ent_menu_header", lang, name=ent["name"]),
+            list(enumerate(items)), lambda it: it[1])
+        if chosen is None:
+            return
+        action = _EDIT_ENT_OPTIONS[chosen[0]]
+    else:
+        action = _EDIT_ENT_OPTIONS[option - 1]
+
+    if action == "name":
+        msg = await _dialog_text(interaction, lang, localized("edit_ent_ask_name", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        db.update_enterprise_field(ent["code"], "name",
+                                   clean_display_name(msg.content, max_len=60))
+        await interaction.channel.send(embed=_econ_embed(localized("edit_ent_done", lang)))
+    elif action == "description":
+        msg = await _dialog_text(interaction, lang, localized("edit_ent_ask_desc", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        text = (msg.content or "").strip()
+        db.update_enterprise_field(ent["code"], "description",
+                                   None if text == "-" else text[:500])
+        await interaction.channel.send(embed=_econ_embed(localized("edit_ent_done", lang)))
+    elif action == "logo":
+        logo = await _dialog_logo(interaction, lang, localized("edit_ent_ask_logo", lang))
+        if logo is None:
+            return
+        db.update_enterprise_logo(ent["code"], logo[0], logo[1])
+        await interaction.channel.send(embed=_econ_embed(localized("edit_ent_done", lang)))
+    elif action in ("add_leader", "transfer"):
+        msg = await _dialog_text(interaction, lang, localized("edit_ent_ask_leader", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        target_id = _parse_user_ref((msg.content or "").strip())
+        if target_id is None:
+            await interaction.channel.send(embed=_econ_embed(localized("edit_invalid_user", lang)))
+            return
+        transfer = action == "transfer"
+        channel = interaction.channel
+
+        async def on_accept(interaction2):
+            display = str(interaction2.user)
+            if transfer:
+                db.set_enterprise_leader(ent["code"], "discord", target_id, display)
+                key = "ent_transfer_done"
+            else:
+                db.add_enterprise_leader(ent["code"], "discord", target_id, display)
+                key = "ent_leader_added"
+            await channel.send(embed=_econ_embed(
+                localized(key, lang, user=f"<@{target_id}>", name=ent["name"])))
+
+        async def on_decline(interaction2):
+            key = "ent_transfer_declined" if transfer else "ent_leader_declined"
+            await channel.send(embed=_econ_embed(localized(key, lang)))
+
+        offer_key = "ent_transfer_offer" if transfer else "ent_leader_offer"
+        await channel.send(
+            f"<@{target_id}>",
+            embed=_econ_embed(localized(offer_key, lang, mention=f"<@{target_id}>",
+                                        name=ent["name"], code=ent["code"])),
+            view=_ConsentView(lang, target_id, on_accept, on_decline),
+            allowed_mentions=discord.AllowedMentions(users=True))
+    elif action == "salary_bank":
+        msg = await _dialog_text(interaction, lang, localized("edit_ent_ask_salary_bank", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        bank = db.get_bank((msg.content or "").strip().upper())
+        if not bank:
+            await interaction.channel.send(embed=_econ_embed(localized("bank_not_found", lang)))
+            return
+        db.update_enterprise_field(ent["code"], "salary_bank", bank["code"])
+        await interaction.channel.send(embed=_econ_embed(localized("edit_ent_done", lang)))
+    elif action == "salary_period":
+        msg = await _dialog_text(interaction, lang, localized("edit_ent_ask_salary_period", lang),
+                                 as_embed=True)
+        if msg is None:
+            return
+        period = (msg.content or "").strip().lower()
+        if period not in ("weekly", "monthly"):
+            await interaction.channel.send(embed=_econ_embed(localized("edit_ent_bad_value", lang)))
+            return
+        db.update_enterprise_field(ent["code"], "salary_period", period)
+        await interaction.channel.send(embed=_econ_embed(localized("edit_ent_done", lang)))
+    elif action == "delete":
+        msg = await _dialog_text(interaction, lang,
+                                 localized("edit_ent_confirm_delete", lang, code=ent["code"]),
+                                 as_embed=True)
+        if msg is None:
+            return
+        if (msg.content or "").strip().upper() != ent["code"]:
+            await interaction.channel.send(embed=_econ_embed(localized("action_cancelled", lang)))
+            return
+        db.delete_enterprise(ent["code"])
+        await interaction.channel.send(embed=_econ_embed(
+            localized("edit_ent_deleted", lang, name=ent["name"])))
+        await send_service_event("enterprise_deleted", name=ent["name"], code=ent["code"],
+                                 user=str(interaction.user))
+
+@bot.tree.command(name="ent-join", description="ask to join an enterprise (its leaders approve)")
+@app_commands.describe(code="Enterprise code or name")
+async def ent_join_cmd(interaction: discord.Interaction, code: str):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = db.find_enterprise(code)
+    if not ent:
+        await _ereply(interaction, "enterprise_not_found", lang)
+        return
+    if db.is_enterprise_worker(ent["code"], "discord", interaction.user.id):
+        await _ereply(interaction, "ent_join_already", lang)
+        return
+    requester_id = interaction.user.id
+    requester_name = str(interaction.user)
+    channel = interaction.channel
+
+    async def on_accept(interaction2):
+        db.add_enterprise_member(ent["code"], "discord", requester_id, requester_name)
+        await channel.send(embed=_econ_embed(
+            localized("ent_join_approved", lang, user=f"<@{requester_id}>", name=ent["name"])))
+
+    async def on_decline(interaction2):
+        await channel.send(embed=_econ_embed(localized("ent_join_declined", lang)))
+
+    await _say(interaction, embed=_econ_embed(
+        localized("ent_join_request", lang, user=f"<@{requester_id}>",
+                  name=ent["name"], code=ent["code"])),
+        view=_EntConsentView(lang, ent["code"], on_accept, on_decline))
+
+@bot.tree.command(name="ent-leave", description="leave an enterprise you work at")
+@app_commands.describe(code="Enterprise code (when you work at several)")
+async def ent_leave_cmd(interaction: discord.Interaction, code: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ents = db.user_member_enterprises("discord", interaction.user.id)
+    if code:
+        ents = [e for e in ents if e["code"].lower() == code.strip().lower()
+                or e["name"].lower() == code.strip().lower()]
+    if not ents:
+        await _ereply(interaction, "ent_leave_none", lang)
+        return
+    ent = ents[0]
+    if len(ents) > 1:
+        ent = await _numbered_choice(interaction, lang, localized("ent_choose", lang),
+                                     ents, _ent_line)
+        if ent is None:
+            return
+    db.remove_enterprise_member(ent["code"], "discord", interaction.user.id)
+    await _ereply(interaction, "ent_leave_done", lang, ephemeral=False, name=ent["name"])
+
+@bot.tree.command(name="ent-kick", description="remove a worker from your enterprise (leaders)")
+@app_commands.describe(user="Worker ID or mention", enterprise="Enterprise code (when you lead several)")
+async def ent_kick_cmd(interaction: discord.Interaction, user: str, enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    if not db.remove_enterprise_member(ent["code"], "discord", target_id):
+        await _ereply(interaction, "ent_kick_not_member", lang)
+        return
+    await _ereply(interaction, "ent_kick_done", lang, ephemeral=False,
+                  user=f"<@{target_id}>", name=ent["name"])
+
+def _salary_display(kind, value, lang):
+    if kind == "percent":
+        return localized("salary_percent", lang, percent=f"{value:g}")
+    return economy.format_amount(value)
+
+@bot.tree.command(name="ent-position", description="create a position and its salary in your enterprise (leaders)")
+@app_commands.describe(position="Position name", salary="Amount (12.34), percent of sales (5%), or 0 to remove",
+                       enterprise="Enterprise code (when you lead several)")
+async def ent_position_cmd(interaction: discord.Interaction, position: str, salary: str,
+                           enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    parsed = economy.parse_salary(salary)
+    if parsed is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    kind, value = parsed
+    pos = clean_display_name(position, max_len=40)
+    if kind == "clear":
+        db.set_position_salary(ent["code"], pos, None, None)
+        await _ereply(interaction, "ent_position_cleared", lang, ephemeral=False, position=pos)
+        return
+    db.set_position_salary(ent["code"], pos,
+                           value if kind == "amount" else None,
+                           value if kind == "percent" else None)
+    await _ereply(interaction, "ent_position_done", lang, ephemeral=False, position=pos,
+                  salary=_salary_display(kind, value, lang))
+
+@bot.tree.command(name="ent-assign", description="assign a worker to a position (leaders)")
+@app_commands.describe(user="Worker ID or mention", position="Position name ('-' clears)",
+                       enterprise="Enterprise code (when you lead several)")
+async def ent_assign_cmd(interaction: discord.Interaction, user: str, position: str,
+                         enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    if not db.get_enterprise_member(ent["code"], "discord", target_id):
+        await _ereply(interaction, "ent_kick_not_member", lang)
+        return
+    pos = clean_display_name(position, max_len=40)
+    if pos == "-":
+        db.set_member_position(ent["code"], "discord", target_id, None)
+        await _ereply(interaction, "ent_assign_cleared", lang, ephemeral=False,
+                      user=f"<@{target_id}>")
+        return
+    db.set_member_position(ent["code"], "discord", target_id, pos)
+    await _ereply(interaction, "ent_assign_done", lang, ephemeral=False,
+                  user=f"<@{target_id}>", position=pos)
+
+@bot.tree.command(name="ent-salary", description="set a worker's personal salary (leaders)")
+@app_commands.describe(user="Worker ID or mention", salary="Amount (12.34), percent of sales (5%), or 0 to remove",
+                       enterprise="Enterprise code (when you lead several)")
+async def ent_salary_cmd(interaction: discord.Interaction, user: str, salary: str,
+                         enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    if not db.is_enterprise_worker(ent["code"], "discord", target_id):
+        await _ereply(interaction, "ent_kick_not_member", lang)
+        return
+    parsed = economy.parse_salary(salary)
+    if parsed is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    kind, value = parsed
+    if kind == "clear":
+        db.set_personal_salary(ent["code"], "discord", target_id, None, None)
+        await _ereply(interaction, "ent_salary_cleared", lang, ephemeral=False,
+                      user=f"<@{target_id}>")
+        return
+    db.set_personal_salary(ent["code"], "discord", target_id,
+                           value if kind == "amount" else None,
+                           value if kind == "percent" else None)
+    await _ereply(interaction, "ent_salary_done", lang, ephemeral=False,
+                  user=f"<@{target_id}>", salary=_salary_display(kind, value, lang))
+
+@bot.tree.command(name="ent-sell", description="sell your enterprise's goods to the bank (leaders)")
+@app_commands.describe(good_code="Good code", qty="How many (default: all)",
+                       enterprise="Enterprise code (when you lead several)")
+async def ent_sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = None,
+                       enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    ent = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if ent is None:
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    owner = db.enterprise_owner(ent["code"])
+    have = db.get_inventory_qty(owner, good["code"])
+    want = qty if (qty and qty > 0) else have
+    status, info = economy.sell(owner, good, want)
+    if status == "not_sellable":
+        await _ereply(interaction, "sell_not_sellable", lang,
+                      name=good_display_name(good, lang))
+        return
+    if status == "nothing":
+        await _ereply(interaction, "sell_nothing", lang, name=good["name"])
+        return
+    bank = db.get_bank(good["bank_code"])
+    await _ereply(interaction, "sell_done", lang, ephemeral=False, qty=info["qty"],
+                  name=good["name"], unit=economy.format_money(info["unit"], bank),
+                  total=economy.format_money(info["total"], bank))
+
+async def _run_export(interaction, lang, source, target, good, qty, price, bank):
+    """Offer a one-off export between two enterprises. A leader of the receiving
+    enterprise must always accept — free or priced — before the shipment leaves.
+    Once accepted, the cargo travels and arrives after its transit time."""
+    channel = interaction.channel
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    name = good_display_name(good, lang)
+    notify = ("discord", str(interaction.channel_id))
+    price_disp = economy.format_money(price, bank) if price else localized("export_free", lang)
+
+    async def on_accept(interaction2):
+        status, info = economy.dispatch_shipment(
+            source["code"], target["code"], good, qty, price,
+            bank["code"] if bank else None, notify, lang)
+        if status == "ok":
+            text = localized("export_dispatched", lang, qty=info["qty"], emoji=emoji, name=name,
+                             source=_ent_line(source), target=_ent_line(target),
+                             eta=_fmt_eta(info["duration"]),
+                             distance=_distance_label(info["distance"], lang))
+        else:
+            text = localized(f"export_{status}", lang)
+        await channel.send(embed=_econ_embed(text))
+
+    async def on_decline(interaction2):
+        await channel.send(embed=_econ_embed(localized("export_declined", lang)))
+
+    await _say(interaction, embed=_econ_embed(
+        localized("export_offer", lang, source=_ent_line(source), target=_ent_line(target),
+                  qty=qty, emoji=emoji, name=name, price=price_disp)),
+        view=_EntConsentView(lang, target["code"], on_accept, on_decline))
+
+def _resolve_export_args(lang, target_query, price_s, currency, source):
+    """(target, price, bank, error_key_or_None) shared by /export and /auto-export."""
+    target = db.find_enterprise(target_query)
+    if not target:
+        return None, None, None, "export_bad_target"
+    if source and target["code"] == source["code"]:
+        return None, None, None, "export_same"
+    price = 0
+    bank = None
+    if price_s:
+        price = economy.parse_amount(price_s)
+        if price is None:
+            return None, None, None, "bad_amount"
+        code = (currency or (source["salary_bank"] if source else None) or "").strip().upper()
+        bank = db.get_bank(code) if code else None
+        if not bank:
+            return None, None, None, "export_need_currency"
+    return target, price, bank, None
+
+@bot.tree.command(name="export", description="export your enterprise's goods to another enterprise (leaders)")
+@app_commands.describe(good_code="Good code", qty="How many units",
+                       target="Receiving enterprise code or name",
+                       price="Total price (the buyer pays on acceptance)",
+                       currency="Currency code of the price",
+                       enterprise="Your enterprise code (when you lead several)")
+async def export_cmd(interaction: discord.Interaction, good_code: str, qty: int, target: str,
+                     price: str = None, currency: str = None, enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    source = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if source is None:
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    if qty <= 0:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    tgt, price_minor, bank, err = _resolve_export_args(lang, target, price, currency, source)
+    if err:
+        await _ereply(interaction, err, lang)
+        return
+    await _run_export(interaction, lang, source, tgt, good, qty, price_minor, bank)
+
+@bot.tree.command(name="auto-export", description="export goods to another enterprise every week (leaders)")
+@app_commands.describe(good_code="Good code", qty="Units per week, or 'off' to cancel",
+                       target="Receiving enterprise code or name",
+                       price="Total price per delivery", currency="Currency code of the price",
+                       enterprise="Your enterprise code (when you lead several)")
+async def auto_export_cmd(interaction: discord.Interaction, good_code: str, qty: str, target: str,
+                          price: str = None, currency: str = None, enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    source = await _resolve_led_enterprise(interaction, lang, enterprise)
+    if source is None:
+        return
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    tgt = db.find_enterprise(target)
+    if not tgt:
+        await _ereply(interaction, "export_bad_target", lang)
+        return
+    if qty.strip().lower() in ("off", "0", "stop"):
+        db.remove_auto_export(source["code"], tgt["code"], good["code"])
+        await _ereply(interaction, "auto_export_removed", lang, ephemeral=False,
+                      name=good_display_name(good, lang), target=_ent_line(tgt))
+        return
+    if not qty.strip().isdigit() or int(qty) <= 0:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    qty_n = int(qty)
+    tgt, price_minor, bank, err = _resolve_export_args(lang, target, price, currency, source)
+    if err:
+        await _ereply(interaction, err, lang)
+        return
+    channel = interaction.channel
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    name = good_display_name(good, lang)
+    price_disp = economy.format_money(price_minor, bank) if price_minor \
+        else localized("export_free", lang)
+
+    async def on_accept(interaction2):
+        db.remove_auto_export(source["code"], tgt["code"], good["code"])
+        db.add_auto_export(source["code"], tgt["code"], good["code"], qty_n, price_minor,
+                           bank["code"] if bank else None, interaction.user.id)
+        await channel.send(embed=_econ_embed(
+            localized("auto_export_set", lang, qty=qty_n, emoji=emoji, name=name,
+                      target=_ent_line(tgt), price=price_disp)))
+
+    async def on_decline(interaction2):
+        await channel.send(embed=_econ_embed(localized("export_declined", lang)))
+
+    await _say(interaction, embed=_econ_embed(
+        localized("auto_export_offer", lang, source=_ent_line(source), target=_ent_line(tgt),
+                  qty=qty_n, emoji=emoji, name=name, price=price_disp)),
+        view=_EntConsentView(lang, tgt["code"], on_accept, on_decline))
+
+@bot.tree.command(name="transit", description="an enterprise's goods in transit")
+@app_commands.describe(enterprise="Enterprise code or name (omit for the one you lead)")
+async def transit_cmd(interaction: discord.Interaction, enterprise: str = None):
+    lang = get_chat_lang(_chat_key(interaction))
+    if enterprise:
+        ent = db.find_enterprise(enterprise)
+        if not ent:
+            await _ereply(interaction, "enterprise_not_found", lang)
+            return
+    else:
+        ent = await _resolve_led_enterprise(interaction, lang)
+        if ent is None:
+            return
+    shipments = db.get_enterprise_shipments(ent["code"])
+    if not shipments:
+        await _ereply(interaction, "transit_empty", lang, name=ent["name"])
+        return
+    embed = discord.Embed(
+        title=localized("transit_title", lang, name=ent["name"], code=ent["code"]),
+        description="\n".join(_transit_lines(ent["code"], shipments, lang))[:4000],
+        color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed)
+
+@bot.tree.command(name="give-good", description="hand goods from your inventory to another user")
+@app_commands.describe(user="Recipient ID or mention", good_code="Good code", qty="How many (default 1)")
+async def give_good_cmd(interaction: discord.Interaction, user: str, good_code: str, qty: int = 1):
+    lang = get_chat_lang(_chat_key(interaction))
+    good = db.get_good(good_code.strip().upper())
+    if not good:
+        await _ereply(interaction, "good_not_found", lang)
+        return
+    target_id = _parse_user_ref(user)
+    if target_id is None:
+        await _ereply(interaction, "edit_invalid_user", lang)
+        return
+    owner = db.canonical_user("discord", interaction.user.id)
+    target = db.canonical_user("discord", target_id)
+    if target == owner:
+        await _ereply(interaction, "give_self", lang)
+        return
+    if qty <= 0:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    have = db.get_inventory_qty(owner, good["code"])
+    if have < qty:
+        await _ereply(interaction, "give_no_goods", lang, have=have)
+        return
+    db.add_inventory(owner, good["code"], -qty)
+    db.add_inventory(target, good["code"], qty)
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    await _ereply(interaction, "give_done", lang, ephemeral=False, qty=qty, emoji=emoji,
+                  name=good_display_name(good, lang), user=f"<@{target_id}>")
+
+@bot.tree.command(name="goods", description="the goods this server can produce")
+async def goods_cmd(interaction: discord.Interaction):
+    lang = get_chat_lang(_chat_key(interaction))
+    lines = []
+    for code, cat, emoji, _name in db.BASE_GOODS:
+        good = db.get_good(code)
+        if not good:
+            continue
+        lines.append(localized("goods_line_base", lang, emoji=emoji,
+                               name=good_display_name(good, lang), code=code,
+                               energy=economy.format_energy(good["energy_cost"])))
+    chat = db.get_chat(str(interaction.guild_id)) if interaction.guild_id else None
+    if chat:
+        for bank in db.get_banks_in_union(chat["union_code"]):
+            for good in db.get_bank_goods(bank["code"]):
+                if db.is_base_good(good["code"]):
+                    continue
+                emoji = f"{good['emoji']} " if good["emoji"] else ""
+                cat_disp = category_label(good["category"], lang) if good["category"] else "—"
+                lines.append(localized("goods_line", lang, emoji=emoji, name=good["name"],
+                                       code=good["code"], category=cat_disp,
+                                       value=economy.format_money(good["base_value"], bank),
+                                       energy=economy.format_energy(good["energy_cost"])))
+    if not lines:
+        await _ereply(interaction, "goods_none", lang)
+        return
+    embed = discord.Embed(title=localized("goods_header", lang),
+                          description="\n".join(lines)[:4000],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed)
+
+# ── Olympiad ────────────────────────────────────────────────────────────────
+# /setolympiad opens the event and is the only Olympiad command that always
+# exists; the five below it are added to the command tree when an Olympiad is
+# running and taken off it again when the voting period ends, so people never
+# see a command they cannot use. Discord distributes a tree change to clients on
+# its own schedule, which is why /setolympiad says the list may take a while.
+#
+# The review and the accepted-vote chats always live on Discord, so the embeds
+# and the two reviewer commands are here even for votes cast on Telegram; the
+# Telegram bot calls post_olympiad_vote for its own voters.
+
+def olympiad_help_keys():
+    """The Olympiad help lines to show right now."""
+    if not olympiad.is_open():
+        return ["help_setolympiad"]
+    return ["help_setolympiad", "help_setcontest", "help_editcontest",
+            "help_olympiad", "help_accepted", "help_denied"]
+
+def _apply_olympiad_commands():
+    """Attach the gated commands to the tree, or take them off it, to match
+    whether an Olympiad is running. Returns True when the tree actually
+    changed — only then is a sync with Discord worth its rate limit."""
+    want = olympiad.is_open()
+    have = bot.tree.get_command("olympiad") is not None
+    if want == have:
+        return False
+    for cmd in OLYMPIAD_COMMANDS:
+        if want:
+            bot.tree.add_command(cmd, override=True)
+        else:
+            bot.tree.remove_command(cmd.name)
+    return True
+
+async def sync_olympiad_commands():
+    """Bring the published command list in line with the Olympiad's state."""
+    if not _apply_olympiad_commands():
+        return
+    try:
+        await bot.tree.sync()
+    except Exception as e:
+        logger.warning("Olympiad command sync failed: %s", e)
+
+def _oly_lang(interaction):
+    return get_chat_lang(_chat_key(interaction))
+
+def _review_lang(contest):
+    """The language the review chat is addressed in: the contest's own, or the
+    default one for a cross-language contest."""
+    return contest["lang"] if contest["lang"] in SUPPORTED_LANGS else DEFAULT_LANG
+
+async def _olympiad_channel(chat_id):
+    """The Discord channel a contest posts to, or None when it is unreachable."""
+    try:
+        cid = int(chat_id)
+    except (TypeError, ValueError):
+        return None
+    channel = bot.get_channel(cid)
+    if channel is None:
+        try:
+            channel = await bot.fetch_channel(cid)
+        except Exception:
+            channel = None
+    return channel
+
+async def _dm_channel(interaction: discord.Interaction):
+    channel = interaction.channel
+    if channel is None:
+        channel = interaction.user.dm_channel or await interaction.user.create_dm()
+    return channel
+
+async def _wait_reply_or_button(channel_id, user_id, view, timeout=DIALOG_TIMEOUT):
+    """Race the caller's next message against a press on `view`. Returns
+    ('text', message), ('button', value) or ('timeout', None)."""
+    def check(m):
+        return m.author.id == user_id and m.channel.id == channel_id
+    msg_task = asyncio.ensure_future(bot.wait_for("message", check=check))
+    btn_task = asyncio.ensure_future(view.wait_value())
+    done, pending = await asyncio.wait({msg_task, btn_task}, timeout=timeout,
+                                       return_when=asyncio.FIRST_COMPLETED)
+    for task in pending:
+        task.cancel()
+    if btn_task in done:
+        return "button", btn_task.result()
+    if msg_task in done:
+        try:
+            return "text", msg_task.result()
+        except Exception:
+            return "timeout", None
+    return "timeout", None
+
+class _OlyDialog:
+    """One Olympiad conversation on Discord.
+
+    Every question carries a Stop button, so the person can walk away from the
+    dialog at any point; `ask` then returns None, exactly as it does when they
+    simply stop replying. Extra buttons ("Another way", "One point each") ride
+    on the same row and come back as ('button', value)."""
+
+    def __init__(self, interaction, lang, channel):
+        self.interaction = interaction
+        self.lang = lang
+        self.channel = channel
+        self.user_id = interaction.user.id
+        self.author = str(interaction.user)
+
+    async def send(self, text, view=None):
+        """A dialog message, through the interaction the first time and into the
+        channel after that. `view` is left out of the call entirely when there is
+        none: `InteractionResponse.send_message` tests it against its own MISSING
+        sentinel, so an explicit view=None gets as far as posting the message and
+        then raises on it."""
+        kwargs = {"view": view} if view is not None else {}
+        text = text[:1990]
+        if not self.interaction.response.is_done():
+            await self.interaction.response.send_message(text, **kwargs)
+            try:
+                return await self.interaction.original_response()
+            except Exception:
+                return None
+        return await self.channel.send(text, **kwargs)
+
+    async def ask(self, prompt, *, validator=None, error_text=None, attempts=5,
+                  buttons=()):
+        """Ask `prompt` and wait for an answer. Returns ('text', value),
+        ('button', value), or None when stopped or timed out."""
+        pending = prompt
+        for _ in range(attempts):
+            rows = [(label, ButtonStyle.secondary, ("button", value))
+                    for label, value in buttons]
+            rows.append((olympiad.text("stop_button", self.lang), ButtonStyle.danger,
+                         ("stop", None)))
+            view = _QuizButtons(self.user_id, self.lang, rows)
+            msg = await self.send(pending, view=view)
+            kind, payload = await _wait_reply_or_button(self.channel.id, self.user_id, view)
+            view.stop()
+            if msg is not None:
+                try:
+                    await msg.edit(view=None)
+                except Exception:
+                    pass
+            if kind == "button":
+                action, value = payload
+                if action == "stop":
+                    await self.send(olympiad.text("dialog_stopped", self.lang))
+                    return None
+                return "button", value
+            if kind != "text":
+                await self.send(localized("dialog_timeout", self.lang))
+                return None
+            value = (payload.content or "").strip()
+            if validator is None:
+                return "text", value
+            ok = validator(value)
+            if ok is not None:
+                return "text", ok
+            pending = error_text or localized("choice_invalid", self.lang)
+        await self.send(localized("dialog_timeout", self.lang))
+        return None
+
+    async def choose(self, header, items, render, *, extra=None):
+        """A numbered list. Returns the chosen item, the sentinel '__extra__'
+        when the trailing extra option is picked, or None."""
+        lines = [header] + [f"{i + 1}. {render(it)}" for i, it in enumerate(items)]
+        if extra:
+            lines.append(f"{len(items) + 1}. {extra}")
+        total = len(items) + (1 if extra else 0)
+
+        def _validator(value):
+            v = value.strip().rstrip(".")
+            return int(v) if v.isdigit() and 1 <= int(v) <= total else None
+
+        answer = await self.ask("\n".join(lines), validator=_validator,
+                                error_text=localized("choice_invalid", self.lang))
+        if not answer:
+            return None
+        number = answer[1]
+        if extra and number == total:
+            return "__extra__"
+        return items[number - 1]
+
+    async def choose_numbers(self, header, items, render, limit):
+        """A numbered list several entries may be picked from at once. Returns
+        the chosen positions in the order given, or None."""
+        lines = [header, ""] + [f"{i + 1}. {render(it)}" for i, it in enumerate(items)]
+        answer = await self.ask(
+            "\n".join(lines),
+            validator=lambda v: olympiad.parse_numbers(v, len(items), limit),
+            error_text=olympiad.text("candidates_invalid", self.lang, max=limit))
+        return answer[1] if answer else None
+
+# ── The embeds the reviewers see ────────────────────────────────────────────
+
+def _vote_footer(vote):
+    platform = "Discord" if vote["platform"] == "discord" else "Telegram"
+    return f"{vote['username']} │ {platform} ID: {vote['user_id']} │ {vote['key']}"
+
+def _review_embed(vote, contest):
+    """Contest name as the title, the supported wikis as the subtitle, then the
+    person's account confirmation, their activity claim and the vote itself.
+    The footer carries who they are and the key the reviewer answers with."""
+    lang = _review_lang(contest)
+    title = olympiad.contest_name(contest, lang)
+    if vote["is_update"]:
+        title = f"{title} — {olympiad.text('review_updated_mark', lang)}"
+
+    parts = [f"**{olympiad.vote_candidate_names(vote)}**", ""]
+    if vote["account_known"]:
+        parts.append(olympiad.text("review_account_verified", lang,
+                                   name=vote["account_text"]))
+    else:
+        parts.append(olympiad.text("review_account_claim", lang,
+                                   text=vote["account_text"]))
+    parts.append(olympiad.text("review_activity", lang, text=vote["activity_text"]))
+    parts.append("")
+    parts.append(olympiad.vote_body(vote, vote["lang"] or lang))
+
+    embed = discord.Embed(title=title[:256], description="\n".join(parts)[:4096],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    embed.set_footer(text=_vote_footer(vote)[:2048])
+    return embed
+
+def _approved_embed(vote, contest, wiki_name):
+    """What lands in the accepted-votes chat: who voted, under both their
+    messenger name and the wiki name the reviewer confirmed, the wikis they
+    supported as the subtitle, and their vote."""
+    lang = _review_lang(contest)
+    title = f"{vote['username']} — {wiki_name}"
+    if vote["is_update"]:
+        title = f"{title} ({olympiad.text('review_updated_mark', lang)})"
+    parts = [f"**{olympiad.vote_candidate_names(vote)}**", "",
+             olympiad.vote_body(vote, vote["lang"] or lang)]
+    return discord.Embed(title=title[:256],
+                         description="\n".join(parts)[:4096],
+                         color=discord.Color(DEFAULT_EMBED_COLOR))
+
+async def post_olympiad_vote(key):
+    """Send a stored vote to its contest's review chat. Both bots use this — the
+    review chats are always on Discord. Returns True when it was delivered."""
+    vote = db.get_vote(key)
+    if not vote:
+        return False
+    contest = db.get_contest(vote["contest_id"])
+    if not contest:
+        return False
+    channel = await _olympiad_channel(contest["review_chat"])
+    if channel is None:
+        return False
+    try:
+        await channel.send(embed=_review_embed(vote, contest))
+        return True
+    except Exception as e:
+        logger.warning("Olympiad vote %s could not be posted for review: %s", key, e)
+        return False
+
+async def dm_olympiad_voter(vote, title, body):
+    """Deliver a reviewer's decision to the voter, on whichever messenger they
+    voted from."""
+    if vote["platform"] == "discord":
+        try:
+            user = await bot.fetch_user(int(vote["user_id"]))
+            await user.send(embed=discord.Embed(title=title, description=body,
+                                                color=discord.Color(DEFAULT_EMBED_COLOR)))
+            return True
+        except Exception:
+            return False
+    try:
+        from telegram_bot import bot as tg_bot
+        await tg_bot.send_message(int(vote["user_id"]), f"{title}\n\n{body}")
+        return True
+    except Exception:
+        return False
+
+# ── /setolympiad ────────────────────────────────────────────────────────────
+
+@bot.tree.command(name="setolympiad", description="open the Olympiad and its voting period (bot admins)")
+@app_commands.describe(start="First day of voting, MM-DD-YYYY — or 'off' to cancel the Olympiad",
+                       end="Last day of voting, MM-DD-YYYY")
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def setolympiad_cmd(interaction: discord.Interaction, start: str, end: str = None):
+    lang = _oly_lang(interaction)
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return
+
+    if (start or "").strip().lower() in ("off", "stop", "cancel"):
+        if not db.get_olympiad():
+            await interaction.response.send_message(
+                olympiad.text("setolympiad_off_none", lang), ephemeral=True)
+            return
+        db.clear_olympiad_data()
+        db.clear_olympiad()
+        await interaction.response.send_message(olympiad.text("setolympiad_off", lang))
+        await sync_olympiad_commands()
+        return
+
+    if not end or not end.strip():
+        await interaction.response.send_message(
+            olympiad.text("setolympiad_usage", lang), ephemeral=True)
+        return
+    try:
+        start_ts, end_ts = olympiad.parse_period(start, end)
+    except ValueError as e:
+        key = "setolympiad_bad_order" if str(e) == "bad_order" else "setolympiad_bad_date"
+        await interaction.response.send_message(olympiad.text(key, lang), ephemeral=True)
+        return
+
+    existed = db.get_olympiad() is not None
+    db.set_olympiad(start_ts, end_ts)
+    await interaction.response.send_message(olympiad.text(
+        "setolympiad_updated" if existed else "setolympiad_set", lang,
+        start=olympiad.format_date(start_ts), end=olympiad.format_date(end_ts)))
+    await sync_olympiad_commands()
+
+# ── /setcontest and /editcontest ────────────────────────────────────────────
+# Both dialogs themselves live in olympiad.py, shared with the Telegram bot;
+# what stays here is the permission gate and the Discord dialog object.
+
+async def _olympiad_admin_gate(interaction, lang):
+    """The two setup commands are for Bot Admins, for as long as the Olympiad
+    runs. Returns the dialog channel, or None when the caller may not proceed."""
+    if not is_admin("discord", interaction.user.id):
+        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
+        return None
+    if not olympiad.is_open():
+        await interaction.response.send_message(
+            olympiad.text("not_active", lang), ephemeral=True)
+        return None
+    return await _dm_channel(interaction)
+
+@app_commands.command(name="setcontest", description="create a contest of the Olympiad (bot admins)")
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def setcontest_cmd(interaction: discord.Interaction):
+    lang = _oly_lang(interaction)
+    channel = await _olympiad_admin_gate(interaction, lang)
+    if channel is None:
+        return
+    await olympiad.run_setcontest(_OlyDialog(interaction, lang, channel), lang)
+
+@app_commands.command(name="editcontest", description="manage a contest's candidate wikis (bot admins)")
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def editcontest_cmd(interaction: discord.Interaction):
+    lang = _oly_lang(interaction)
+    channel = await _olympiad_admin_gate(interaction, lang)
+    if channel is None:
+        return
+    await olympiad.run_editcontest(_OlyDialog(interaction, lang, channel), lang)
+
+
+# ── /olympiad ───────────────────────────────────────────────────────────────
+
+async def _ask_dm_language(dialog, interaction):
+    """Step 1: with no language chosen for this private chat yet, ask in English
+    and offer a button per localization. The answer is remembered for the chat
+    (and dropped again after a year). Returns the language code, or None."""
+    rows = [(language_name(code), ButtonStyle.primary, code)
+            for code in available_locales()]
+    view = _QuizButtons(interaction.user.id, DEFAULT_LANG, rows)
+    msg = await dialog.send(olympiad.text("ask_lang", DEFAULT_LANG), view=view)
+    code = await view.wait_click()
+    if msg is not None:
+        try:
+            await msg.edit(view=None)
+        except Exception:
+            pass
+    if not code:
+        return None
+    set_chat_lang(_chat_key(interaction), code, is_dm=True)
+    dialog.lang = code
+    await dialog.send(olympiad.text("lang_chosen", code))
+    return code
+
+@app_commands.command(name="olympiad", description="vote in the Olympiad (private chat with the bot only)")
+@app_commands.allowed_contexts(guilds=False, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def olympiad_cmd(interaction: discord.Interaction):
+    lang = _oly_lang(interaction)
+    if interaction.guild is not None:
+        await interaction.response.send_message(
+            olympiad.text("dm_only", lang), ephemeral=True)
+        return
+    period = olympiad.period()
+    if not period:
+        await interaction.response.send_message(
+            olympiad.text("not_active", lang), ephemeral=True)
+        return
+    if not olympiad.is_voting_open():
+        await interaction.response.send_message(olympiad.text(
+            "voting_not_started", lang, start=olympiad.format_date(period[0])),
+            ephemeral=True)
+        return
+
+    channel = await _dm_channel(interaction)
+    dialog = _OlyDialog(interaction, lang, channel)
+    if db.get_chat_lang(_chat_key(interaction)) is None:
+        code = await _ask_dm_language(dialog, interaction)
+        if code is None:
+            return
+        lang = code
+    await olympiad.run_vote(dialog, lang, "discord", interaction.user.id,
+                            str(interaction.user), "Discord", post_olympiad_vote)
+
+
+# ── /accepted and /denied ───────────────────────────────────────────────────
+
+async def _resolve_review(interaction, lang, key, usage_key, not_found_key):
+    """The vote a reviewer named, once it is clear the command was run in the
+    chat that reviews it — the key alone is not enough to decide a vote from
+    somewhere else. Returns (vote, contest) or (None, None)."""
+    key = (key or "").strip()
+    if not key:
+        await interaction.response.send_message(
+            olympiad.text(usage_key, lang), ephemeral=True)
+        return None, None
+    vote = db.get_vote(key)
+    contest = db.get_contest(vote["contest_id"]) if vote else None
+    if not vote or not contest:
+        await interaction.response.send_message(
+            olympiad.text(not_found_key, lang, key=key), ephemeral=True)
+        return None, None
+    if str(interaction.channel_id) != str(contest["review_chat"]):
+        await interaction.response.send_message(
+            olympiad.text("accepted_wrong_chat", lang), ephemeral=True)
+        return None, None
+    return vote, contest
+
+@app_commands.command(name="accepted", description="accept a vote under review")
+@app_commands.describe(key="The vote's key, from the embed's footer",
+                       nickname="The voter's username on the wiki host",
+                       remember="Type 'remember' to link that account to this user")
+async def accepted_cmd(interaction: discord.Interaction, key: str, nickname: str,
+                       remember: str = None):
+    lang = _oly_lang(interaction)
+    vote, contest = await _resolve_review(interaction, lang, key, "accepted_usage",
+                                          "accepted_not_found")
+    if not vote:
+        return
+    nickname = (nickname or "").strip()
+    if not nickname:
+        await interaction.response.send_message(
+            olympiad.text("accepted_usage", lang), ephemeral=True)
+        return
+
+    approved_chat = db.approved_chat_for(contest, vote["lang"])
+    channel = await _olympiad_channel(approved_chat)
+    if channel is None:
+        await interaction.response.send_message(
+            olympiad.text("accepted_no_channel", lang), ephemeral=True)
+        return
+    try:
+        await channel.send(embed=_approved_embed(vote, contest, nickname))
+    except Exception as e:
+        logger.warning("Accepted vote %s could not be posted: %s", vote["key"], e)
+        await interaction.response.send_message(
+            olympiad.text("accepted_no_channel", lang), ephemeral=True)
+        return
+
+    lines = [olympiad.text("accepted_done", lang, key=vote["key"])]
+    if (remember or "").strip().lower() == "remember":
+        db.set_wiki_account(vote["platform"], vote["user_id"], nickname,
+                            str(interaction.user))
+        lines.append(olympiad.text("accepted_remembered", lang, name=nickname))
+
+    voter_lang = vote["lang"] or DEFAULT_LANG
+    await dm_olympiad_voter(
+        vote, olympiad.text("accepted_dm_title", voter_lang),
+        olympiad.text("accepted_dm_body", voter_lang,
+                      contest=olympiad.contest_name(contest, voter_lang),
+                      wikis=olympiad.vote_candidate_names(vote)))
+    db.delete_vote(vote["key"])
+    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+@app_commands.command(name="denied", description="reject a vote under review")
+@app_commands.describe(key="The vote's key, from the embed's footer",
+                       reason="Why the vote is rejected — the voter is told")
+async def denied_cmd(interaction: discord.Interaction, key: str, reason: str):
+    lang = _oly_lang(interaction)
+    vote, contest = await _resolve_review(interaction, lang, key, "denied_usage",
+                                          "denied_not_found")
+    if not vote:
+        return
+    reason = (reason or "").strip()
+    if not reason:
+        await interaction.response.send_message(
+            olympiad.text("denied_usage", lang), ephemeral=True)
+        return
+
+    voter_lang = vote["lang"] or DEFAULT_LANG
+    await dm_olympiad_voter(
+        vote, olympiad.text("denied_dm_title", voter_lang),
+        olympiad.text("denied_dm_body", voter_lang,
+                      contest=olympiad.contest_name(contest, voter_lang),
+                      wikis=olympiad.vote_candidate_names(vote), reason=reason))
+    db.delete_vote(vote["key"])
+    await interaction.response.send_message(
+        olympiad.text("denied_done", lang, key=vote["key"]), ephemeral=True)
+
+OLYMPIAD_COMMANDS = [setcontest_cmd, editcontest_cmd, olympiad_cmd,
+                     accepted_cmd, denied_cmd]

@@ -11,13 +11,37 @@
     "status": "unverified",
     "text": "Ação cancelada."
   },
+  "add_ent_ask_code": {
+    "status": "unverified",
+    "text": "Escreva um código único de 4 caracteres (letras e dígitos)."
+  },
+  "add_ent_ask_desc": {
+    "status": "unverified",
+    "text": "Envie uma descrição, ou «-» para saltar."
+  },
+  "add_ent_ask_logo": {
+    "status": "unverified",
+    "text": "Envie uma imagem de logótipo, ou «-» para saltar."
+  },
+  "add_ent_ask_name": {
+    "status": "unverified",
+    "text": "Escreva o nome da empresa."
+  },
+  "add_ent_bad_code": {
+    "status": "unverified",
+    "text": "O código é inválido ou já está em uso — escreva outro."
+  },
+  "add_ent_created": {
+    "status": "unverified",
+    "text": "✅ Empresa «{name}» [{code}] fundada. És o seu líder."
+  },
   "add_govt_created": {
     "status": "unverified",
-    "text": "✅ Órgão governamental “{name}” criado na união {union} (membro: {singular}; membros: {plural})."
+    "text": "✅ Órgão diretivo “{name}” criado na união {union} (membro: {singular}; membros: {plural})."
   },
   "add_govt_exists": {
     "status": "unverified",
-    "text": "Já existe um órgão governamental com esse nome na união."
+    "text": "Já existe um órgão diretivo com esse nome na união."
   },
   "add_govt_usage": {
     "status": "unverified",
@@ -99,6 +123,22 @@
     "status": "unverified",
     "text": "Uso: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
   },
+  "auto_export_offer": {
+    "status": "unverified",
+    "text": "📦 {source} oferece a {target} uma entrega semanal: {qty} × {emoji}{name} por {price}. Um líder da empresa recetora deve aceitar abaixo."
+  },
+  "auto_export_removed": {
+    "status": "unverified",
+    "text": "A exportação semanal de «{name}» para {target} foi cancelada."
+  },
+  "auto_export_set": {
+    "status": "unverified",
+    "text": "✅ Exportação semanal configurada: {qty} × {emoji}{name} → {target}, {price}."
+  },
+  "auto_export_usage": {
+    "status": "unverified",
+    "text": "Uso: /auto_export <código do bem> <qtd|off> <empresa destino> [preço] [moeda] [a tua empresa]"
+  },
   "autocraft_off": {
     "status": "unverified",
     "text": "✅ A fabricação automática de {name} está desativada."
@@ -109,7 +149,7 @@
   },
   "autocraft_usage": {
     "status": "unverified",
-    "text": "Uso: /autocraft <código de bem> <on|off>"
+    "text": "Uso: /autocraft <código do bem> <on|off> [empresa]"
   },
   "autosend_bad_percent": {
     "status": "unverified",
@@ -129,7 +169,7 @@
   },
   "autosend_usage": {
     "status": "unverified",
-    "text": "Uso: /autosend <código de bem> <porcentagem> <usuário|partido>"
+    "text": "Uso: /autosend <código do bem> <percentagem> <utilizador|partido|empresa>"
   },
   "backup_failed": {
     "status": "unverified",
@@ -243,6 +283,26 @@
     "status": "unverified",
     "text": "Uso: /bank <código de moeda>"
   },
+  "category_food": {
+    "status": "unverified",
+    "text": "Alimentos"
+  },
+  "category_household": {
+    "status": "unverified",
+    "text": "Artigos domésticos"
+  },
+  "category_hygiene": {
+    "status": "unverified",
+    "text": "Produtos de higiene"
+  },
+  "category_pharmacy": {
+    "status": "unverified",
+    "text": "Produtos de farmácia"
+  },
+  "category_wardrobe": {
+    "status": "unverified",
+    "text": "Vestuário"
+  },
   "chat_not_setup": {
     "status": "unverified",
     "text": "Este chat ainda não foi configurado. Primeiro, um admin do bot deve vinculá-lo a uma união com /setup."
@@ -309,7 +369,7 @@
   },
   "craft_usage": {
     "status": "unverified",
-    "text": "Uso: /craft <código de bem>"
+    "text": "Uso: /craft <código do bem> [empresa]"
   },
   "create_bank_ask_chat": {
     "status": "unverified",
@@ -347,13 +407,29 @@
     "status": "unverified",
     "text": "Valores inválidos. O valor base deve ser positivo e o custo de energia um inteiro positivo."
   },
+  "create_good_bad_category": {
+    "status": "unverified",
+    "text": "Categoria desconhecida. Disponíveis: {categories}."
+  },
+  "create_good_category_note": {
+    "status": "unverified",
+    "text": "O bem está vinculado à categoria {category}: a sua qualidade aumentará o abastecimento do servidor."
+  },
   "create_good_created": {
     "status": "unverified",
     "text": "✅ Bem criado: {name} [{code}] — valor base {value}, {energy} para fabricar, banco {bank}."
   },
+  "create_good_need_bank": {
+    "status": "unverified",
+    "text": "Esta união tem vários bancos — indique o código da moeda."
+  },
   "create_good_usage": {
     "status": "unverified",
-    "text": "Uso: /create-good <nome> | <valor_base> | <custo_energia> | [emoji]"
+    "text": "Uso: /create_good <nome> | <valor base> | <custo de energia> | [emoji] | [categoria] | [moeda] | [empresa]"
+  },
+  "create_good_wrong_union": {
+    "status": "unverified",
+    "text": "Essa moeda pertence a outra união."
   },
   "delete_party_confirm": {
     "status": "unverified",
@@ -447,6 +523,170 @@
     "status": "unverified",
     "text": "Envie o código da união para a qual o partido será movido."
   },
+  "edit_bank_ask_central": {
+    "status": "unverified",
+    "text": "Envie o ID do novo servidor central (ele precisa estar vinculado com /setup)."
+  },
+  "edit_bank_ask_code": {
+    "status": "unverified",
+    "text": "Envie o novo código de moeda de 4 caracteres."
+  },
+  "edit_bank_ask_emoji": {
+    "status": "unverified",
+    "text": "Envie o novo emoji da moeda."
+  },
+  "edit_bank_ask_leader": {
+    "status": "unverified",
+    "text": "Quem? Envie um ID de usuário, uma menção ou @username."
+  },
+  "edit_bank_ask_name": {
+    "status": "unverified",
+    "text": "Digite o novo nome da moeda."
+  },
+  "edit_bank_bad_central": {
+    "status": "unverified",
+    "text": "Esse chat não está configurado. Vincule-o primeiro com /setup."
+  },
+  "edit_bank_bad_code": {
+    "status": "unverified",
+    "text": "O código está ocupado ou é inválido. Envie 4 caracteres não usados por nenhuma união, partido, moeda ou bem."
+  },
+  "edit_bank_choose": {
+    "status": "unverified",
+    "text": "Qual banco você quer gerenciar? Responda com um número:"
+  },
+  "edit_bank_code_changed": {
+    "status": "unverified",
+    "text": "✅ Código da moeda alterado: {old} → {code}. Todas as contas, bens e tratados já usam o novo."
+  },
+  "edit_bank_confirm_delete": {
+    "status": "unverified",
+    "text": "⚠️ Isto apaga o banco, suas contas, seu registro e todos os bens precificados na sua moeda. A carga em trânsito volta para quem a enviou. Digite {code} para confirmar."
+  },
+  "edit_bank_deleted": {
+    "status": "unverified",
+    "text": "🗑 Banco {name} [{code}] apagado."
+  },
+  "edit_bank_done": {
+    "status": "unverified",
+    "text": "✅ Pronto."
+  },
+  "edit_bank_menu_header": {
+    "status": "unverified",
+    "text": "Gerenciando o banco {name} [{code}]. Responda com um número:"
+  },
+  "edit_bank_no_permission": {
+    "status": "unverified",
+    "text": "Só os líderes deste banco e os admins do bot podem editá-lo."
+  },
+  "edit_bank_opt_add_leader": {
+    "status": "unverified",
+    "text": "Adicionar um líder"
+  },
+  "edit_bank_opt_central": {
+    "status": "unverified",
+    "text": "Mudar o servidor central"
+  },
+  "edit_bank_opt_code": {
+    "status": "unverified",
+    "text": "Mudar o código da moeda"
+  },
+  "edit_bank_opt_delete": {
+    "status": "unverified",
+    "text": "Apagar o banco"
+  },
+  "edit_bank_opt_emoji": {
+    "status": "unverified",
+    "text": "Mudar o emoji da moeda"
+  },
+  "edit_bank_opt_name": {
+    "status": "unverified",
+    "text": "Renomear a moeda"
+  },
+  "edit_bank_opt_transfer": {
+    "status": "unverified",
+    "text": "Transferir o banco"
+  },
+  "edit_bank_specify": {
+    "status": "unverified",
+    "text": "Indique o banco: /edit-bank <opção> <código da moeda>."
+  },
+  "edit_ent_ask_desc": {
+    "status": "unverified",
+    "text": "Envie a nova descrição («-» apaga)."
+  },
+  "edit_ent_ask_leader": {
+    "status": "unverified",
+    "text": "Quem? Envie o ID do utilizador, uma menção ou @username."
+  },
+  "edit_ent_ask_logo": {
+    "status": "unverified",
+    "text": "Envie a nova imagem do logótipo."
+  },
+  "edit_ent_ask_name": {
+    "status": "unverified",
+    "text": "Escreva o novo nome."
+  },
+  "edit_ent_ask_salary_bank": {
+    "status": "unverified",
+    "text": "Escreva o código da moeda em que os salários são pagos."
+  },
+  "edit_ent_ask_salary_period": {
+    "status": "unverified",
+    "text": "Escreva o período de pagamento: weekly (semanal) ou monthly (mensal)."
+  },
+  "edit_ent_bad_value": {
+    "status": "unverified",
+    "text": "Valor inválido."
+  },
+  "edit_ent_confirm_delete": {
+    "status": "unverified",
+    "text": "⚠️ Serão eliminados a empresa, as suas contas e o armazém. Escreva {code} para confirmar."
+  },
+  "edit_ent_deleted": {
+    "status": "unverified",
+    "text": "Empresa «{name}» eliminada."
+  },
+  "edit_ent_done": {
+    "status": "unverified",
+    "text": "✅ Feito."
+  },
+  "edit_ent_menu_header": {
+    "status": "unverified",
+    "text": "Gestão de «{name}». Responda com um número:"
+  },
+  "edit_ent_opt_add_leader": {
+    "status": "unverified",
+    "text": "Adicionar um líder"
+  },
+  "edit_ent_opt_delete": {
+    "status": "unverified",
+    "text": "Eliminar a empresa"
+  },
+  "edit_ent_opt_description": {
+    "status": "unverified",
+    "text": "Alterar a descrição"
+  },
+  "edit_ent_opt_logo": {
+    "status": "unverified",
+    "text": "Alterar o logótipo"
+  },
+  "edit_ent_opt_name": {
+    "status": "unverified",
+    "text": "Renomear"
+  },
+  "edit_ent_opt_salary_bank": {
+    "status": "unverified",
+    "text": "Moeda dos salários"
+  },
+  "edit_ent_opt_salary_period": {
+    "status": "unverified",
+    "text": "Período de pagamento (weekly/monthly)"
+  },
+  "edit_ent_opt_transfer": {
+    "status": "unverified",
+    "text": "Transferir a empresa"
+  },
   "edit_invalid_article": {
     "status": "unverified",
     "text": "Isso não parece um link. Envie uma URL começando com http(s)://."
@@ -522,6 +762,230 @@
   "edit_union_changed": {
     "status": "unverified",
     "text": "✅ O partido {name} foi movido para a união {union}."
+  },
+  "ent_assign_cleared": {
+    "status": "unverified",
+    "text": "{user} já não ocupa um cargo."
+  },
+  "ent_assign_done": {
+    "status": "unverified",
+    "text": "✅ {user} agora ocupa o cargo «{position}»."
+  },
+  "ent_assign_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_assign <utilizador> | <cargo> [| <empresa>] — ou responda ao trabalhador; «-» remove."
+  },
+  "ent_choose": {
+    "status": "unverified",
+    "text": "Qual empresa? Responda com um número."
+  },
+  "ent_consent_not_leader": {
+    "status": "unverified",
+    "text": "Só um líder dessa empresa pode responder."
+  },
+  "ent_field_balance": {
+    "status": "unverified",
+    "text": "Saldo"
+  },
+  "ent_field_goods": {
+    "status": "unverified",
+    "text": "Armazém"
+  },
+  "ent_field_leaders": {
+    "status": "unverified",
+    "text": "Líderes"
+  },
+  "ent_field_positions": {
+    "status": "unverified",
+    "text": "Cargos"
+  },
+  "ent_field_salary": {
+    "status": "unverified",
+    "text": "Salários"
+  },
+  "ent_field_server": {
+    "status": "unverified",
+    "text": "Servidor"
+  },
+  "ent_field_transit": {
+    "status": "unverified",
+    "text": "Em trânsito ({count})"
+  },
+  "ent_field_workers": {
+    "status": "unverified",
+    "text": "Trabalhadores ({count})"
+  },
+  "ent_join_already": {
+    "status": "unverified",
+    "text": "Já trabalhas nesta empresa."
+  },
+  "ent_join_approved": {
+    "status": "unverified",
+    "text": "✅ {user} agora trabalha em «{name}»."
+  },
+  "ent_join_declined": {
+    "status": "unverified",
+    "text": "O pedido foi recusado."
+  },
+  "ent_join_request": {
+    "status": "unverified",
+    "text": "{user} pede para se juntar a «{name}» [{code}]. Um líder pode responder abaixo."
+  },
+  "ent_join_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_join <código>"
+  },
+  "ent_kick_done": {
+    "status": "unverified",
+    "text": "{user} já não trabalha em «{name}»."
+  },
+  "ent_kick_not_member": {
+    "status": "unverified",
+    "text": "Esse utilizador não é trabalhador desta empresa."
+  },
+  "ent_kick_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_kick <utilizador> [código] — ou responda à mensagem do trabalhador."
+  },
+  "ent_leader_added": {
+    "status": "unverified",
+    "text": "✅ {user} agora é líder de «{name}»."
+  },
+  "ent_leader_declined": {
+    "status": "unverified",
+    "text": "A oferta de liderança foi recusada."
+  },
+  "ent_leader_offer": {
+    "status": "unverified",
+    "text": "{mention}, oferecem-te a coliderança da empresa «{name}» [{code}]."
+  },
+  "ent_leave_done": {
+    "status": "unverified",
+    "text": "Saíste de «{name}»."
+  },
+  "ent_leave_none": {
+    "status": "unverified",
+    "text": "Não trabalhas em nenhuma empresa correspondente."
+  },
+  "ent_list_empty": {
+    "status": "unverified",
+    "text": "Este servidor ainda não tem empresas."
+  },
+  "ent_list_header": {
+    "status": "unverified",
+    "text": "Empresas deste servidor"
+  },
+  "ent_none_led": {
+    "status": "unverified",
+    "text": "Não diriges nenhuma empresa."
+  },
+  "ent_not_leader": {
+    "status": "unverified",
+    "text": "Só os líderes da empresa podem fazer isso."
+  },
+  "ent_not_worker": {
+    "status": "unverified",
+    "text": "Não trabalhas nesta empresa."
+  },
+  "ent_position_cleared": {
+    "status": "unverified",
+    "text": "Cargo «{position}» removido."
+  },
+  "ent_position_done": {
+    "status": "unverified",
+    "text": "✅ Cargo «{position}»: salário {salary}."
+  },
+  "ent_position_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_position <nome> | <salário> [| <empresa>] — o salário é 12.34, 5% ou 0."
+  },
+  "ent_salary_cleared": {
+    "status": "unverified",
+    "text": "Salário pessoal de {user} removido."
+  },
+  "ent_salary_done": {
+    "status": "unverified",
+    "text": "✅ Salário pessoal de {user}: {salary}."
+  },
+  "ent_salary_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_salary <utilizador> <salário> [empresa] — o salário é 12.34, 5% ou 0; uma resposta também funciona."
+  },
+  "ent_sell_usage": {
+    "status": "unverified",
+    "text": "Uso: /ent_sell <código do bem> [qtd] [empresa]"
+  },
+  "ent_transfer_declined": {
+    "status": "unverified",
+    "text": "A transferência foi recusada."
+  },
+  "ent_transfer_done": {
+    "status": "unverified",
+    "text": "✅ A empresa «{name}» agora pertence a {user}."
+  },
+  "ent_transfer_offer": {
+    "status": "unverified",
+    "text": "{mention}, oferecem-te assumir a empresa «{name}» [{code}]."
+  },
+  "enterprise_not_found": {
+    "status": "unverified",
+    "text": "Empresa não encontrada."
+  },
+  "export_arrived": {
+    "status": "unverified",
+    "text": "📦 {qty} × {emoji}{name} chegaram a {target} de {source}."
+  },
+  "export_arrived_perished": {
+    "status": "unverified",
+    "text": "📦 {qty} × {emoji}{name} chegaram a {target} de {source} ({lost} estragaram-se no caminho)."
+  },
+  "export_bad_target": {
+    "status": "unverified",
+    "text": "Empresa de destino não encontrada."
+  },
+  "export_declined": {
+    "status": "unverified",
+    "text": "A oferta de exportação foi recusada."
+  },
+  "export_dispatched": {
+    "status": "unverified",
+    "text": "📦 Enviado {qty} × {emoji}{name}: {source} → {target}. Chegada em {eta} ({distance})."
+  },
+  "export_done": {
+    "status": "unverified",
+    "text": "✅ Exportado {qty} × {emoji}{name}: {source} → {target}."
+  },
+  "export_free": {
+    "status": "unverified",
+    "text": "gratuitamente"
+  },
+  "export_need_currency": {
+    "status": "unverified",
+    "text": "Indique a moeda do preço."
+  },
+  "export_no_bank": {
+    "status": "unverified",
+    "text": "Moeda do preço desconhecida."
+  },
+  "export_no_funds": {
+    "status": "unverified",
+    "text": "A empresa recetora não pode pagar o preço."
+  },
+  "export_no_goods": {
+    "status": "unverified",
+    "text": "A empresa não tem tantos bens em armazém."
+  },
+  "export_offer": {
+    "status": "unverified",
+    "text": "📦 {source} oferece a {target}: {qty} × {emoji}{name} por {price}. Um líder da empresa recetora deve aceitar abaixo."
+  },
+  "export_same": {
+    "status": "unverified",
+    "text": "Uma empresa não pode exportar para si própria."
+  },
+  "export_usage": {
+    "status": "unverified",
+    "text": "Uso: /export <código do bem> <qtd> <empresa destino> [preço] [moeda] [a tua empresa]"
   },
   "find_channel_not_found": {
     "status": "unverified",
@@ -679,9 +1143,49 @@
     "status": "unverified",
     "text": "Aniversários"
   },
+  "fx_log_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}]: {value} {change}"
+  },
+  "fx_log_title": {
+    "status": "unverified",
+    "text": "Valores das moedas atualizados"
+  },
+  "give_done": {
+    "status": "unverified",
+    "text": "✅ Entregues {qty} × {emoji}{name} a {user}."
+  },
+  "give_good_usage": {
+    "status": "unverified",
+    "text": "Uso: /give_good <utilizador> <código do bem> [qtd] — ou responda à mensagem do utilizador com /give_good <código> [qtd]."
+  },
+  "give_no_goods": {
+    "status": "unverified",
+    "text": "Não há bens suficientes no teu inventário (tens {have})."
+  },
+  "give_self": {
+    "status": "unverified",
+    "text": "Não podes entregar bens a ti próprio."
+  },
   "good_not_found": {
     "status": "unverified",
     "text": "Não existe bem com esse código."
+  },
+  "goods_header": {
+    "status": "unverified",
+    "text": "Bens disponíveis"
+  },
+  "goods_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] — {category}, {value}, {energy}"
+  },
+  "goods_line_base": {
+    "status": "unverified",
+    "text": "{emoji} {name} [{code}] — categoria básica, {energy}"
+  },
+  "goods_none": {
+    "status": "unverified",
+    "text": "Ainda não há bens disponíveis aqui."
   },
   "govt_no_members": {
     "status": "unverified",
@@ -689,11 +1193,11 @@
   },
   "govt_not_found": {
     "status": "unverified",
-    "text": "Governo não encontrado."
+    "text": "Órgão diretivo não encontrado."
   },
   "govt_not_found_suggest": {
     "status": "unverified",
-    "text": "Governo não encontrado. Talvez você procurasse um destes? Responda com um número em até 30 minutos:"
+    "text": "Órgão diretivo não encontrado. Talvez você procurasse um destes? Responda com um número em até 30 minutos:"
   },
   "govt_other_union_mark": {
     "status": "unverified",
@@ -715,13 +1219,17 @@
     "status": "unverified",
     "text": "/add_discord <usuário_discord> — vincule sua conta do Discord (conclua com /add-telegram no Discord)"
   },
+  "help.cmd_add_enterprise": {
+    "status": "unverified",
+    "text": "/add-enterprise — funda uma empresa neste servidor (diálogo interativo; verificados)"
+  },
   "help.cmd_add_govt": {
     "status": "unverified",
-    "text": "/add-govt <união> <nome> <membro> <membros> — criar um órgão governamental (admins do bot)"
+    "text": "/add-govt <união> <nome> <membro> <membros> — criar um órgão diretivo (admins do bot)"
   },
   "help.cmd_add_govt_tg": {
     "status": "unverified",
-    "text": "/add_govt <união> <nome> <membro> <membros> — criar um órgão governamental (admins do bot)"
+    "text": "/add_govt <união> <nome> <membro> <membros> — criar um órgão diretivo (admins do bot)"
   },
   "help.cmd_add_party": {
     "status": "unverified",
@@ -747,13 +1255,17 @@
     "status": "unverified",
     "text": "/allow_parties <união> <enable|disable> [id_cargos] — habilitar ou desabilitar partidos em uma união (admins do bot)"
   },
+  "help.cmd_auto_export": {
+    "status": "unverified",
+    "text": "/auto-export <bem> <qtd|off> <empresa> [preço] [moeda] — um envio semanal recorrente (o líder recetor aceita uma vez)"
+  },
   "help.cmd_autocraft": {
     "status": "unverified",
-    "text": "/autocraft <código de bem> <on|off> — fabrica automaticamente a cada dia enquanto houver energia"
+    "text": "/autocraft <bem> <on|off> [empresa] — produção contínua 24/7, mais lenta do que a manual"
   },
   "help.cmd_autosend": {
     "status": "unverified",
-    "text": "/autosend <código de bem> <porcentagem> <usuário|partido> — envia automaticamente uma parte de um bem"
+    "text": "/autosend <bem> <percentagem> <utilizador|partido|empresa> — envia diariamente uma parte do stock"
   },
   "help.cmd_backup": {
     "status": "unverified",
@@ -781,7 +1293,7 @@
   },
   "help.cmd_craft": {
     "status": "unverified",
-    "text": "/craft <código de bem> — fabrica uma unidade de um bem gastando energia"
+    "text": "/craft <bem> [empresa] — inicia a produção de um lote; pronto em poucos minutos"
   },
   "help.cmd_create_bank": {
     "status": "unverified",
@@ -789,7 +1301,19 @@
   },
   "help.cmd_create_good": {
     "status": "unverified",
-    "text": "/create-good <nome> <base> <energia> [emoji] — cria um bem fabricável (líderes do banco)"
+    "text": "/create-good <nome> <valor> <energia> [emoji] [categoria] [moeda] [empresa] — cria um bem teu ou da tua empresa"
+  },
+  "help.cmd_edit_bank": {
+    "status": "unverified",
+    "text": "/edit-bank [opção] [código] — gerenciar um banco: nome da moeda, emoji, código, servidor central, líderes, exclusão"
+  },
+  "help.cmd_edit_bank_tg": {
+    "status": "unverified",
+    "text": "/edit_bank [opção] [código] — gerenciar um banco: nome da moeda, emoji, código, servidor central, líderes, exclusão"
+  },
+  "help.cmd_edit_enterprise": {
+    "status": "unverified",
+    "text": "/edit-enterprise [opção] [código] — gere a tua empresa: textos, logótipo, líderes, salários, eliminação"
   },
   "help.cmd_edit_party": {
     "status": "unverified",
@@ -815,6 +1339,42 @@
     "status": "unverified",
     "text": "/edit_rules [opção] — regras do partido (fundadores e líderes)"
   },
+  "help.cmd_ent_assign": {
+    "status": "unverified",
+    "text": "/ent-assign <utilizador> <cargo> — atribui um cargo a um trabalhador (líderes)"
+  },
+  "help.cmd_ent_join": {
+    "status": "unverified",
+    "text": "/ent-join <código> — pede para te juntares a uma empresa (os líderes aprovam)"
+  },
+  "help.cmd_ent_kick": {
+    "status": "unverified",
+    "text": "/ent-kick <utilizador> [código] — despede um trabalhador (líderes da empresa)"
+  },
+  "help.cmd_ent_leave": {
+    "status": "unverified",
+    "text": "/ent-leave [código] — sai de uma empresa"
+  },
+  "help.cmd_ent_position": {
+    "status": "unverified",
+    "text": "/ent-position <nome> <salário> — um cargo e o seu salário: soma ou percentagem das vendas (líderes)"
+  },
+  "help.cmd_ent_salary": {
+    "status": "unverified",
+    "text": "/ent-salary <utilizador> <salário> — o salário pessoal de um trabalhador (líderes)"
+  },
+  "help.cmd_ent_sell": {
+    "status": "unverified",
+    "text": "/ent-sell <bem> [qtd] — vende os bens da empresa ao banco (líderes)"
+  },
+  "help.cmd_enterprise": {
+    "status": "unverified",
+    "text": "/enterprise [código] — a ficha de uma empresa ou a lista do servidor"
+  },
+  "help.cmd_export": {
+    "status": "unverified",
+    "text": "/export <bem> <qtd> <empresa> [preço] [moeda] — envia bens a outra empresa (o líder aceita; a entrega demora em trânsito)"
+  },
   "help.cmd_find_with": {
     "status": "unverified",
     "text": "/find-with <id_canal> <MM-DD-YYYY[ + 7D]> <palavras;…> — responder com menção às mensagens que contêm as palavras-chave (admins do servidor)"
@@ -831,9 +1391,17 @@
     "status": "unverified",
     "text": "/force_leave <plataforma> <id> — fazer o bot sair de um chat (admins do bot)"
   },
+  "help.cmd_give_good": {
+    "status": "unverified",
+    "text": "/give-good <utilizador> <bem> [qtd] — entrega bens a outro utilizador"
+  },
+  "help.cmd_goods": {
+    "status": "unverified",
+    "text": "/goods — os bens disponíveis para produção aqui"
+  },
   "help.cmd_govt": {
     "status": "unverified",
-    "text": "/govt <nome> — informações sobre um órgão governamental da união"
+    "text": "/govt <nome> — informações sobre um órgão diretivo da união"
   },
   "help.cmd_help": {
     "status": "unverified",
@@ -1019,9 +1587,21 @@
     "status": "unverified",
     "text": "/setadmin <ID | @username | resposta> — delegar os direitos de admin deste grupo (admins do bot)"
   },
+  "help.cmd_setlogs": {
+    "status": "unverified",
+    "text": "/setlogs [canal] [dia] [HH:MM] [fuso] — canal de registo económico: atualizações cambiais e estatísticas semanais (administradores do servidor)"
+  },
+  "help.cmd_settasks": {
+    "status": "unverified",
+    "text": "/settasks [canal] [HH:MM] [fuso] — canal da tarefa de produção mensal (administradores do servidor)"
+  },
   "help.cmd_setup": {
     "status": "unverified",
     "text": "/setup <união> <idioma> — vincular o servidor/grupo a uma união e definir o idioma (admins do bot)"
+  },
+  "help.cmd_transit": {
+    "status": "unverified",
+    "text": "/transit [código] — os bens de uma empresa que ainda estão a caminho"
   },
   "help.cmd_treaty": {
     "status": "unverified",
@@ -1054,6 +1634,10 @@
   "help.section_economy": {
     "status": "unverified",
     "text": "Economia"
+  },
+  "help.section_enterprises": {
+    "status": "unverified",
+    "text": "Empresas"
   },
   "help.section_everyone": {
     "status": "unverified",
@@ -1325,7 +1909,7 @@
   },
   "party_field_seats": {
     "status": "unverified",
-    "text": "Assentos em órgãos governamentais"
+    "text": "Assentos em órgãos diretivos"
   },
   "party_join_accept": {
     "status": "unverified",
@@ -1523,9 +2107,45 @@
     "status": "unverified",
     "text": "Privacidade"
   },
+  "production_busy": {
+    "status": "unverified",
+    "text": "Já estás a produzir algo — estará pronto em {time} min."
+  },
+  "production_dest_enterprise": {
+    "status": "unverified",
+    "text": "entregue à empresa [{code}]"
+  },
+  "production_dest_inventory": {
+    "status": "unverified",
+    "text": "adicionado ao inventário"
+  },
+  "production_done": {
+    "status": "unverified",
+    "text": "✅ {user} produziu {qty} × {emoji}{name} (nível de qualidade {level}) — {dest}."
+  },
+  "production_started": {
+    "status": "unverified",
+    "text": "🏭 Produção iniciada: {name}{emoji} — lote de {qty}, pronto em {duration} min, custo {cost}."
+  },
   "profession_none": {
     "status": "unverified",
     "text": "nenhuma"
+  },
+  "provision_level_acceptable": {
+    "status": "unverified",
+    "text": "aceitável"
+  },
+  "provision_level_excellent": {
+    "status": "unverified",
+    "text": "excelente"
+  },
+  "provision_level_good": {
+    "status": "unverified",
+    "text": "boa"
+  },
+  "provision_level_insufficient": {
+    "status": "unverified",
+    "text": "insuficiente"
   },
   "quiz_answer_hint": {
     "status": "unverified",
@@ -1679,6 +2299,10 @@
     "status": "unverified",
     "text": "Questionários"
   },
+  "rate_limited": {
+    "status": "unverified",
+    "text": "Demasiadas tentativas — tente novamente mais tarde."
+  },
   "rates_line": {
     "status": "unverified",
     "text": "1 {a} = {rate} {b}{peg}"
@@ -1743,9 +2367,25 @@
     "status": "unverified",
     "text": "Regras do partido — {name} [{code}]"
   },
+  "salary_percent": {
+    "status": "unverified",
+    "text": "{percent}% das vendas"
+  },
+  "salary_period_monthly": {
+    "status": "unverified",
+    "text": "mensal"
+  },
+  "salary_period_weekly": {
+    "status": "unverified",
+    "text": "semanal"
+  },
   "sell_done": {
     "status": "unverified",
     "text": "💰 Vendido {qty} ×{name} a {unit} cada — {total} no total."
+  },
+  "sell_not_sellable": {
+    "status": "unverified",
+    "text": "«{name}» não tem valor de mercado e não pode ser vendido a um banco."
   },
   "sell_nothing": {
     "status": "unverified",
@@ -1759,6 +2399,10 @@
     "status": "unverified",
     "text": "🏦 {user} fundou o banco {name} [{code}] na união {union}."
   },
+  "service_event.bank_deleted": {
+    "status": "unverified",
+    "text": "🏦 {user} apagou o banco {name} [{code}]."
+  },
   "service_event.bot_started": {
     "status": "unverified",
     "text": "🤖 Bot iniciado."
@@ -1766,6 +2410,14 @@
   "service_event.bot_stopped": {
     "status": "unverified",
     "text": "🛑 Bot parado."
+  },
+  "service_event.enterprise_created": {
+    "status": "unverified",
+    "text": "🏭 Empresa «{name}» [{code}] fundada por {user}."
+  },
+  "service_event.enterprise_deleted": {
+    "status": "unverified",
+    "text": "🏭 Empresa «{name}» [{code}] eliminada por {user}."
   },
   "service_event.parties_disabled": {
     "status": "unverified",
@@ -1883,6 +2535,46 @@
     "status": "unverified",
     "text": "Uso: /setadmin <ID ou @username>, ou responda à mensagem do usuário com /setadmin."
   },
+  "setchannel_bad_channel": {
+    "status": "unverified",
+    "text": "Esse canal não foi encontrado neste servidor."
+  },
+  "setchannel_bad_time": {
+    "status": "unverified",
+    "text": "Hora inválida: use o formato HH:MM."
+  },
+  "setchannel_bad_tz": {
+    "status": "unverified",
+    "text": "Fuso horário inválido: use um desvio UTC como UTC+3 ou -05:30."
+  },
+  "setchannel_bad_weekday": {
+    "status": "unverified",
+    "text": "Dia da semana inválido: use 1–7 (1 = segunda) ou o nome em inglês (mon…sun)."
+  },
+  "setlogs_done": {
+    "status": "unverified",
+    "text": "✅ Canal de registo económico definido: {channel}. {schedule}"
+  },
+  "setlogs_removed": {
+    "status": "unverified",
+    "text": "Canal de registo económico desvinculado."
+  },
+  "setlogs_schedule": {
+    "status": "unverified",
+    "text": "Estatísticas semanais: {weekday} às {time} ({tz})."
+  },
+  "settasks_done": {
+    "status": "unverified",
+    "text": "✅ Canal de tarefas mensais definido: {channel}. {schedule}"
+  },
+  "settasks_removed": {
+    "status": "unverified",
+    "text": "Canal de tarefas mensais desvinculado."
+  },
+  "settasks_schedule": {
+    "status": "unverified",
+    "text": "Publicação da tarefa: no dia 1 de cada mês às {time} ({tz})."
+  },
   "setup_success": {
     "status": "unverified",
     "text": "✅ Chat vinculado à união {union} ({code}). Idioma: {lang_name} ({lang})."
@@ -1903,6 +2595,50 @@
     "status": "unverified",
     "text": "sim"
   },
+  "stats_bank_line": {
+    "status": "unverified",
+    "text": "{emoji}{code}: massa monetária {supply}, valor {value}"
+  },
+  "stats_base_only_mark": {
+    "status": "unverified",
+    "text": "(apenas bens básicos)"
+  },
+  "stats_category_line": {
+    "status": "unverified",
+    "text": "{category}: {percent}"
+  },
+  "stats_gdp_line": {
+    "status": "unverified",
+    "text": "PIB da semana (ponderado pelo valor das moedas): {gdp}"
+  },
+  "stats_good_line": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}]: ×{qty}"
+  },
+  "stats_goods_header": {
+    "status": "unverified",
+    "text": "Bens produzidos esta semana: {total}"
+  },
+  "stats_provision_total": {
+    "status": "unverified",
+    "text": "{emoji} Abastecimento: {percent} — {level}"
+  },
+  "stats_shortage_mark": {
+    "status": "unverified",
+    "text": "(faltam {qty})"
+  },
+  "stats_task_bonus": {
+    "status": "unverified",
+    "text": "Inclui o bónus pela tarefa concluída no mês passado."
+  },
+  "stats_task_line": {
+    "status": "unverified",
+    "text": "Tarefa do mês: {done}/{total} itens obrigatórios concluídos"
+  },
+  "stats_title": {
+    "status": "unverified",
+    "text": "Estatísticas semanais do servidor"
+  },
   "suspend_confirm": {
     "status": "unverified",
     "text": "Suspender o partido {name}? As informações permanecerão, em /party ele será marcado como suspenso e um líder poderá retomá-lo depois."
@@ -1910,6 +2646,34 @@
   "suspend_done": {
     "status": "unverified",
     "text": "⏸️ Partido {name} suspenso."
+  },
+  "task_footer": {
+    "status": "unverified",
+    "text": "A parte obrigatória deve ser produzida neste servidor/grupo; o resto é opcional. O progresso aparece nas estatísticas semanais."
+  },
+  "task_intro": {
+    "status": "unverified",
+    "text": "Este mês o servidor precisa de produzir:"
+  },
+  "task_item_mandatory": {
+    "status": "unverified",
+    "text": "• {item} — {qty} un. (obrigatório)"
+  },
+  "task_item_optional": {
+    "status": "unverified",
+    "text": "• {item} — {qty} un. (opcional)"
+  },
+  "task_prev_done": {
+    "status": "unverified",
+    "text": "✅ A tarefa do mês passado foi concluída! O bónus de abastecimento está ativo."
+  },
+  "task_prev_failed": {
+    "status": "unverified",
+    "text": "❌ A tarefa do mês passado não foi concluída."
+  },
+  "task_title": {
+    "status": "unverified",
+    "text": "Tarefa do servidor para {month}"
   },
   "too_many_requests": {
     "status": "unverified",
@@ -1922,6 +2686,34 @@
   "transfer_done": {
     "status": "unverified",
     "text": "✅ {user} agora lidera {name}."
+  },
+  "transit_empty": {
+    "status": "unverified",
+    "text": "«{name}» não tem bens em trânsito."
+  },
+  "transit_line_in": {
+    "status": "unverified",
+    "text": "⬅️ {emoji}{name} ×{qty} ← {other}, {eta}"
+  },
+  "transit_line_out": {
+    "status": "unverified",
+    "text": "➡️ {emoji}{name} ×{qty} → {other}, {eta}"
+  },
+  "transit_title": {
+    "status": "unverified",
+    "text": "Bens em trânsito — {name} [{code}]"
+  },
+  "transport_cross_server": {
+    "status": "unverified",
+    "text": "dentro da união"
+  },
+  "transport_cross_union": {
+    "status": "unverified",
+    "text": "entre uniões"
+  },
+  "transport_local": {
+    "status": "unverified",
+    "text": "local"
   },
   "treaty_declined": {
     "status": "unverified",
@@ -1982,5 +2774,33 @@
   "verify_usage": {
     "status": "unverified",
     "text": "Uso: /verify <seu usuário no fandom.com>"
+  },
+  "weekday_0": {
+    "status": "unverified",
+    "text": "segunda-feira"
+  },
+  "weekday_1": {
+    "status": "unverified",
+    "text": "terça-feira"
+  },
+  "weekday_2": {
+    "status": "unverified",
+    "text": "quarta-feira"
+  },
+  "weekday_3": {
+    "status": "unverified",
+    "text": "quinta-feira"
+  },
+  "weekday_4": {
+    "status": "unverified",
+    "text": "sexta-feira"
+  },
+  "weekday_5": {
+    "status": "unverified",
+    "text": "sábado"
+  },
+  "weekday_6": {
+    "status": "unverified",
+    "text": "domingo"
   }
 }

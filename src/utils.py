@@ -154,6 +154,69 @@ def founday_message(server_lang, wiki_lang, name, years, url, past):
     second = founday_line(wiki_lang, name, years, past)
     return f"{first} {flag}\n{flag}{second}\n{url}"
 
+_TZ_RE = re.compile(r"^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$", re.IGNORECASE)
+
+def parse_tz_offset(text):
+    """A timezone as a UTC offset — 'UTC+3', '+3', '-05:30', 'UTC' — in minutes
+    east of UTC. Raises ValueError on bad input."""
+    s = (text or "").strip()
+    if not s or s.upper() in ("UTC", "GMT", "0", "Z"):
+        return 0
+    m = _TZ_RE.match(s)
+    if not m:
+        raise ValueError("invalid_tz")
+    sign = -1 if m.group(1) == "-" else 1
+    hours, minutes = int(m.group(2)), int(m.group(3) or 0)
+    if hours > 14 or minutes > 59:
+        raise ValueError("invalid_tz")
+    return sign * (hours * 60 + minutes)
+
+def format_tz_offset(minutes):
+    minutes = int(minutes or 0)
+    sign = "-" if minutes < 0 else "+"
+    m = abs(minutes)
+    return f"UTC{sign}{m // 60:02d}:{m % 60:02d}"
+
+_WEEKDAY_ALIASES = {
+    "mon": 0, "monday": 0, "tue": 1, "tues": 1, "tuesday": 1, "wed": 2,
+    "wednesday": 2, "thu": 3, "thur": 3, "thurs": 3, "thursday": 3, "fri": 4,
+    "friday": 4, "sat": 5, "saturday": 5, "sun": 6, "sunday": 6,
+}
+
+def parse_weekday(text):
+    """A weekday as 1-7 (1 = Monday) or an English name/abbreviation, returned
+    as 0-6 with Monday 0. Raises ValueError on bad input."""
+    s = (text or "").strip().lower()
+    if s.isdigit():
+        n = int(s)
+        if 1 <= n <= 7:
+            return n - 1
+        raise ValueError("invalid_weekday")
+    if s in _WEEKDAY_ALIASES:
+        return _WEEKDAY_ALIASES[s]
+    raise ValueError("invalid_weekday")
+
+def weekday_name(index, lang):
+    return localized(f"weekday_{int(index) % 7}", lang)
+
+CATEGORY_EMOJI = {cat: emoji for _code, cat, emoji, _name in db.BASE_GOODS}
+
+def category_label(category, lang, with_emoji=True):
+    """The localized display name of a base category, with its emoji."""
+    name = localized(f"category_{category}", lang)
+    emoji = CATEGORY_EMOJI.get(category, "")
+    return f"{emoji} {name}".strip() if with_emoji else name
+
+def good_display_name(good, lang):
+    """A good's name for humans: the five base goods are localized, user-created
+    goods keep the name they were given."""
+    if db.is_base_good(good["code"]):
+        return localized(f"category_{good['category']}", lang)
+    return good["name"]
+
+def provision_level_label(level, lang):
+    return localized(f"provision_level_{level}", lang)
+
 _FIND_PERIOD_RE = re.compile(
     r"^\s*(\d{1,2})-(\d{1,2})-(\d{4})\s*(?:\+\s*(\d+)\s*[dD])?\s*$"
 )
@@ -376,10 +439,10 @@ def get_chat_lang(chat_id):
         return lang
     return DEFAULT_LANG
 
-def set_chat_lang(chat_id, lang_code):
+def set_chat_lang(chat_id, lang_code, is_dm=False):
     if lang_code not in SUPPORTED_LANGS:
         raise ValueError("unsupported_lang")
-    db.set_chat_lang(chat_id, lang_code)
+    db.set_chat_lang(chat_id, lang_code, is_dm=is_dm)
 
 def localized_help(event_key, lang, **kwargs):
     table = _LOCALE.get("help", {}).get(event_key, {})

@@ -16,6 +16,7 @@ from aiogram.types import (
 
 import db
 import economy
+import olympiad
 import quizzes
 import utils
 from config import TELEGRAM_TOKEN, SUPPORT_CHATS
@@ -30,6 +31,8 @@ from utils import (
     LANG_ORDER, LOCALE_STATUS_EMOJI, SUPPORTED_LANGS, DEFAULT_LANG,
     PARTY_CODE_RE, format_stored_user, send_service_event, is_verified,
     format_quiz_date, resolve_previous_quiz, privacy_actions, privacy_option_labels,
+    parse_tz_offset, format_tz_offset, parse_weekday, weekday_name,
+    parse_founday_time, category_label, good_display_name,
 )
 
 logger = logging.getLogger("dem.telegram")
@@ -312,7 +315,7 @@ async def lang_cmd(message: Message):
             return
         code = parts[1].strip().lower()
         try:
-            set_chat_lang(_chat_key(message), code)
+            set_chat_lang(_chat_key(message), code, is_dm=True)
         except Exception:
             await message.reply(
                 localized("loc_unknown_lang", lang, lang=code, supported=", ".join(sorted(SUPPORTED_LANGS)))
@@ -360,7 +363,7 @@ async def locallang_cmd(message: Message):
             return
         code = parts[1].strip().lower()
         try:
-            set_chat_lang(chat_key, code)
+            set_chat_lang(chat_key, code, is_dm=True)
         except Exception:
             await message.reply(
                 localized("loc_unknown_lang", lang, lang=code, supported=", ".join(sorted(SUPPORTED_LANGS)))
@@ -444,6 +447,8 @@ async def help_cmd(message: Message):
     admins_lines = "\n".join([
         escape_html(localized_help("cmd_lang", lang)),
         escape_html(localized_help("cmd_locallang", lang)),
+        escape_html(localized_help("cmd_setlogs", lang)),
+        escape_html(localized_help("cmd_settasks", lang)),
     ])
 
     bot_admins_lines = "\n".join([
@@ -465,6 +470,7 @@ async def help_cmd(message: Message):
     economy_lines = "\n".join([
         escape_html(localized_help("cmd_create_bank", lang)),
         escape_html(localized_help("cmd_bank", lang)),
+        escape_html(localized_help("cmd_edit_bank_tg", lang)),
         escape_html(localized_help("cmd_bank_add_leader", lang)),
         escape_html(localized_help("cmd_bank_transfer", lang)),
         escape_html(localized_help("cmd_open_account", lang)),
@@ -472,9 +478,11 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_pay", lang)),
         escape_html(localized_help("cmd_set_earn", lang)),
         escape_html(localized_help("cmd_create_good", lang)),
+        escape_html(localized_help("cmd_goods", lang)),
         escape_html(localized_help("cmd_craft", lang)),
         escape_html(localized_help("cmd_inventory", lang)),
         escape_html(localized_help("cmd_sell", lang)),
+        escape_html(localized_help("cmd_give_good", lang)),
         escape_html(localized_help("cmd_autocraft", lang)),
         escape_html(localized_help("cmd_autosend", lang)),
         escape_html(localized_help("cmd_set_profession", lang)),
@@ -487,14 +495,47 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_party_dues", lang)),
     ])
 
-    text = (
+    enterprise_lines = "\n".join([
+        escape_html(localized_help("cmd_add_enterprise", lang)),
+        escape_html(localized_help("cmd_enterprise", lang)),
+        escape_html(localized_help("cmd_edit_enterprise", lang)),
+        escape_html(localized_help("cmd_ent_join", lang)),
+        escape_html(localized_help("cmd_ent_leave", lang)),
+        escape_html(localized_help("cmd_ent_kick", lang)),
+        escape_html(localized_help("cmd_ent_position", lang)),
+        escape_html(localized_help("cmd_ent_assign", lang)),
+        escape_html(localized_help("cmd_ent_salary", lang)),
+        escape_html(localized_help("cmd_ent_sell", lang)),
+        escape_html(localized_help("cmd_export", lang)),
+        escape_html(localized_help("cmd_auto_export", lang)),
+        escape_html(localized_help("cmd_transit", lang)),
+    ])
+
+    # Only /setolympiad while no Olympiad runs — the rest of its commands do not
+    # answer then, so listing them would point at nothing.
+    olympiad_lines = "\n".join(
+        escape_html(olympiad.text(k, lang)) for k in olympiad_help_keys())
+
+    blocks = [
         f"<b>{localized_help('title', lang)}</b>\n\n"
-        f"<b>{localized_help('section_everyone', lang)}</b>\n{everyone_lines}\n\n"
-        f"<b>{localized_help('section_economy', lang)}</b>\n{economy_lines}\n\n"
+        f"<b>{localized_help('section_everyone', lang)}</b>\n{everyone_lines}",
+        f"<b>{localized_help('section_economy', lang)}</b>\n{economy_lines}",
+        f"<b>{localized_help('section_enterprises', lang)}</b>\n{enterprise_lines}",
         f"<b>{localized_help('section_admins', lang)}</b>\n{admins_lines}\n\n"
-        f"<b>{localized_help('section_bot_admins', lang)}</b>\n{bot_admins_lines}"
-    )
-    await _reply_autodelete(text)
+        f"<b>{localized_help('section_bot_admins', lang)}</b>\n{bot_admins_lines}\n\n"
+        f"<b>{escape_html(olympiad.text('section_title', lang))}</b>\n{olympiad_lines}",
+    ]
+    chunks, current = [], ""
+    for block in blocks:
+        candidate = f"{current}\n\n{block}" if current else block
+        if current and len(candidate) > 3900:
+            chunks.append(current)
+            current = block
+        else:
+            current = candidate
+    if current:
+        chunks.append(current)
+    await asyncio.gather(*(_reply_autodelete(chunk) for chunk in chunks))
 
 @router.message(Command("list_chats"))
 async def list_chats_cmd(message: Message):
@@ -778,6 +819,7 @@ from discord_bot import (
     _search_party, _search_govt, _govt_member_lines, _edit_menu_text,
     _rules_menu_text, _party_line, _leaders_differ_from_founder,
     _edit_admin_menu_text, _resume_state, parties_enabled, _party_balance_lines,
+    olympiad_help_keys, post_olympiad_vote, sync_olympiad_commands,
 )
 
 _pending_inputs = {}
@@ -900,6 +942,25 @@ def _parse_tg_user_ref(text):
     if m.group(1):
         return "username", m.group(1)
     return "id", int(m.group(2))
+
+TEMP_REPLY_SECONDS = 60
+
+async def _reply_temp(message: Message, text, seconds=TEMP_REPLY_SECONDS, **kwargs):
+    """Reply with a message that clears itself after a while — Telegram's
+    nearest equivalent of Discord's ephemeral answers. Used for administrative
+    confirmations that would otherwise sit in a live chat forever. The removal
+    runs as its own task, so the handler never waits on it."""
+    sent = await message.reply(text, **kwargs)
+
+    async def _remove():
+        await asyncio.sleep(seconds)
+        try:
+            await sent.delete()
+        except Exception:
+            pass
+
+    asyncio.create_task(_remove())
+    return sent
 
 async def _require_verified_tg(message: Message, lang):
     """Gate the Fandom-activity commands on Telegram. Returns True when the
@@ -2115,7 +2176,7 @@ async def handle_econ_consent(query: CallbackQuery):
     lang = pend["lang"]
     user = query.from_user
     action = pend["action"]
-    if action in ("bank_leader", "bank_transfer"):
+    if action in ("bank_leader", "bank_transfer", "ent_leader", "ent_transfer"):
         if pend["target_kind"] == "id":
             allowed = user is not None and user.id == int(pend["target"])
         else:
@@ -2126,6 +2187,11 @@ async def handle_econ_consent(query: CallbackQuery):
         allowed = user is not None and (db.is_bank_leader(pend["other"], "telegram", user.id)
                                         or is_admin("telegram", user.id))
         deny_key = "bank_consent_not_leader"
+    elif action in ("ent_join", "export", "auto_export"):
+        allowed = user is not None and \
+            (db.is_enterprise_leader(pend["ent"], "telegram", user.id)
+             or is_admin("telegram", user.id))
+        deny_key = "ent_consent_not_leader"
     else:
         await query.answer()
         return
@@ -2169,6 +2235,68 @@ async def handle_econ_consent(query: CallbackQuery):
                              rate=f"{pend['rate']:g}", b=pend["other"])
         else:
             text = localized("set_rate_declined", lang)
+    elif action == "ent_leader":
+        ent = db.get_enterprise(pend["ent"])
+        if ent and accepted:
+            db.add_enterprise_leader(ent["code"], "telegram", user.id, display)
+            text = localized("ent_leader_added", lang, user=display, name=ent["name"])
+        else:
+            text = localized("ent_leader_declined", lang)
+    elif action == "ent_transfer":
+        ent = db.get_enterprise(pend["ent"])
+        if ent and accepted:
+            db.set_enterprise_leader(ent["code"], "telegram", user.id, display)
+            text = localized("ent_transfer_done", lang, user=display, name=ent["name"])
+        else:
+            text = localized("ent_transfer_declined", lang)
+    elif action == "ent_join":
+        ent = db.get_enterprise(pend["ent"])
+        if ent and accepted:
+            db.add_enterprise_member(ent["code"], "telegram",
+                                     pend["requester_id"], pend["requester_name"])
+            text = localized("ent_join_approved", lang,
+                             user=pend["requester_name"], name=ent["name"])
+        else:
+            text = localized("ent_join_declined", lang)
+    elif action == "export":
+        if accepted:
+            good = db.get_good(pend["good"])
+            if good:
+                status, info = economy.dispatch_shipment(
+                    pend["from"], pend["ent"], good, pend["qty"], pend["price"],
+                    pend["bank"], (pend.get("notify_platform"), pend.get("notify_key")),
+                    lang)
+                if status == "ok":
+                    src, tgt = db.get_enterprise(pend["from"]), db.get_enterprise(pend["ent"])
+                    emoji = f"{good['emoji']} " if good["emoji"] else ""
+                    text = localized(
+                        "export_dispatched", lang, qty=info["qty"], emoji=emoji,
+                        name=good_display_name(good, lang),
+                        source=f"{src['name']} [{src['code']}]" if src else pend["from"],
+                        target=f"{tgt['name']} [{tgt['code']}]" if tgt else pend["ent"],
+                        eta=_fmt_eta(info["duration"]),
+                        distance=localized(f"transport_{info['distance']}", lang))
+                else:
+                    text = localized(f"export_{status}", lang)
+        else:
+            text = localized("export_declined", lang)
+    elif action == "auto_export":
+        if accepted:
+            db.remove_auto_export(pend["from"], pend["ent"], pend["good"])
+            db.add_auto_export(pend["from"], pend["ent"], pend["good"], pend["qty"],
+                               pend["price"], pend["bank"], pend["created_by"])
+            good = db.get_good(pend["good"])
+            tgt = db.get_enterprise(pend["ent"])
+            bank = db.get_bank(pend["bank"]) if pend["bank"] else None
+            emoji = f"{good['emoji']} " if good and good["emoji"] else ""
+            text = localized(
+                "auto_export_set", lang, qty=pend["qty"], emoji=emoji,
+                name=good_display_name(good, lang) if good else pend["good"],
+                target=f"{tgt['name']} [{tgt['code']}]" if tgt else pend["ent"],
+                price=economy.format_money(pend["price"], bank) if bank
+                else localized("export_free", lang))
+        else:
+            text = localized("export_declined", lang)
 
     await query.answer()
     if text:
@@ -2261,8 +2389,6 @@ async def _bank_leadership_tg(message, transfer):
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
-    if not await _require_verified_tg(message, lang):
-        return
     parts = (message.text or "").split()
     if len(parts) < 3:
         await message.reply(localized("bank_leader_usage", lang))
@@ -2311,10 +2437,139 @@ async def bank_add_leader_tg(message: Message):
 async def bank_transfer_tg(message: Message):
     await _bank_leadership_tg(message, transfer=True)
 
+_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "add_leader",
+                      "transfer", "delete")
+
+async def _resolve_edit_bank_tg(message, lang, query=None):
+    """Mirror of the Discord helper: any bank for a Bot Admin, only a led one
+    otherwise; without a code the single bank the caller leads."""
+    admin = is_admin("telegram", message.from_user.id)
+    if query:
+        bank = db.get_bank(query.strip().upper())
+        if not bank:
+            await message.reply(localized("bank_not_found", lang))
+            return None
+        if not (admin or db.is_bank_leader(bank["code"], "telegram", message.from_user.id)):
+            await message.reply(localized("edit_bank_no_permission", lang))
+            return None
+        return bank
+    led = [b for b in db.get_all_banks()
+           if db.is_bank_leader(b["code"], "telegram", message.from_user.id)]
+    if not led:
+        await message.reply(localized("edit_bank_specify" if admin
+                                      else "edit_bank_no_permission", lang))
+        return None
+    if len(led) == 1:
+        return led[0]
+    return await _numbered_choice_tg(message, lang, localized("edit_bank_choose", lang),
+                                     led, lambda b: f"{b['currency_name']} [{b['code']}]")
+
+@router.message(Command("edit_bank", "edit-bank"))
+async def edit_bank_tg(message: Message):
+    """/edit-bank [option] [code] — numbered management menu for a bank."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    option = None
+    query = None
+    for p in parts:
+        if p.isdigit() and option is None:
+            option = int(p)
+        elif query is None:
+            query = p
+    bank = await _resolve_edit_bank_tg(message, lang, query)
+    if bank is None:
+        return
+    if option is None or not 1 <= option <= len(_EDIT_BANK_OPTIONS):
+        items = [localized(f"edit_bank_opt_{key}", lang) for key in _EDIT_BANK_OPTIONS]
+        chosen = await _numbered_choice_tg(
+            message, lang,
+            localized("edit_bank_menu_header", lang, name=bank["currency_name"],
+                      code=bank["code"]),
+            list(enumerate(items)), lambda it: it[1])
+        if chosen is None:
+            return
+        action = _EDIT_BANK_OPTIONS[chosen[0]]
+    else:
+        action = _EDIT_BANK_OPTIONS[option - 1]
+
+    if action == "name":
+        m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_name", lang))
+        if m is None:
+            return
+        db.update_bank_field(bank["code"], "currency_name",
+                             clean_display_name(m.text or "", max_len=40))
+        await message.reply(localized("edit_bank_done", lang))
+    elif action == "emoji":
+        m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_emoji", lang))
+        if m is None:
+            return
+        chunks = (m.text or "").strip().split()
+        db.update_bank_field(bank["code"], "emoji", chunks[0][:16] if chunks else "")
+        await message.reply(localized("edit_bank_done", lang))
+    elif action == "code":
+        m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_code", lang))
+        if m is None:
+            return
+        new_code = _currency_code_validator_tg((m.text or "").strip())
+        if new_code is None:
+            await message.reply(localized("edit_bank_bad_code", lang))
+            return
+        old_code = bank["code"]
+        db.rename_bank_code(old_code, new_code)
+        await message.reply(localized("edit_bank_code_changed", lang,
+                                      old=old_code, code=new_code))
+    elif action == "central":
+        m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_central", lang))
+        if m is None:
+            return
+        chat = db.get_chat((m.text or "").strip())
+        if not chat:
+            await message.reply(localized("edit_bank_bad_central", lang))
+            return
+        db.set_bank_central_chat(bank["code"], chat["chat_id"], chat["union_code"])
+        await message.reply(localized("edit_bank_done", lang))
+    elif action in ("add_leader", "transfer"):
+        m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_leader", lang))
+        if m is None:
+            return
+        ref = _parse_tg_user_ref((m.text or "").strip())
+        if ref is None:
+            await message.reply(localized("edit_invalid_user", lang))
+            return
+        target_kind, target = ref
+        mention = f"@{target}" if target_kind == "username" else str(target)
+        transfer = action == "transfer"
+        token = _register_econ_consent({
+            "action": "bank_transfer" if transfer else "bank_leader",
+            "bank_code": bank["code"], "target_kind": target_kind,
+            "target": target, "lang": lang})
+        offer_key = "bank_transfer_offer" if transfer else "bank_leader_offer"
+        await message.answer(
+            localized(offer_key, lang, mention=mention,
+                      name=bank["currency_name"], code=bank["code"]),
+            reply_markup=_econ_consent_keyboard(lang, token))
+    elif action == "delete":
+        m = await _dialog_text_tg(message, lang,
+                                  localized("edit_bank_confirm_delete", lang,
+                                            code=bank["code"]))
+        if m is None:
+            return
+        if (m.text or "").strip().upper() != bank["code"]:
+            await message.reply(localized("action_cancelled", lang))
+            return
+        name = bank["currency_name"]
+        db.delete_bank(bank["code"])
+        await message.reply(localized("edit_bank_deleted", lang, name=name,
+                                      code=bank["code"]))
+        await send_service_event("bank_deleted", name=name, code=bank["code"],
+                                 user=_tg_user_label(message.from_user))
+
 @router.message(Command("open_account", "open-account"))
 async def open_account_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 2:
@@ -2334,7 +2589,7 @@ async def open_account_tg(message: Message):
 @router.message(Command("balance"))
 async def balance_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     owner = db.canonical_user("telegram", message.from_user.id)
     parts = (message.text or "").split()
@@ -2370,7 +2625,7 @@ async def balance_tg(message: Message):
 @router.message(Command("pay"))
 async def pay_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()[1:]
     if message.reply_to_message and message.reply_to_message.from_user:
@@ -2410,37 +2665,39 @@ async def pay_tg(message: Message):
 
 @router.message(Command("set_earn", "set-earn"))
 async def set_earn_tg(message: Message):
+    """Every answer here is temporary: marking a channel is a one-off setup act,
+    and its confirmation should not stay in the chat people earn in."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
     if message.chat.type not in GROUP_CHAT_TYPES:
-        await message.reply(localized("group_only", lang))
+        await _reply_temp(message, localized("group_only", lang))
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
-        await message.reply(localized("set_earn_usage", lang))
+        await _reply_temp(message, localized("set_earn_usage", lang))
         return
     bank = db.get_bank(parts[1].strip().upper())
     if not bank:
-        await message.reply(localized("bank_not_found", lang))
+        await _reply_temp(message, localized("bank_not_found", lang))
         return
     if not (db.is_bank_leader(bank["code"], "telegram", message.from_user.id)
             or await is_server_admin(message.chat.id, message.from_user.id)
             or is_admin("telegram", message.from_user.id)):
-        await message.reply(localized("set_earn_no_permission", lang))
+        await _reply_temp(message, localized("set_earn_no_permission", lang))
         return
     chat = db.get_chat(str(message.chat.id))
     if not chat or chat["union_code"] != bank["union_code"]:
-        await message.reply(localized("set_earn_wrong_union", lang))
+        await _reply_temp(message, localized("set_earn_wrong_union", lang))
         return
     action = parts[2].strip().lower()
     chan_key = _chat_key(message)
     if action in ("off", "disable", "0", "false", "no"):
         db.remove_earn_channel("telegram", chan_key)
-        await message.reply(localized("set_earn_off", lang))
+        await _reply_temp(message, localized("set_earn_off", lang))
         return
     if action not in ("on", "enable", "1", "true", "yes"):
-        await message.reply(localized("set_earn_usage", lang))
+        await _reply_temp(message, localized("set_earn_usage", lang))
         return
     rate = 1.0
     if len(parts) > 3:
@@ -2449,21 +2706,69 @@ async def set_earn_tg(message: Message):
         except ValueError:
             rate = 1.0
     db.set_earn_channel("telegram", chan_key, bank["code"], rate)
-    await message.reply(localized("set_earn_on", lang, code=bank["code"], rate=f"{rate:g}"))
+    await _reply_temp(message, localized("set_earn_on", lang, code=bank["code"],
+                                         rate=f"{rate:g}"))
+
+def _resolve_good_bank_tg(chat, currency):
+    """Mirror of the Discord helper: the bank a new good is denominated in."""
+    banks = db.get_banks_in_union(chat["union_code"])
+    if currency:
+        bank = db.get_bank(currency.strip().upper())
+        if not bank:
+            return None, "bank_not_found"
+        if bank["union_code"] != chat["union_code"]:
+            return None, "create_good_wrong_union"
+        return bank, None
+    if len(banks) == 1:
+        return banks[0], None
+    return None, "create_good_need_bank"
+
+def _normalize_category(raw):
+    s = (raw or "").strip().lower()
+    if not s or s == "-":
+        return None, True
+    return (s, True) if s in db.GOOD_CATEGORIES else (None, False)
 
 @router.message(Command("create_good", "create-good"))
 async def create_good_tg(message: Message):
+    """/create-good <name> | <base_value> | <energy> | [emoji] | [category]
+    | [currency] | [enterprise] — the good belongs to the caller (or their
+    enterprise) and is denominated in a bank of this group's union."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
+        return
+    if message.chat.type not in GROUP_CHAT_TYPES:
+        await message.reply(localized("group_only", lang))
         return
     body = (message.text or "").split(maxsplit=1)
     fields = [p.strip() for p in body[1].split("|")] if len(body) > 1 else []
     if len(fields) < 3:
         await message.reply(localized("create_good_usage", lang))
         return
-    bank = await _resolve_led_bank_tg(message, lang)
-    if bank is None:
+    chat = db.get_chat(str(message.chat.id))
+    if not chat:
+        await message.reply(localized("chat_not_setup", lang))
         return
+    currency = fields[5] if len(fields) > 5 else None
+    bank, err = _resolve_good_bank_tg(chat, currency)
+    if err:
+        await message.reply(localized(err, lang))
+        return
+    cat, ok = _normalize_category(fields[4] if len(fields) > 4 else None)
+    if not ok:
+        await message.reply(localized("create_good_bad_category", lang,
+                                      categories=", ".join(db.GOOD_CATEGORIES)))
+        return
+    owner = db.canonical_user("telegram", message.from_user.id)
+    if len(fields) > 6 and fields[6]:
+        ent = db.find_enterprise(fields[6])
+        if not ent:
+            await message.reply(localized("enterprise_not_found", lang))
+            return
+        if not db.is_enterprise_leader(ent["code"], "telegram", message.from_user.id):
+            await message.reply(localized("ent_not_leader", lang))
+            return
+        owner = db.enterprise_owner(ent["code"])
     name = clean_display_name(fields[0], max_len=40)
     base = economy.parse_amount(fields[1])
     try:
@@ -2474,15 +2779,45 @@ async def create_good_tg(message: Message):
         await message.reply(localized("create_good_bad", lang))
         return
     emoji = fields[3].split()[0][:16] if len(fields) > 3 and fields[3].split() else ""
-    gcode = db.create_good(bank["code"], name, base, energy_cost, emoji)
+    gcode = db.create_good(bank["code"], name, base, energy_cost, emoji,
+                           owner=owner, category=cat)
     await message.reply(localized("create_good_created", lang, name=name, code=gcode,
                                   value=economy.format_money(base, bank),
                                   energy=economy.format_energy(energy_cost), bank=bank["code"]))
+    if cat:
+        await message.answer(localized("create_good_category_note", lang,
+                                       category=category_label(cat, lang)))
+
+def _fmt_duration(seconds):
+    seconds = max(int(seconds), 0)
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+def _fmt_eta(seconds):
+    """mm:ss for short waits, h:mm:ss once a shipment runs into hours."""
+    seconds = max(int(seconds), 0)
+    if seconds >= 3600:
+        return f"{seconds // 3600}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+def _resolve_production_target_tg(message, enterprise_query):
+    """(owner, server, error_key) of a production request — Telegram mirror."""
+    if enterprise_query:
+        ent = db.find_enterprise(enterprise_query)
+        if not ent:
+            return None, None, "enterprise_not_found"
+        if not db.is_enterprise_worker(ent["code"], "telegram", message.from_user.id):
+            return None, None, "ent_not_worker"
+        return db.enterprise_owner(ent["code"]), (ent["platform"], ent["server_id"]), None
+    owner = db.canonical_user("telegram", message.from_user.id)
+    server = ("telegram", str(message.chat.id)) \
+        if message.chat.type in GROUP_CHAT_TYPES else (None, None)
+    return owner, server, None
 
 @router.message(Command("craft"))
 async def craft_tg(message: Message):
+    """/craft <good_code> [enterprise] — start a timed production run."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 2:
@@ -2492,24 +2827,35 @@ async def craft_tg(message: Message):
     if not good:
         await message.reply(localized("good_not_found", lang))
         return
-    owner = db.canonical_user("telegram", message.from_user.id)
-    status, info = economy.craft(owner, good)
+    owner, server, err = _resolve_production_target_tg(
+        message, parts[2] if len(parts) > 2 else None)
+    if err:
+        await message.reply(localized(err, lang))
+        return
+    worker = db.canonical_user("telegram", message.from_user.id)
+    notify = ("telegram", _chat_key(message))
+    status, info = economy.start_production(
+        worker, good, owner, server, notify, lang,
+        starter_display=_tg_user_label(message.from_user))
+    if status == "busy":
+        await message.reply(localized("production_busy", lang,
+                                      time=_fmt_duration(info["finish_at"] - int(time.time()))))
+        return
     if status == "no_energy":
         await message.reply(localized("craft_no_energy", lang,
                                       cost=economy.format_energy(info["cost"]),
                                       have=economy.format_energy(info["have"])))
         return
-    bank = db.get_bank(good["bank_code"])
     emoji = f" {good['emoji']}" if good["emoji"] else ""
-    await message.reply(localized("craft_done", lang, name=good["name"], emoji=emoji,
-                                  cost=economy.format_energy(info["cost"]),
-                                  value=economy.format_money(info["value"], bank),
-                                  level=info["level"]))
+    await message.reply(localized("production_started", lang,
+                                  name=good_display_name(good, lang), emoji=emoji,
+                                  qty=info["qty"], duration=_fmt_duration(info["duration"]),
+                                  cost=economy.format_energy(info["cost"])))
 
 @router.message(Command("inventory"))
 async def inventory_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     owner = db.canonical_user("telegram", message.from_user.id)
     inv = db.get_inventory(owner)
@@ -2523,15 +2869,17 @@ async def inventory_tg(message: Message):
         bank = db.get_bank(row["bank_code"])
         val = economy.format_money(economy.unit_value(good, m), bank) if good and bank else "—"
         emoji = f"{row['emoji']} " if row["emoji"] else ""
-        lines.append(escape_html(localized("inventory_line", lang, emoji=emoji, name=row["name"],
-                                           code=row["good_code"], qty=row["qty"], value=val,
-                                           level=economy.mastery_level(m))))
+        lines.append(escape_html(localized(
+            "inventory_line", lang, emoji=emoji,
+            name=good_display_name(good, lang) if good else row["name"],
+            code=row["good_code"], qty=row["qty"], value=val,
+            level=economy.mastery_level(m))))
     await message.reply("\n".join(lines), parse_mode="HTML")
 
 @router.message(Command("sell"))
 async def sell_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 2:
@@ -2547,6 +2895,10 @@ async def sell_tg(message: Message):
     if len(parts) > 2 and parts[2].isdigit() and int(parts[2]) > 0:
         want = int(parts[2])
     status, info = economy.sell(owner, good, want)
+    if status == "not_sellable":
+        await message.reply(localized("sell_not_sellable", lang,
+                                      name=good_display_name(good, lang)))
+        return
     if status == "nothing":
         await message.reply(localized("sell_nothing", lang, name=good["name"]))
         return
@@ -2557,8 +2909,9 @@ async def sell_tg(message: Message):
 
 @router.message(Command("autocraft"))
 async def autocraft_tg(message: Message):
+    """/autocraft <good_code> <on|off> [enterprise] — 24/7 autoproduction."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
@@ -2568,15 +2921,22 @@ async def autocraft_tg(message: Message):
     if not good:
         await message.reply(localized("good_not_found", lang))
         return
-    owner = db.canonical_user("telegram", message.from_user.id)
+    owner, server, err = _resolve_production_target_tg(
+        message, parts[3] if len(parts) > 3 else None)
+    if err:
+        await message.reply(localized(err, lang))
+        return
+    worker = db.canonical_user("telegram", message.from_user.id)
     on = parts[2].strip().lower() in ("on", "enable", "1", "true", "yes")
-    db.set_autocraft(owner, good["code"], on)
-    await message.reply(localized("autocraft_on" if on else "autocraft_off", lang, name=good["name"]))
+    db.set_autocraft(owner, good["code"], on,
+                     starter=(worker[1], worker[2]), server=server)
+    await message.reply(localized("autocraft_on" if on else "autocraft_off", lang,
+                                  name=good_display_name(good, lang)))
 
 @router.message(Command("autosend"))
 async def autosend_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 4:
@@ -2593,8 +2953,11 @@ async def autosend_tg(message: Message):
     owner = db.canonical_user("telegram", message.from_user.id)
     target_arg = parts[3]
     party = db.get_party(target_arg.strip().upper())
+    ent = db.get_enterprise(target_arg.strip().upper())
     if party:
         tgt, tname = db.party_owner(party["code"]), f"{party['name']} [{party['code']}]"
+    elif ent:
+        tgt, tname = db.enterprise_owner(ent["code"]), f"{ent['name']} [{ent['code']}]"
     else:
         tid = await _resolve_tg_target(message, target_arg)
         if tid is None:
@@ -2613,7 +2976,7 @@ async def autosend_tg(message: Message):
 @router.message(Command("set_profession", "set-profession"))
 async def set_profession_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
@@ -2639,7 +3002,7 @@ async def set_profession_tg(message: Message):
 @router.message(Command("fine"))
 async def fine_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     bank = await _resolve_led_bank_tg(message, lang)
     if bank is None:
@@ -2676,7 +3039,7 @@ async def fine_tg(message: Message):
 @router.message(Command("treaty"))
 async def treaty_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 2:
@@ -2704,7 +3067,7 @@ async def treaty_tg(message: Message):
 @router.message(Command("set_rate", "set-rate"))
 async def set_rate_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
@@ -2739,7 +3102,7 @@ async def set_rate_tg(message: Message):
 @router.message(Command("convert"))
 async def convert_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 4:
@@ -2799,7 +3162,7 @@ async def rates_tg(message: Message):
 @router.message(Command("set_wage", "set-wage"))
 async def set_wage_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
@@ -2827,7 +3190,7 @@ async def set_wage_tg(message: Message):
 @router.message(Command("party_dues", "party-dues"))
 async def party_dues_tg(message: Message):
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not await _require_verified_tg(message, lang):
+    if not message.from_user:
         return
     parts = (message.text or "").split()
     if len(parts) < 3:
@@ -2855,6 +3218,1108 @@ async def party_dues_tg(message: Message):
     await message.reply(localized("dues_done", lang, name=party["name"],
                                   amount=economy.format_money(minor, bank)))
 
+_CHAT_KEY_ARG_RE = re.compile(r"^-?\d{5,}(:\d+)?$")
+_TIME_ARG_RE = re.compile(r"^\d{1,2}:\d{2}$")
+
+def _classify_channel_args(parts):
+    """Sort /setlogs and /settasks tokens by shape: a long number is the chat,
+    HH:MM the time, a signed offset the timezone, the rest the weekday."""
+    chat = wd = tm = tz = None
+    off = False
+    for p in parts:
+        s = p.strip()
+        if not s:
+            continue
+        low = s.lower()
+        if low in ("off", "remove", "disable"):
+            off = True
+        elif chat is None and _CHAT_KEY_ARG_RE.match(s):
+            chat = s
+        elif tm is None and _TIME_ARG_RE.match(s):
+            tm = s
+        elif tz is None and (s[0] in "+-" or low.startswith(("utc", "gmt"))):
+            tz = s
+        elif wd is None:
+            wd = s
+    return chat, wd, tm, tz, off
+
+async def _set_channel_tg(message, kind):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    if message.chat.type not in GROUP_CHAT_TYPES:
+        await message.reply(localized("group_only", lang))
+        return
+    if not (is_admin("telegram", message.from_user.id)
+            or await is_server_admin(message.chat.id, message.from_user.id)):
+        await message.reply(localized("no_permission", lang))
+        return
+    server_id = str(message.chat.id)
+    if not db.is_setup(server_id):
+        await message.reply(localized("chat_not_setup", lang))
+        return
+    parts = (message.text or "").split()[1:]
+    chat_arg, wd_arg, time_arg, tz_arg, off = _classify_channel_args(parts)
+    if off:
+        db.remove_chat_channel("telegram", server_id, kind)
+        await message.reply(localized(f"set{kind}_removed", lang))
+        return
+    if kind == "tasks" and wd_arg is not None:
+        await message.reply(localized("setchannel_bad_time", lang))
+        return
+    if chat_arg:
+        chat_id_part = chat_arg.split(":", 1)[0]
+        try:
+            await bot.get_chat(int(chat_id_part))
+        except Exception:
+            await message.reply(localized("setchannel_bad_channel", lang))
+            return
+        channel_key = chat_arg if ":" in chat_arg else f"{chat_arg}:0"
+    else:
+        channel_key = _chat_key(message)
+    wd = None
+    if wd_arg is not None:
+        try:
+            wd = parse_weekday(wd_arg)
+        except ValueError:
+            await message.reply(localized("setchannel_bad_weekday", lang))
+            return
+    hour = minute = None
+    if time_arg is not None:
+        try:
+            hour, minute = parse_founday_time(time_arg)
+        except ValueError:
+            await message.reply(localized("setchannel_bad_time", lang))
+            return
+    offset = None
+    if tz_arg is not None:
+        try:
+            offset = parse_tz_offset(tz_arg)
+        except ValueError:
+            await message.reply(localized("setchannel_bad_tz", lang))
+            return
+    db.set_chat_channel("telegram", server_id, kind, channel_key,
+                        weekday=wd, hour=hour, minute=minute, tz_offset=offset)
+    row = db.get_chat_channel("telegram", server_id, kind)
+    when = f"{row['hour']:02d}:{row['minute']:02d}"
+    tz_disp = format_tz_offset(row["tz_offset"])
+    if kind == "logs":
+        schedule = localized("setlogs_schedule", lang,
+                             weekday=weekday_name(row["weekday"], lang),
+                             time=when, tz=tz_disp)
+    else:
+        schedule = localized("settasks_schedule", lang, time=when, tz=tz_disp)
+    await message.reply(localized(f"set{kind}_done", lang, channel=channel_key,
+                                  schedule=schedule))
+
+@router.message(Command("setlogs"))
+async def setlogs_tg(message: Message):
+    await _set_channel_tg(message, "logs")
+
+@router.message(Command("settasks"))
+async def settasks_tg(message: Message):
+    await _set_channel_tg(message, "tasks")
+
+def _ent_line_tg(ent):
+    return f"{ent['name']} [{ent['code']}]"
+
+async def _resolve_led_enterprise_tg(message, lang, query=None):
+    if query:
+        ent = db.find_enterprise(query)
+        if not ent:
+            await message.reply(localized("enterprise_not_found", lang))
+            return None
+        if not (db.is_enterprise_leader(ent["code"], "telegram", message.from_user.id)
+                or is_admin("telegram", message.from_user.id)):
+            await message.reply(localized("ent_not_leader", lang))
+            return None
+        return ent
+    ents = db.user_led_enterprises("telegram", message.from_user.id)
+    if not ents:
+        await message.reply(localized("ent_none_led", lang))
+        return None
+    if len(ents) == 1:
+        return ents[0]
+    return await _numbered_choice_tg(message, lang, localized("ent_choose", lang),
+                                     ents, _ent_line_tg)
+
+@router.message(Command("add_enterprise", "add-enterprise"))
+async def add_enterprise_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    if message.chat.type not in GROUP_CHAT_TYPES:
+        await message.reply(localized("group_only", lang))
+        return
+    if not db.is_setup(str(message.chat.id)):
+        await message.reply(localized("chat_not_setup", lang))
+        return
+    if not rate_limit_ok(f"addent|telegram|{message.from_user.id}", 3, 86400):
+        await message.reply(localized("rate_limited", lang))
+        return
+    m = await _dialog_text_tg(message, lang, localized("add_ent_ask_name", lang))
+    if m is None:
+        return
+    name = clean_display_name(m.text or "", max_len=60)
+    code = await _dialog_text_tg(message, lang, localized("add_ent_ask_code", lang),
+                                 validator=_party_code_validator,
+                                 error_key="add_ent_bad_code")
+    if code is None:
+        return
+    m = await _dialog_text_tg(message, lang, localized("add_ent_ask_desc", lang))
+    if m is None:
+        return
+    description = (m.text or "").strip()
+    description = None if description == "-" else description[:500]
+    await message.reply(localized("add_ent_ask_logo", lang))
+    logo = logo_mime = None
+    for _ in range(5):
+        m = await _wait_user_message(message.chat.id, message.from_user.id)
+        if m is None:
+            await message.reply(localized("dialog_timeout", lang))
+            return
+        if (m.text or "").strip() == "-":
+            break
+        got = await _extract_logo_tg(m)
+        if got:
+            logo, logo_mime = got
+            break
+        await message.reply(localized("add_party_invalid_logo", lang))
+    db.create_enterprise(code, name, "telegram", message.chat.id,
+                         "telegram", message.from_user.id,
+                         _tg_user_label(message.from_user),
+                         description=description, logo=logo, logo_mime=logo_mime)
+    await message.reply(localized("add_ent_created", lang, name=name, code=code))
+    await send_service_event("enterprise_created", name=name, code=code,
+                             user=_tg_user_label(message.from_user))
+
+def _enterprise_card_tg(ent, lang):
+    lines = [f"<b>{escape_html(ent['name'])} [{escape_html(ent['code'])}]</b>"]
+    if ent["description"]:
+        lines.append(escape_html(ent["description"][:1000]))
+    lines.append(f"<b>{escape_html(localized('ent_field_server', lang))}:</b> "
+                 f"{escape_html(str(ent['server_id']))}")
+    leaders = db.get_enterprise_leaders(ent["code"])
+    shown = ", ".join(format_stored_user("telegram", l["platform"], l["user_id"],
+                                         l["display_name"]) for l in leaders) or "—"
+    lines.append(f"<b>{escape_html(localized('ent_field_leaders', lang))}:</b> {escape_html(shown)}")
+    members = db.get_enterprise_members(ent["code"])
+    if members:
+        mlines = []
+        for m in members[:15]:
+            pos = f" — {m['position']}" if m["position"] else ""
+            mlines.append(escape_html(format_stored_user(
+                "telegram", m["platform"], m["user_id"], m["display_name"]) + pos))
+        if len(members) > 15:
+            mlines.append(f"… +{len(members) - 15}")
+        lines.append(f"<b>{escape_html(localized('ent_field_workers', lang, count=len(members)))}:</b>\n"
+                     + "\n".join(mlines))
+    balances = []
+    for acc in db.get_owner_accounts(*db.enterprise_owner(ent["code"])):
+        bank = db.get_bank(acc["bank_code"])
+        if bank:
+            balances.append(escape_html(economy.format_money(acc["balance"], bank)))
+    if balances:
+        lines.append(f"<b>{escape_html(localized('ent_field_balance', lang))}:</b> "
+                     + ", ".join(balances))
+    period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
+    lines.append(f"<b>{escape_html(localized('ent_field_salary', lang))}:</b> "
+                 f"{escape_html(period)} · {escape_html(ent['salary_bank'] or '—')}")
+    positions = db.get_enterprise_positions(ent["code"])
+    if positions:
+        plines = []
+        for p in positions:
+            if p["percent"] is not None:
+                sal = localized("salary_percent", lang, percent=f"{p['percent']:g}")
+            else:
+                sal = economy.format_amount(p["amount"] or 0)
+            plines.append(escape_html(f"{p['position']}: {sal}"))
+        lines.append(f"<b>{escape_html(localized('ent_field_positions', lang))}:</b>\n"
+                     + "\n".join(plines))
+    inv = db.get_inventory(db.enterprise_owner(ent["code"]))
+    if inv:
+        glines = []
+        for row in inv[:8]:
+            emoji = f"{row['emoji']} " if row["emoji"] else ""
+            good = db.get_good(row["good_code"])
+            nm = good_display_name(good, lang) if good else row["name"]
+            glines.append(escape_html(f"{emoji}{nm} [{row['good_code']}] ×{row['qty']}"))
+        lines.append(f"<b>{escape_html(localized('ent_field_goods', lang))}:</b>\n"
+                     + "\n".join(glines))
+    transit = db.get_enterprise_shipments(ent["code"])
+    if transit:
+        lines.append(
+            f"<b>{escape_html(localized('ent_field_transit', lang, count=len(transit)))}:</b>\n"
+            + "\n".join(escape_html(l) for l in _transit_lines_tg(ent["code"], transit[:8], lang)))
+    return "\n".join(lines)
+
+def _transit_lines_tg(ent_code, shipments, lang):
+    """In-transit shipments seen from `ent_code`: outgoing (➡️) and incoming (⬅️)."""
+    now = int(time.time())
+    out = []
+    for s in shipments:
+        good = db.get_good(s["good_code"])
+        emoji = f"{good['emoji']} " if good and good["emoji"] else ""
+        name = good_display_name(good, lang) if good else s["good_code"]
+        eta = _fmt_eta(max(int(s["arrive_at"]) - now, 0))
+        if s["from_ent"] == ent_code:
+            other = db.get_enterprise(s["to_ent"])
+            key, label = "transit_line_out", (_ent_line_tg(other) if other else s["to_ent"])
+        else:
+            other = db.get_enterprise(s["from_ent"])
+            key, label = "transit_line_in", (_ent_line_tg(other) if other else s["from_ent"])
+        out.append(localized(key, lang, emoji=emoji, name=name, qty=s["qty"],
+                             other=label, eta=eta))
+    return out
+
+@router.message(Command("enterprise"))
+async def enterprise_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) < 2:
+        ents = db.get_server_enterprises("telegram", str(message.chat.id)) \
+            if message.chat.type in GROUP_CHAT_TYPES else []
+        if not ents:
+            await message.reply(localized("ent_list_empty", lang))
+            return
+        lines = [f"<b>{escape_html(localized('ent_list_header', lang))}</b>"]
+        lines += [escape_html(_ent_line_tg(e)) for e in ents]
+        await message.reply("\n".join(lines), parse_mode="HTML")
+        return
+    ent = db.find_enterprise(parts[1])
+    if not ent:
+        await message.reply(localized("enterprise_not_found", lang))
+        return
+    card = _enterprise_card_tg(ent, lang)
+    if ent["logo"]:
+        try:
+            photo = BufferedInputFile(ent["logo"], filename="logo.png")
+            await message.reply_photo(photo, caption=card[:1024], parse_mode="HTML")
+            return
+        except Exception:
+            pass
+    await message.reply(card, parse_mode="HTML")
+
+_EDIT_ENT_OPTIONS = ("name", "description", "logo", "add_leader", "transfer",
+                     "salary_bank", "salary_period", "delete")
+
+@router.message(Command("edit_enterprise", "edit-enterprise"))
+async def edit_enterprise_tg(message: Message):
+    """/edit-enterprise [option] [code] — numbered management menu."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    option = None
+    query = None
+    for p in parts:
+        if p.isdigit() and option is None:
+            option = int(p)
+        elif query is None:
+            query = p
+    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    if ent is None:
+        return
+    if option is None or not 1 <= option <= len(_EDIT_ENT_OPTIONS):
+        items = [localized(f"edit_ent_opt_{key}", lang) for key in _EDIT_ENT_OPTIONS]
+        chosen = await _numbered_choice_tg(
+            message, lang, localized("edit_ent_menu_header", lang, name=ent["name"]),
+            list(enumerate(items)), lambda it: it[1])
+        if chosen is None:
+            return
+        action = _EDIT_ENT_OPTIONS[chosen[0]]
+    else:
+        action = _EDIT_ENT_OPTIONS[option - 1]
+
+    if action == "name":
+        m = await _dialog_text_tg(message, lang, localized("edit_ent_ask_name", lang))
+        if m is None:
+            return
+        db.update_enterprise_field(ent["code"], "name",
+                                   clean_display_name(m.text or "", max_len=60))
+        await message.reply(localized("edit_ent_done", lang))
+    elif action == "description":
+        m = await _dialog_text_tg(message, lang, localized("edit_ent_ask_desc", lang))
+        if m is None:
+            return
+        text = (m.text or "").strip()
+        db.update_enterprise_field(ent["code"], "description",
+                                   None if text == "-" else text[:500])
+        await message.reply(localized("edit_ent_done", lang))
+    elif action == "logo":
+        logo = await _dialog_logo_tg(message, lang, localized("edit_ent_ask_logo", lang))
+        if logo is None:
+            return
+        db.update_enterprise_logo(ent["code"], logo[0], logo[1])
+        await message.reply(localized("edit_ent_done", lang))
+    elif action in ("add_leader", "transfer"):
+        m = await _dialog_text_tg(message, lang, localized("edit_ent_ask_leader", lang))
+        if m is None:
+            return
+        ref = _parse_tg_user_ref((m.text or "").strip())
+        if ref is None:
+            await message.reply(localized("edit_invalid_user", lang))
+            return
+        target_kind, target = ref
+        mention = f"@{target}" if target_kind == "username" else str(target)
+        transfer = action == "transfer"
+        token = _register_econ_consent({
+            "action": "ent_transfer" if transfer else "ent_leader",
+            "ent": ent["code"], "target_kind": target_kind, "target": target,
+            "lang": lang})
+        offer_key = "ent_transfer_offer" if transfer else "ent_leader_offer"
+        await message.answer(
+            localized(offer_key, lang, mention=mention, name=ent["name"], code=ent["code"]),
+            reply_markup=_econ_consent_keyboard(lang, token))
+    elif action == "salary_bank":
+        m = await _dialog_text_tg(message, lang, localized("edit_ent_ask_salary_bank", lang))
+        if m is None:
+            return
+        bank = db.get_bank((m.text or "").strip().upper())
+        if not bank:
+            await message.reply(localized("bank_not_found", lang))
+            return
+        db.update_enterprise_field(ent["code"], "salary_bank", bank["code"])
+        await message.reply(localized("edit_ent_done", lang))
+    elif action == "salary_period":
+        m = await _dialog_text_tg(message, lang, localized("edit_ent_ask_salary_period", lang))
+        if m is None:
+            return
+        period = (m.text or "").strip().lower()
+        if period not in ("weekly", "monthly"):
+            await message.reply(localized("edit_ent_bad_value", lang))
+            return
+        db.update_enterprise_field(ent["code"], "salary_period", period)
+        await message.reply(localized("edit_ent_done", lang))
+    elif action == "delete":
+        m = await _dialog_text_tg(message, lang,
+                                  localized("edit_ent_confirm_delete", lang, code=ent["code"]))
+        if m is None:
+            return
+        if (m.text or "").strip().upper() != ent["code"]:
+            await message.reply(localized("action_cancelled", lang))
+            return
+        db.delete_enterprise(ent["code"])
+        await message.reply(localized("edit_ent_deleted", lang, name=ent["name"]))
+        await send_service_event("enterprise_deleted", name=ent["name"], code=ent["code"],
+                                 user=_tg_user_label(message.from_user))
+
+@router.message(Command("ent_join", "ent-join"))
+async def ent_join_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) < 2:
+        await message.reply(localized("ent_join_usage", lang))
+        return
+    ent = db.find_enterprise(parts[1])
+    if not ent:
+        await message.reply(localized("enterprise_not_found", lang))
+        return
+    if db.is_enterprise_worker(ent["code"], "telegram", message.from_user.id):
+        await message.reply(localized("ent_join_already", lang))
+        return
+    display = _tg_user_label(message.from_user)
+    token = _register_econ_consent({
+        "action": "ent_join", "ent": ent["code"], "requester_id": message.from_user.id,
+        "requester_name": display, "lang": lang})
+    await message.answer(
+        localized("ent_join_request", lang, user=display, name=ent["name"], code=ent["code"]),
+        reply_markup=_econ_consent_keyboard(lang, token))
+
+@router.message(Command("ent_leave", "ent-leave"))
+async def ent_leave_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()
+    ents = db.user_member_enterprises("telegram", message.from_user.id)
+    if len(parts) > 1:
+        q = parts[1].strip().lower()
+        ents = [e for e in ents if e["code"].lower() == q or e["name"].lower() == q]
+    if not ents:
+        await message.reply(localized("ent_leave_none", lang))
+        return
+    ent = ents[0]
+    if len(ents) > 1:
+        ent = await _numbered_choice_tg(message, lang, localized("ent_choose", lang),
+                                        ents, _ent_line_tg)
+        if ent is None:
+            return
+    db.remove_enterprise_member(ent["code"], "telegram", message.from_user.id)
+    await message.reply(localized("ent_leave_done", lang, name=ent["name"]))
+
+@router.message(Command("ent_kick", "ent-kick"))
+async def ent_kick_tg(message: Message):
+    """/ent-kick <user> [code] — or reply to the worker with /ent-kick [code]."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_id = message.reply_to_message.from_user.id
+        query = parts[0] if parts else None
+    else:
+        if not parts:
+            await message.reply(localized("ent_kick_usage", lang))
+            return
+        target_id = await _resolve_tg_target(message, parts[0])
+        query = parts[1] if len(parts) > 1 else None
+    if target_id is None:
+        await message.reply(localized("edit_invalid_user", lang))
+        return
+    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    if ent is None:
+        return
+    if not db.remove_enterprise_member(ent["code"], "telegram", target_id):
+        await message.reply(localized("ent_kick_not_member", lang))
+        return
+    disp = await _quiz_target_label_tg(target_id)
+    await message.reply(localized("ent_kick_done", lang, user=escape_html(disp),
+                                  name=ent["name"]))
+
+def _salary_display(kind, value, lang):
+    if kind == "percent":
+        return localized("salary_percent", lang, percent=f"{value:g}")
+    return economy.format_amount(value)
+
+@router.message(Command("ent_position", "ent-position"))
+async def ent_position_tg(message: Message):
+    """/ent-position <name> | <salary> [| <enterprise>]"""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    body = (message.text or "").split(maxsplit=1)
+    fields = [p.strip() for p in body[1].split("|")] if len(body) > 1 else []
+    if len(fields) < 2:
+        await message.reply(localized("ent_position_usage", lang))
+        return
+    ent = await _resolve_led_enterprise_tg(message, lang,
+                                           fields[2] if len(fields) > 2 else None)
+    if ent is None:
+        return
+    parsed = economy.parse_salary(fields[1])
+    if parsed is None:
+        await message.reply(localized("bad_amount", lang))
+        return
+    kind, value = parsed
+    pos = clean_display_name(fields[0], max_len=40)
+    if kind == "clear":
+        db.set_position_salary(ent["code"], pos, None, None)
+        await message.reply(localized("ent_position_cleared", lang, position=pos))
+        return
+    db.set_position_salary(ent["code"], pos,
+                           value if kind == "amount" else None,
+                           value if kind == "percent" else None)
+    await message.reply(localized("ent_position_done", lang, position=pos,
+                                  salary=_salary_display(kind, value, lang)))
+
+@router.message(Command("ent_assign", "ent-assign"))
+async def ent_assign_tg(message: Message):
+    """/ent-assign <user> | <position> [| <enterprise>] — or a reply with
+    /ent-assign <position> [| <enterprise>]."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    body = (message.text or "").split(maxsplit=1)
+    fields = [p.strip() for p in body[1].split("|")] if len(body) > 1 else []
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_id = message.reply_to_message.from_user.id
+        pos_field = fields[0] if fields else None
+        query = fields[1] if len(fields) > 1 else None
+    else:
+        if len(fields) < 2:
+            await message.reply(localized("ent_assign_usage", lang))
+            return
+        target_id = await _resolve_tg_target(message, fields[0])
+        pos_field = fields[1]
+        query = fields[2] if len(fields) > 2 else None
+    if target_id is None:
+        await message.reply(localized("edit_invalid_user", lang))
+        return
+    if not pos_field:
+        await message.reply(localized("ent_assign_usage", lang))
+        return
+    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    if ent is None:
+        return
+    if not db.get_enterprise_member(ent["code"], "telegram", target_id):
+        await message.reply(localized("ent_kick_not_member", lang))
+        return
+    disp = await _quiz_target_label_tg(target_id)
+    pos = clean_display_name(pos_field, max_len=40)
+    if pos == "-":
+        db.set_member_position(ent["code"], "telegram", target_id, None)
+        await message.reply(localized("ent_assign_cleared", lang, user=escape_html(disp)))
+        return
+    db.set_member_position(ent["code"], "telegram", target_id, pos)
+    await message.reply(localized("ent_assign_done", lang, user=escape_html(disp),
+                                  position=pos))
+
+@router.message(Command("ent_salary", "ent-salary"))
+async def ent_salary_tg(message: Message):
+    """/ent-salary <user> <salary> [enterprise] — or a reply with
+    /ent-salary <salary> [enterprise]."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_id = message.reply_to_message.from_user.id
+        if not parts:
+            await message.reply(localized("ent_salary_usage", lang))
+            return
+        salary_s = parts[0]
+        query = parts[1] if len(parts) > 1 else None
+    else:
+        if len(parts) < 2:
+            await message.reply(localized("ent_salary_usage", lang))
+            return
+        target_id = await _resolve_tg_target(message, parts[0])
+        salary_s = parts[1]
+        query = parts[2] if len(parts) > 2 else None
+    if target_id is None:
+        await message.reply(localized("edit_invalid_user", lang))
+        return
+    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    if ent is None:
+        return
+    if not db.is_enterprise_worker(ent["code"], "telegram", target_id):
+        await message.reply(localized("ent_kick_not_member", lang))
+        return
+    parsed = economy.parse_salary(salary_s)
+    if parsed is None:
+        await message.reply(localized("bad_amount", lang))
+        return
+    kind, value = parsed
+    disp = await _quiz_target_label_tg(target_id)
+    if kind == "clear":
+        db.set_personal_salary(ent["code"], "telegram", target_id, None, None)
+        await message.reply(localized("ent_salary_cleared", lang, user=escape_html(disp)))
+        return
+    db.set_personal_salary(ent["code"], "telegram", target_id,
+                           value if kind == "amount" else None,
+                           value if kind == "percent" else None)
+    await message.reply(localized("ent_salary_done", lang, user=escape_html(disp),
+                                  salary=_salary_display(kind, value, lang)))
+
+@router.message(Command("ent_sell", "ent-sell"))
+async def ent_sell_tg(message: Message):
+    """/ent-sell <good_code> [qty] [enterprise]"""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if not parts:
+        await message.reply(localized("ent_sell_usage", lang))
+        return
+    good = db.get_good(parts[0].strip().upper())
+    if not good:
+        await message.reply(localized("good_not_found", lang))
+        return
+    qty = None
+    query = None
+    for p in parts[1:]:
+        if p.isdigit() and qty is None:
+            qty = int(p)
+        elif query is None:
+            query = p
+    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    if ent is None:
+        return
+    owner = db.enterprise_owner(ent["code"])
+    have = db.get_inventory_qty(owner, good["code"])
+    want = qty if (qty and qty > 0) else have
+    status, info = economy.sell(owner, good, want)
+    if status == "not_sellable":
+        await message.reply(localized("sell_not_sellable", lang,
+                                      name=good_display_name(good, lang)))
+        return
+    if status == "nothing":
+        await message.reply(localized("sell_nothing", lang, name=good["name"]))
+        return
+    bank = db.get_bank(good["bank_code"])
+    await message.reply(localized("sell_done", lang, qty=info["qty"], name=good["name"],
+                                  unit=economy.format_money(info["unit"], bank),
+                                  total=economy.format_money(info["total"], bank)))
+
+def _resolve_export_args_tg(target_query, price_s, currency, source):
+    """(target, price, bank, error_key_or_None) — Telegram mirror."""
+    target = db.find_enterprise(target_query)
+    if not target:
+        return None, None, None, "export_bad_target"
+    if source and target["code"] == source["code"]:
+        return None, None, None, "export_same"
+    price = 0
+    bank = None
+    if price_s:
+        price = economy.parse_amount(price_s)
+        if price is None:
+            return None, None, None, "bad_amount"
+        code = (currency or (source["salary_bank"] if source else None) or "").strip().upper()
+        bank = db.get_bank(code) if code else None
+        if not bank:
+            return None, None, None, "export_need_currency"
+    return target, price, bank, None
+
+@router.message(Command("export"))
+async def export_tg(message: Message):
+    """/export <good_code> <qty> <target_ent> [price] [currency] [your_ent]"""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if len(parts) < 3:
+        await message.reply(localized("export_usage", lang))
+        return
+    good = db.get_good(parts[0].strip().upper())
+    if not good:
+        await message.reply(localized("good_not_found", lang))
+        return
+    if not parts[1].isdigit() or int(parts[1]) <= 0:
+        await message.reply(localized("bad_amount", lang))
+        return
+    qty = int(parts[1])
+    source = await _resolve_led_enterprise_tg(message, lang,
+                                              parts[5] if len(parts) > 5 else None)
+    if source is None:
+        return
+    tgt, price, bank, err = _resolve_export_args_tg(
+        parts[2], parts[3] if len(parts) > 3 else None,
+        parts[4] if len(parts) > 4 else None, source)
+    if err:
+        await message.reply(localized(err, lang))
+        return
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    name = good_display_name(good, lang)
+    price_disp = economy.format_money(price, bank) if price else localized("export_free", lang)
+    token = _register_econ_consent({
+        "action": "export", "ent": tgt["code"], "from": source["code"],
+        "good": good["code"], "qty": qty, "price": price,
+        "bank": bank["code"] if bank else None,
+        "notify_platform": "telegram", "notify_key": _chat_key(message), "lang": lang})
+    await message.answer(
+        localized("export_offer", lang, source=_ent_line_tg(source), target=_ent_line_tg(tgt),
+                  qty=qty, emoji=emoji, name=name, price=price_disp),
+        reply_markup=_econ_consent_keyboard(lang, token))
+
+@router.message(Command("auto_export", "auto-export"))
+async def auto_export_tg(message: Message):
+    """/auto-export <good_code> <qty|off> <target_ent> [price] [currency] [your_ent]"""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if len(parts) < 3:
+        await message.reply(localized("auto_export_usage", lang))
+        return
+    good = db.get_good(parts[0].strip().upper())
+    if not good:
+        await message.reply(localized("good_not_found", lang))
+        return
+    source = await _resolve_led_enterprise_tg(message, lang,
+                                              parts[5] if len(parts) > 5 else None)
+    if source is None:
+        return
+    tgt = db.find_enterprise(parts[2])
+    if not tgt:
+        await message.reply(localized("export_bad_target", lang))
+        return
+    if parts[1].strip().lower() in ("off", "0", "stop"):
+        db.remove_auto_export(source["code"], tgt["code"], good["code"])
+        await message.reply(localized("auto_export_removed", lang,
+                                      name=good_display_name(good, lang),
+                                      target=_ent_line_tg(tgt)))
+        return
+    if not parts[1].isdigit() or int(parts[1]) <= 0:
+        await message.reply(localized("bad_amount", lang))
+        return
+    qty = int(parts[1])
+    tgt, price, bank, err = _resolve_export_args_tg(
+        parts[2], parts[3] if len(parts) > 3 else None,
+        parts[4] if len(parts) > 4 else None, source)
+    if err:
+        await message.reply(localized(err, lang))
+        return
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    name = good_display_name(good, lang)
+    price_disp = economy.format_money(price, bank) if price else localized("export_free", lang)
+    token = _register_econ_consent({
+        "action": "auto_export", "ent": tgt["code"], "from": source["code"],
+        "good": good["code"], "qty": qty, "price": price,
+        "bank": bank["code"] if bank else None,
+        "created_by": message.from_user.id, "lang": lang})
+    await message.answer(
+        localized("auto_export_offer", lang, source=_ent_line_tg(source),
+                  target=_ent_line_tg(tgt), qty=qty, emoji=emoji, name=name, price=price_disp),
+        reply_markup=_econ_consent_keyboard(lang, token))
+
+@router.message(Command("transit"))
+async def transit_tg(message: Message):
+    """/transit [code] — an enterprise's goods in transit."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) > 1:
+        ent = db.find_enterprise(parts[1])
+        if not ent:
+            await message.reply(localized("enterprise_not_found", lang))
+            return
+    else:
+        ent = await _resolve_led_enterprise_tg(message, lang)
+        if ent is None:
+            return
+    shipments = db.get_enterprise_shipments(ent["code"])
+    if not shipments:
+        await message.reply(localized("transit_empty", lang, name=ent["name"]))
+        return
+    header = localized("transit_title", lang, name=ent["name"], code=ent["code"])
+    body = "\n".join(escape_html(l) for l in _transit_lines_tg(ent["code"], shipments, lang))
+    await message.reply(f"<b>{escape_html(header)}</b>\n{body}"[:4000], parse_mode="HTML")
+
+@router.message(Command("give_good", "give-good"))
+async def give_good_tg(message: Message):
+    """/give-good <user> <good_code> [qty] — or a reply with
+    /give-good <good_code> [qty]."""
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    parts = (message.text or "").split()[1:]
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_id = message.reply_to_message.from_user.id
+        if not parts:
+            await message.reply(localized("give_good_usage", lang))
+            return
+        good_s = parts[0]
+        qty_s = parts[1] if len(parts) > 1 else "1"
+    else:
+        if len(parts) < 2:
+            await message.reply(localized("give_good_usage", lang))
+            return
+        target_id = await _resolve_tg_target(message, parts[0])
+        good_s = parts[1]
+        qty_s = parts[2] if len(parts) > 2 else "1"
+    if target_id is None:
+        await message.reply(localized("edit_invalid_user", lang))
+        return
+    good = db.get_good(good_s.strip().upper())
+    if not good:
+        await message.reply(localized("good_not_found", lang))
+        return
+    if not qty_s.isdigit() or int(qty_s) <= 0:
+        await message.reply(localized("bad_amount", lang))
+        return
+    qty = int(qty_s)
+    owner = db.canonical_user("telegram", message.from_user.id)
+    target = db.canonical_user("telegram", target_id)
+    if target == owner:
+        await message.reply(localized("give_self", lang))
+        return
+    have = db.get_inventory_qty(owner, good["code"])
+    if have < qty:
+        await message.reply(localized("give_no_goods", lang, have=have))
+        return
+    db.add_inventory(owner, good["code"], -qty)
+    db.add_inventory(target, good["code"], qty)
+    disp = await _quiz_target_label_tg(target_id)
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    await message.reply(localized("give_done", lang, qty=qty, emoji=emoji,
+                                  name=good_display_name(good, lang),
+                                  user=escape_html(disp)))
+
+@router.message(Command("goods"))
+async def goods_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    lines = [f"<b>{escape_html(localized('goods_header', lang))}</b>"]
+    for code, cat, emoji, _name in db.BASE_GOODS:
+        good = db.get_good(code)
+        if not good:
+            continue
+        lines.append(escape_html(localized(
+            "goods_line_base", lang, emoji=emoji, name=good_display_name(good, lang),
+            code=code, energy=economy.format_energy(good["energy_cost"]))))
+    chat = db.get_chat(str(message.chat.id)) \
+        if message.chat.type in GROUP_CHAT_TYPES else None
+    if chat:
+        for bank in db.get_banks_in_union(chat["union_code"]):
+            for good in db.get_bank_goods(bank["code"]):
+                if db.is_base_good(good["code"]):
+                    continue
+                emoji = f"{good['emoji']} " if good["emoji"] else ""
+                cat_disp = category_label(good["category"], lang) if good["category"] else "—"
+                lines.append(escape_html(localized(
+                    "goods_line", lang, emoji=emoji, name=good["name"], code=good["code"],
+                    category=cat_disp,
+                    value=economy.format_money(good["base_value"], bank),
+                    energy=economy.format_energy(good["energy_cost"]))))
+    await message.reply("\n".join(lines)[:4000], parse_mode="HTML")
+
+# ── Olympiad ────────────────────────────────────────────────────────────────
+# The dialogs themselves live in olympiad.py and are shared with the Discord
+# bot; here are the Telegram permission gates and the dialog object they drive.
+# Telegram has no published command list to hide anything from, so the gating
+# people see is /help (which omits the commands while no Olympiad runs) and the
+# refusal below. The votes still travel to the contest's Discord chats.
+
+_pending_oly_buttons = {}
+
+def _new_oly_token(user_id, lang):
+    token = secrets.token_hex(8)
+    fut = asyncio.get_running_loop().create_future()
+    _pending_oly_buttons[token] = {"future": fut, "user_id": user_id, "lang": lang,
+                                   "created": time.time()}
+    return token, fut
+
+def _oly_keyboard(token, buttons, per_row=1):
+    rows, current = [], []
+    for label, value in buttons:
+        current.append(InlineKeyboardButton(text=label,
+                                            callback_data=f"ob:{token}:{value}"))
+        if len(current) == per_row:
+            rows.append(current)
+            current = []
+    if current:
+        rows.append(current)
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+@router.callback_query(lambda c: c.data and c.data.startswith("ob:"))
+async def handle_olympiad_button(query: CallbackQuery):
+    try:
+        _, token, value = query.data.split(":", 2)
+    except Exception:
+        await query.answer()
+        return
+    pend = _pending_oly_buttons.get(token)
+    if not pend or time.time() - pend["created"] > DIALOG_TIMEOUT:
+        _pending_oly_buttons.pop(token, None)
+        await query.answer()
+        try:
+            await query.message.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+        return
+    if not query.from_user or query.from_user.id != pend["user_id"]:
+        await query.answer(localized("consent_not_yours", pend["lang"]), show_alert=True)
+        return
+    _pending_oly_buttons.pop(token, None)
+    await query.answer()
+    try:
+        await query.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    if not pend["future"].done():
+        pend["future"].set_result(value)
+
+async def _await_oly_button(fut, timeout=DIALOG_TIMEOUT):
+    try:
+        return await asyncio.wait_for(fut, timeout)
+    except (asyncio.TimeoutError, asyncio.CancelledError):
+        return None
+
+async def _wait_reply_or_button_tg(chat_id, user_id, token, fut, timeout=DIALOG_TIMEOUT):
+    """Race the caller's next message against a press on the inline keyboard.
+    Returns ('text', message), ('button', value) or ('timeout', None)."""
+    key = (chat_id, user_id)
+    old = _pending_inputs.pop(key, None)
+    if old and not old.done():
+        old.cancel()
+    msg_fut = asyncio.get_running_loop().create_future()
+    _pending_inputs[key] = msg_fut
+    try:
+        done, _pending = await asyncio.wait({msg_fut, fut}, timeout=timeout,
+                                            return_when=asyncio.FIRST_COMPLETED)
+        if fut in done:
+            return "button", fut.result()
+        if msg_fut in done:
+            try:
+                return "text", msg_fut.result()
+            except Exception:
+                return "timeout", None
+        return "timeout", None
+    finally:
+        if _pending_inputs.get(key) is msg_fut:
+            _pending_inputs.pop(key, None)
+        if not msg_fut.done():
+            msg_fut.cancel()
+        _pending_oly_buttons.pop(token, None)
+
+class _OlyDialogTg:
+    """The Telegram half of an Olympiad conversation: the same four coroutines
+    olympiad.py expects, so the dialogs themselves are written only once."""
+
+    def __init__(self, message: Message, lang):
+        self.message = message
+        self.lang = lang
+        self.chat_id = message.chat.id
+        self.user_id = message.from_user.id
+        self.author = _tg_user_label(message.from_user)
+
+    async def send(self, text, reply_markup=None):
+        return await self.message.answer(text[:4000], reply_markup=reply_markup)
+
+    async def ask(self, prompt, *, validator=None, error_text=None, attempts=5,
+                  buttons=()):
+        """Ask `prompt` and wait for an answer. Returns ('text', value),
+        ('button', value), or None when stopped or timed out."""
+        pending = prompt
+        for _ in range(attempts):
+            token, fut = _new_oly_token(self.user_id, self.lang)
+            row = list(buttons) + [(olympiad.text("stop_button", self.lang), "stop")]
+            await self.send(pending, reply_markup=_oly_keyboard(token, row,
+                                                                per_row=len(row)))
+            kind, payload = await _wait_reply_or_button_tg(self.chat_id, self.user_id,
+                                                           token, fut)
+            if kind == "button":
+                if payload == "stop":
+                    await self.send(olympiad.text("dialog_stopped", self.lang))
+                    return None
+                return "button", payload
+            if kind != "text":
+                await self.send(localized("dialog_timeout", self.lang))
+                return None
+            value = (payload.text or payload.caption or "").strip()
+            if validator is None:
+                return "text", value
+            ok = validator(value)
+            if ok is not None:
+                return "text", ok
+            pending = error_text or localized("choice_invalid", self.lang)
+        await self.send(localized("dialog_timeout", self.lang))
+        return None
+
+    async def choose(self, header, items, render, *, extra=None):
+        lines = [header] + [f"{i + 1}. {render(it)}" for i, it in enumerate(items)]
+        if extra:
+            lines.append(f"{len(items) + 1}. {extra}")
+        total = len(items) + (1 if extra else 0)
+
+        def _validator(value):
+            v = value.strip().rstrip(".")
+            return int(v) if v.isdigit() and 1 <= int(v) <= total else None
+
+        answer = await self.ask("\n".join(lines), validator=_validator,
+                                error_text=localized("choice_invalid", self.lang))
+        if not answer:
+            return None
+        number = answer[1]
+        if extra and number == total:
+            return "__extra__"
+        return items[number - 1]
+
+    async def choose_numbers(self, header, items, render, limit):
+        lines = [header, ""] + [f"{i + 1}. {render(it)}" for i, it in enumerate(items)]
+        answer = await self.ask(
+            "\n".join(lines),
+            validator=lambda v: olympiad.parse_numbers(v, len(items), limit),
+            error_text=olympiad.text("candidates_invalid", self.lang, max=limit))
+        return answer[1] if answer else None
+
+@router.message(Command("setolympiad"))
+async def setolympiad_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user or not is_admin("telegram", message.from_user.id):
+        await message.reply(localized("no_permission", lang))
+        return
+
+    parts = (message.text or "").split()
+    if len(parts) == 2 and parts[1].strip().lower() in ("off", "stop", "cancel"):
+        if not db.get_olympiad():
+            await message.reply(olympiad.text("setolympiad_off_none", lang))
+            return
+        db.clear_olympiad_data()
+        db.clear_olympiad()
+        await message.reply(olympiad.text("setolympiad_off", lang))
+        await sync_olympiad_commands()
+        return
+
+    if len(parts) != 3:
+        await message.reply(olympiad.text("setolympiad_usage", lang))
+        return
+    try:
+        start_ts, end_ts = olympiad.parse_period(parts[1], parts[2])
+    except ValueError as e:
+        key = "setolympiad_bad_order" if str(e) == "bad_order" else "setolympiad_bad_date"
+        await message.reply(olympiad.text(key, lang))
+        return
+
+    existed = db.get_olympiad() is not None
+    db.set_olympiad(start_ts, end_ts)
+    await message.reply(olympiad.text(
+        "setolympiad_updated" if existed else "setolympiad_set", lang,
+        start=olympiad.format_date(start_ts), end=olympiad.format_date(end_ts)))
+    await sync_olympiad_commands()
+
+async def _olympiad_admin_gate_tg(message: Message, lang):
+    """The two setup commands are for Bot Admins, for as long as the Olympiad
+    runs."""
+    if not message.from_user or not is_admin("telegram", message.from_user.id):
+        await message.reply(localized("no_permission", lang))
+        return False
+    if not olympiad.is_open():
+        await message.reply(olympiad.text("not_active", lang))
+        return False
+    return True
+
+@router.message(Command("setcontest"))
+async def setcontest_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not await _olympiad_admin_gate_tg(message, lang):
+        return
+    await olympiad.run_setcontest(_OlyDialogTg(message, lang), lang)
+
+@router.message(Command("editcontest"))
+async def editcontest_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not await _olympiad_admin_gate_tg(message, lang):
+        return
+    await olympiad.run_editcontest(_OlyDialogTg(message, lang), lang)
+
+async def _ask_dm_language_tg(dialog, message):
+    """With no language chosen for this private chat yet, ask in English and
+    offer a button per localization. The answer is remembered for the chat (and
+    dropped again after a year). Returns the language code, or None."""
+    token, fut = _new_oly_token(dialog.user_id, DEFAULT_LANG)
+    keyboard = _oly_keyboard(token, [(language_name(c), c) for c in available_locales()],
+                             per_row=2)
+    await dialog.send(olympiad.text("ask_lang", DEFAULT_LANG), reply_markup=keyboard)
+    code = await _await_oly_button(fut)
+    _pending_oly_buttons.pop(token, None)
+    if not code:
+        return None
+    set_chat_lang(_chat_key(message), code, is_dm=True)
+    dialog.lang = code
+    await dialog.send(olympiad.text("lang_chosen", code))
+    return code
+
+@router.message(Command("olympiad"))
+async def olympiad_tg(message: Message):
+    lang = get_chat_lang(_chat_key(message))
+    if not message.from_user:
+        return
+    if message.chat.type != "private":
+        await message.reply(olympiad.text("dm_only", lang))
+        return
+    period = olympiad.period()
+    if not period:
+        await message.reply(olympiad.text("not_active", lang))
+        return
+    if not olympiad.is_voting_open():
+        await message.reply(olympiad.text("voting_not_started", lang,
+                                          start=olympiad.format_date(period[0])))
+        return
+
+    dialog = _OlyDialogTg(message, lang)
+    if db.get_chat_lang(_chat_key(message)) is None:
+        code = await _ask_dm_language_tg(dialog, message)
+        if code is None:
+            return
+        lang = code
+    await olympiad.run_vote(dialog, lang, "telegram", message.from_user.id,
+                            _tg_user_label(message.from_user), "Telegram",
+                            post_olympiad_vote)
+
 @router.message()
 async def _dialog_catchall(message: Message):
     if not message.from_user:
@@ -2870,8 +4335,9 @@ async def _dialog_catchall(message: Message):
 def _try_earn_tg(message: Message):
     """Message earning on Telegram. Runs from the catch-all (the last handler),
     so it sees ordinary group chatter without disturbing command handlers or the
-    wait_for dialogs. Earns only in /set-earn earning topics, for verified
-    humans, subject to the same anti-abuse gate as Discord."""
+    wait_for dialogs. Earns only in /set-earn earning topics, for humans (the
+    economy needs no verification, so bots are skipped explicitly, as on
+    Discord), subject to the same anti-abuse gate as Discord."""
     try:
         if message.chat.type not in GROUP_CHAT_TYPES:
             return
@@ -2882,7 +4348,7 @@ def _try_earn_tg(message: Message):
         earn = db.get_earn_channel("telegram", chan_key)
         if not earn:
             return
-        if not is_verified("telegram", message.from_user.id):
+        if not message.from_user or message.from_user.is_bot:
             return
         economy.earn_from_message("telegram", message.from_user.id,
                                   _tg_user_label(message.from_user),
