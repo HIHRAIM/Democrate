@@ -192,6 +192,8 @@ All other commands — `/setup`, `/add-unia`, `/allow-parties`, `/party`, `/govt
 
 A **union** is a confederation of wiki communities created with `/add-unia` (code + names in any subset of the six languages). `/setup` binds a Discord server or Telegram group to a union and sets its language. Most public commands only work in set-up chats. When the bot leaves a chat, the binding and the chat's language settings are removed.
 
+A chat that is never bound is not kept: see [the seven-day setup deadline](#the-seven-day-setup-deadline).
+
 ### Verification
 
 To use the Fandom-activity commands (parties, `/find-with`/`/find-without`), users verify once, globally. The economy needs no verification — anyone in a set-up chat earns, produces, trades and works:
@@ -353,9 +355,23 @@ Every reply exists in six languages (en, ru, uk, pl, es, pt) with per-key verifi
 
 On Discord the economy speaks entirely in **embeds** (default color `#245590`); Telegram uses HTML formatting. Discord users mentioned in Telegram replies are shown by their stored nickname, never as an unresolvable ping.
 
+### The seven-day setup deadline
+
+The bot is invited far more often than it is put to use, so a server or group it has just been added to has **seven days** to be bound to a union with `/setup`. If that never happens, the bot leaves on its own and says so in `SERVICE_CHATS`, where it also announces every chat it is added to.
+
+Nothing is said in the community itself, neither on arrival nor on the way out. `/setup` is a bot-admin command, so the people who could act on a warning are the operators — and `SERVICE_CHATS` is exactly where they read.
+
+The rule is deliberately narrow:
+
+- **It never touches a community the bot was already in.** The deadline counts from the join, and the moment the rule came into force is recorded once, on the first start of the version that introduced it; everything that joined before that instant is out of reach for good.
+- **It fires at most once per community.** The first daily sweep that finds a chat bound to a union settles it permanently.
+- **It skips the deployment's own chats.** A server or group holding any chat named in `config.py` — `SERVICE_CHATS`, `BACKUP_CHATS`, `SUPPORT_CHATS` — is never left.
+
+On Discord the week is measured from Discord's own record of when the bot joined, so a restart or a missed event cannot shorten it. Telegram publishes no such timestamp, so there the clock starts from the update that adds the bot to the group, and a group whose arrival the bot never saw is never examined. Leaving is not a deletion: a community that invites the bot back starts a fresh seven days.
+
 ### Service events and automatic backups
 
-Start/stop notices and administrative events (`/setup`, `/add-unia`, `/allow-parties`, party and bank creation/deletion) go to the configured `SERVICE_CHATS`. Every 12 hours (and on `/backup`) the database is sent to `BACKUP_CHATS` — always encrypted with an authenticated BLAKE2 keystream; the key never leaves the operator's `BACKUP_KEY` environment variable. `restore_backup.py` decrypts a backup file back into `dem.db`.
+Start/stop notices, administrative events (`/setup`, `/add-unia`, `/allow-parties`, party and bank creation/deletion) and the chats the bot is added to or leaves on the setup deadline go to the configured `SERVICE_CHATS`. Every 12 hours (and on `/backup`) the database is sent to `BACKUP_CHATS` — always encrypted with an authenticated BLAKE2 keystream; the key never leaves the operator's `BACKUP_KEY` environment variable. `restore_backup.py` decrypts a backup file back into `dem.db`.
 
 ---
 

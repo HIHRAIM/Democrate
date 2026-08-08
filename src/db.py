@@ -251,6 +251,23 @@ def init():
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_wiki_foundays_guild_url
         ON wiki_foundays (guild_id, url);
+
+    -- The seven-day setup deadline (setup_deadline.py). One row per server or
+    -- group the bot was added to AFTER the rule came into force — everything
+    -- it was already sitting in has no row and is never examined. joined_at
+    -- is what the deadline counts from; on Discord it is only a record, since
+    -- Guild.me.joined_at is authoritative there and survives a restart, while
+    -- Telegram offers nothing of the kind and the my_chat_member update that
+    -- adds the bot is the only moment the time can be learnt. settled_at is
+    -- set the first time the chat is found bound to a union with /setup, and
+    -- is what makes the check one-shot: a chat set up once is never left.
+    CREATE TABLE IF NOT EXISTS setup_deadlines (
+        platform TEXT NOT NULL,
+        server_id TEXT NOT NULL,
+        joined_at INTEGER,
+        settled_at INTEGER,
+        PRIMARY KEY (platform, server_id)
+    );
     """)
     conn.commit()
     _migrate_core()
@@ -275,6 +292,73 @@ def set_setting(key, value):
         "INSERT INTO bot_settings (key, value) VALUES (?,?)"
         " ON CONFLICT(key) DO UPDATE SET value=excluded.value",
         (key, str(value))
+    )
+    conn.commit()
+
+def rule_since():
+    """The unix time the seven-day setup deadline came into force, planted on
+    first call and stable ever after.
+
+    Every server and group the bot was already in joined before that instant,
+    and the sweep leaves those alone — which is what keeps a deployment from
+    walking out of its own communities the day the rule ships."""
+    value = get_setting("setup_rule_since")
+    if value:
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    now = int(time.time())
+    set_setting("setup_rule_since", now)
+    return now
+
+def record_join(platform, prefix, joined_at=None):
+    """Remember that the bot has just been added to a server or group.
+
+    Does nothing when a row already exists: a Telegram promotion that follows
+    the join, or a Discord GUILD_CREATE the library replays, must not restart
+    a deadline — least of all a settled one."""
+    cur.execute(
+        "INSERT OR IGNORE INTO setup_deadlines (platform, server_id, joined_at)"
+        " VALUES (?,?,?)",
+        (platform, str(prefix), int(joined_at if joined_at is not None else time.time()))
+    )
+    conn.commit()
+
+def get_deadline_row(platform, prefix):
+    """The chat's deadline row, or None — which is what every chat from
+    before the rule looks like."""
+    return cur.execute(
+        "SELECT * FROM setup_deadlines WHERE platform=? AND server_id=?",
+        (platform, str(prefix))
+    ).fetchone()
+
+def get_pending_deadlines(platform):
+    """Chats of this platform still under the deadline: recorded, and not yet
+    found set up."""
+    return cur.execute(
+        "SELECT * FROM setup_deadlines WHERE platform=? AND settled_at IS NULL",
+        (platform,)
+    ).fetchall()
+
+def mark_settled(platform, prefix):
+    """Note that the chat has been through /setup, which takes it out of the
+    rule for good."""
+    now = int(time.time())
+    cur.execute(
+        "INSERT INTO setup_deadlines (platform, server_id, joined_at, settled_at)"
+        " VALUES (?,?,?,?)"
+        " ON CONFLICT(platform, server_id) DO UPDATE SET settled_at=excluded.settled_at",
+        (platform, str(prefix), now, now)
+    )
+    conn.commit()
+
+def forget_deadline(platform, prefix):
+    """Drop the row once the bot has left, so that a later re-invitation is a
+    fresh seven days rather than a settlement inherited from last time."""
+    cur.execute(
+        "DELETE FROM setup_deadlines WHERE platform=? AND server_id=?",
+        (platform, str(prefix))
     )
     conn.commit()
 

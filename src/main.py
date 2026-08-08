@@ -19,6 +19,7 @@ from telegram_bot import main as tg_main
 from utils import send_service_event, localized, format_stored_user, good_display_name
 
 db.init()
+db.rule_since()
 
 async def retention_loop():
     while True:
@@ -230,6 +231,25 @@ async def channel_post_loop():
             logger.exception("Channel post loop failed")
         await asyncio.sleep(60)
 
+async def setup_deadline_loop():
+    """Daily wrapper around setup_deadline.setup_deadline_pass: leaves the
+    communities whose seven days ran out without a `/setup`, and reports each
+    departure to the service chats.
+
+    Waits for the Discord client first — the sweep reads `Guild.me.joined_at`
+    off the guild list, and an empty one would simply find nothing to do."""
+    from setup_deadline import setup_deadline_pass
+    from telegram_bot import bot as tg_bot
+
+    await discord_bot.wait_until_ready()
+    while True:
+        try:
+            for event_key, fields in await setup_deadline_pass(discord_bot, tg_bot):
+                await send_service_event(event_key, **fields)
+        except Exception:
+            logger.exception("Setup deadline sweep failed")
+        await asyncio.sleep(24 * 3600)
+
 async def main():
     tasks = [
         asyncio.create_task(tg_main()),
@@ -240,6 +260,7 @@ async def main():
         asyncio.create_task(shipment_loop()),
         asyncio.create_task(channel_post_loop()),
         asyncio.create_task(olympiad_loop()),
+        asyncio.create_task(setup_deadline_loop()),
     ]
 
     await asyncio.sleep(5)

@@ -2419,6 +2419,14 @@
     "status": "unverified",
     "text": "🏭 Empresa «{name}» [{code}] eliminada por {user}."
   },
+  "service_event.joined_chat": {
+    "status": "unverified",
+    "text": "➕ {platform}: el bot fue añadido a «{chat}» ({chat_id})."
+  },
+  "service_event.left_unconfigured": {
+    "status": "unverified",
+    "text": "👋 {platform}: el bot salió de «{chat}» ({chat_id}): han pasado {days} días desde que se añadió y el chat nunca se vinculó a una unión con /setup."
+  },
   "service_event.parties_disabled": {
     "status": "unverified",
     "text": "🏛️ {user} deshabilitó los partidos en la unión {code}."

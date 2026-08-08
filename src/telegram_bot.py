@@ -10,8 +10,8 @@ import time
 from aiogram import Bot, Dispatcher, Router
 from aiogram.filters import Command
 from aiogram.types import (
-    Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton,
-    BufferedInputFile,
+    Message, CallbackQuery, ChatMemberUpdated, InlineKeyboardMarkup,
+    InlineKeyboardButton, BufferedInputFile,
 )
 
 import db
@@ -97,6 +97,40 @@ async def _resolve_tg_admin_target(message: Message, arg):
         return chat.id, getattr(chat, "username", None) or ref[1]
     except Exception:
         return None, None
+
+@router.my_chat_member()
+async def my_chat_member_update(update: ChatMemberUpdated):
+    """The bot's own membership changed somewhere.
+
+    This is the one moment the bot can learn that it has been *added* to a
+    group, which is what starts the seven-day setup deadline
+    (setup_deadline.py): Telegram has no equivalent of Discord's join
+    timestamp, so a group with no row is simply never examined. The change
+    must come from outside the chat — old status left or kicked — or a
+    promotion to administrator in a group the bot has been sitting in for
+    years would read as a fresh arrival and put it on the clock.
+
+    Being removed drops the row, so that a later re-invitation is a fresh
+    seven days. The group's union binding is deliberately left alone: only
+    `/setup` and the Discord side's on_guild_remove touch that."""
+    try:
+        if not update.new_chat_member or update.new_chat_member.user.id != bot.id:
+            return
+        new_status = str(update.new_chat_member.status)
+        old_status = str(update.old_chat_member.status) if update.old_chat_member else ""
+        if new_status in ("left", "kicked"):
+            db.forget_deadline("telegram", update.chat.id)
+            return
+        if update.chat.type in GROUP_CHAT_TYPES and old_status in ("left", "kicked"):
+            db.record_join("telegram", update.chat.id)
+            await send_service_event(
+                "joined_chat",
+                platform="Telegram",
+                chat=update.chat.title or str(update.chat.id),
+                chat_id=update.chat.id,
+            )
+    except Exception as e:
+        logger.warning("my_chat_member handling failed: %s", e)
 
 @router.message(Command("setadmin"))
 async def setadmin_cmd(message: Message):

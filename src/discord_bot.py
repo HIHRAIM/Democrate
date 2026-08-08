@@ -176,8 +176,29 @@ async def _send_db_backup_telegram():
             logger.warning("Periodic backup: failed to send to Telegram chat %s: %s", chat_entry, e)
 
 @bot.event
+async def on_guild_join(guild: discord.Guild):
+    """The bot was added to a server: record the join and tell the service
+    chats, since a Bot Admin now has seven days to bind it to a union with
+    `/setup` (setup_deadline.py).
+
+    The row is a record, not the clock — the sweep reads Discord's own
+    `Guild.me.joined_at`, so a missed event costs nothing but this notice."""
+    db.record_join("discord", guild.id)
+    await send_service_event(
+        "joined_chat",
+        platform="Discord",
+        chat=guild.name or str(guild.id),
+        chat_id=guild.id,
+    )
+
+@bot.event
 async def on_guild_remove(guild: discord.Guild):
+    """The bot was kicked from (or left) a server: forget the server's union
+    binding, and its setup-deadline row with it, so that a later
+    re-invitation is a fresh seven days rather than a settlement inherited
+    from the last time."""
     db.remove_chat(guild.id)
+    db.forget_deadline("discord", guild.id)
 
 @bot.event
 async def on_message(message: discord.Message):

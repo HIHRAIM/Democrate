@@ -2419,6 +2419,14 @@
     "status": "unverified",
     "text": "🏭 Enterprise “{name}” [{code}] deleted by {user}."
   },
+  "service_event.joined_chat": {
+    "status": "unverified",
+    "text": "➕ {platform}: the bot was added to “{chat}” ({chat_id})."
+  },
+  "service_event.left_unconfigured": {
+    "status": "unverified",
+    "text": "👋 {platform}: the bot left “{chat}” ({chat_id}) — {days} days have passed since it was added and it was never bound to a union with /setup."
+  },
   "service_event.parties_disabled": {
     "status": "unverified",
     "text": "🏛️ Parties were disabled in union {code} by {user}."
