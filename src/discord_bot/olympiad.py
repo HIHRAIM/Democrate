@@ -23,6 +23,7 @@ Not this module's zone: the event's rules, its dates and the dialogs
 (olympiad.py), and the rows (db/olympiad.py).
 """
 import asyncio
+import re
 
 import discord
 from discord import app_commands, ButtonStyle
@@ -122,6 +123,32 @@ async def _wait_reply_or_button(channel_id, user_id, view, timeout=DIALOG_TIMEOU
             return "timeout", None
     return "timeout", None
 
+_BARE_URL_RE = re.compile(r"(?<![<\[(])\bhttps?://[^\s<>]+")
+
+def _no_link_previews(text):
+    """Wrap every bare url in angle brackets, the way Discord asks to be told
+    that a link is a reference and not something to unfurl.
+
+    Done to the text rather than through the message's SUPPRESS_EMBEDS flag
+    because the text is the only part that survives an edit — see `_drop_view`.
+    Urls already wrapped, and those inside a markdown link, are left alone."""
+    return _BARE_URL_RE.sub(lambda m: f"<{m.group(0)}>", text or "")
+
+async def _drop_view(msg):
+    """Take the buttons off a finished dialog message without waking its link
+    previews.
+
+    `Message.edit` defaults `suppress` to **False**, not to "leave the flag as
+    it was", so a plain `edit(view=None)` clears SUPPRESS_EMBEDS and Discord
+    answers with every preview the send had suppressed — which is exactly what
+    an ending dialog used to do to its own candidate list.
+    `InteractionMessage.edit` has no such parameter and does leave the flag
+    alone, hence the fallback: the first message of a dialog is one of those."""
+    try:
+        await msg.edit(view=None, suppress=True)
+    except TypeError:
+        await msg.edit(view=None)
+
 class _OlyDialog:
     """One Olympiad conversation on Discord.
 
@@ -146,12 +173,17 @@ class _OlyDialog:
         sentinel, so an explicit view=None gets as far as posting the message and
         then raises on it.
 
-        Link previews are suppressed on every message of the dialog. A candidate
-        list is a wiki url per line (olympiad.py: candidate_label), and Discord
-        would answer a list of three with three embeds — burying the question
-        under the answers to it."""
+        No link previews. A candidate list is a wiki url per line (olympiad.py:
+        candidate_label), and Discord would answer a list of three with three
+        embeds, burying the question under the answers to it. Two things stop
+        that, and the first is the one that matters: `_no_link_previews` wraps
+        every bare url in angle brackets, which is a property of the *text* and
+        therefore survives every later edit of the message. `suppress_embeds`
+        is the belt to that pair of braces — it covers the send, but it is a
+        message flag, and `_drop_view` explains why a flag alone is not
+        enough."""
         kwargs = {"view": view} if view is not None else {}
-        text = text[:1990]
+        text = _no_link_previews(text)[:1990]
         if not self.interaction.response.is_done():
             await self.interaction.response.send_message(text, suppress_embeds=True,
                                                          **kwargs)
@@ -177,7 +209,7 @@ class _OlyDialog:
             view.stop()
             if msg is not None:
                 try:
-                    await msg.edit(view=None)
+                    await _drop_view(msg)
                 except Exception:
                     pass
             if kind == "button":
@@ -409,7 +441,7 @@ async def _ask_dm_language(dialog, interaction):
     code = await view.wait_click()
     if msg is not None:
         try:
-            await msg.edit(view=None)
+            await _drop_view(msg)
         except Exception:
             pass
     if not code:
