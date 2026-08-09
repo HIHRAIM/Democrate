@@ -53,6 +53,7 @@ def fx_lines(union_code, lang):
     return lines
 
 def _percent(x):
+    """A ratio as a rounded percentage string."""
     return f"{x * 100:.0f}%"
 
 def weekly_stats(platform, server_id, lang):
@@ -109,6 +110,8 @@ def weekly_stats(platform, server_id, lang):
     return localized("stats_title", lang), lines
 
 def _task_item_lines(items, lang):
+    """One line per task item: what was asked, what was made, and whether it
+    is done — mandatory items marked apart from the optional ones."""
     lines = []
     for item in items:
         if item["kind"] == "category":

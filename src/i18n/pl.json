@@ -1235,6 +1235,10 @@
     "status": "unverified",
     "text": "/add-party [id_założyciela] — założyć partię (dialog; wymaga roli ustawionej przez /allow-parties)"
   },
+  "help.cmd_add_party_tg": {
+    "status": "unverified",
+    "text": "/add_party [założyciel] — założyć partię (dialog; wymaga konta Fandom znanego botowi)"
+  },
   "help.cmd_add_telegram": {
     "status": "unverified",
     "text": "/add-telegram <@username> — połącz konto Telegram (dokończ przez /add-discord w Telegramie)"

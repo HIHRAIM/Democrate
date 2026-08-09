@@ -1,3 +1,27 @@
+"""Entry point: both bots and every cross-platform background loop.
+
+`db.init()` runs here, before either half is imported far enough to touch a
+table, and it is the only call that ever creates schema. The process must be
+started with cwd = `src/` — the database and `.env` are opened by relative path,
+and the control panel launches it exactly that way.
+
+The loops below are all shaped alike: poll on a fixed interval and act only on
+what is actually due, deciding that by comparing a stored marker rather than by
+trusting the clock they woke up on. That is what makes a bot which was down
+through a scheduled minute do the work when it comes back, and a bot restarted
+three times in an hour do it once. The economy ticks compare a UTC period label
+in `bot_settings`, the scheduled channel posts compare a per-row `last_marker`,
+and the wiki anniversaries compare a year.
+
+`economy_loop`'s ordering is load-bearing twice over: consumption runs before
+the FX recompute inside the daily tick, and the autoproduction advance is
+measured against a monotonic clock rather than the loop's nominal hour, so a
+slow tick does not silently produce less.
+
+The three loops that live on the Discord client instead — presence, backups and
+the anniversary check — are in discord_bot/client.py, because they need the
+client to be ready first.
+"""
 import asyncio
 import logging
 import time
@@ -22,6 +46,11 @@ db.init()
 db.rule_since()
 
 async def retention_loop():
+    """Run every retention sweep once a day.
+
+    The sweeps enforce nothing on their own — each table's reads already respect
+    its own window — so the whole loop is wrapped in one bare except: a failing
+    sweep must not take the other ten down with it."""
     while True:
         try:
             db.cleanup_old_loc_suggestions()
@@ -251,6 +280,11 @@ async def setup_deadline_loop():
         await asyncio.sleep(24 * 3600)
 
 async def main():
+    """Start both bots and every cross-platform loop on one asyncio loop.
+
+    The five-second wait before announcing the start is there so the two clients
+    are actually connected when the service chats hear about it. The stop notice is
+    in a finally, so an orderly shutdown says so."""
     tasks = [
         asyncio.create_task(tg_main()),
         asyncio.create_task(discord_bot.start(DISCORD_TOKEN)),

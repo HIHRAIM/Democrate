@@ -1235,6 +1235,10 @@
     "status": "unverified",
     "text": "/add-party [id_fundador] — fundar um partido (diálogo; requer um cargo configurado com /allow-parties)"
   },
+  "help.cmd_add_party_tg": {
+    "status": "unverified",
+    "text": "/add_party [fundador] — fundar um partido (diálogo; requer uma conta Fandom conhecida pelo bot)"
+  },
   "help.cmd_add_telegram": {
     "status": "unverified",
     "text": "/add-telegram <@usuário> — vincule sua conta do Telegram (conclua com /add-discord no Telegram)"

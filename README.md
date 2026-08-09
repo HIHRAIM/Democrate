@@ -54,6 +54,74 @@ Democrate is a cross-platform coordination bot for **unions** of wiki communitie
 
 ---
 
+## Project structure
+
+The code lives in `src/`, split into packages by domain. `ARCHITECTURE.md` describes how the pieces work together and carries a feature → file table.
+
+```
+src/
+  main.py              entry point: both bots plus the cross-platform loops
+                       (economy ticks, production, shipments, scheduled posts,
+                       the Olympiad, retention, the setup deadline)
+  config.py            this deployment's ids and the economy's tuning constants
+                       (untracked; config.example.py is the template)
+  env_loader.py        reads src/.env
+  utils.py             localization runtime, role checks, parsers, rate limiter,
+                       service events
+  quizzes.py           the quiz engine (its data lives in src/quizzes/)
+  olympiad.py          the Olympiad engine and its shared voting dialog
+  stats.py             weekly statistics, monthly task posts, FX log lines
+  message_relay.py     markup conversion between Discord and Telegram
+  fandom.py            Fandom profile lookup for /verify
+  setup_deadline.py    leaves communities nobody bound to a union
+  backup_crypto.py     encrypted database snapshots
+  restore_backup.py    their restore tool
+
+  db/                  SQLite layer: one connection, one module per domain
+    __init__.py          connection (conn/cur), init(), the whole public API
+    schema.py            core CREATE TABLEs, migrations, the Olympiad schema
+    schema_economy.py    the economy's schema, column migrations, base goods
+    unions.py   settings.py   admins.py    users.py
+    parties.py  govt.py       quizzes.py   foundays.py
+    banks.py    goods.py      trade.py     enterprises.py
+    logistics.py             serverstats.py
+    onboarding.py        join times and the setup-deadline bookkeeping
+
+  economy/             the rules: money, goods, production, trade
+    money.py             amounts, mastery, unit value, craft cost
+    activity.py          earning from messages
+    production.py        timed production, autocraft, autosend
+    trade.py             selling to a bank, currency values, rates, conversion
+    payroll.py           the daily/weekly/monthly ticks, wages, dues, salaries
+    logistics.py         distance, transit time, perishing, shipments
+    consumption.py       the daily meal, provision, GDP
+    tasks.py             monthly task generation and evaluation
+
+  discord_bot/         the Discord half
+    client.py            the client, its loops, the shared permission gates
+    events.py            the three @bot.event handlers
+    dialogs.py           interactive dialogs and consent views
+    parties.py           party cards and edit menus (shared with the TG half)
+    olympiad.py          dynamic commands, review embeds, verdicts
+    commands/            slash commands: unions, settings, admins, locale, user,
+                         parties, govt, quizzes, moderation, foundays, banks,
+                         trade, goods, enterprises
+
+  telegram_bot/        the Telegram half, mirroring the Discord one
+    client.py            bot/dispatcher/router, polling, resolvers
+    dialogs.py           the pending-answer registries and consent keyboards
+    callbacks.py         the four @router.callback_query handlers
+    parties.py           party card and edit menu, Telegram rendering
+    olympiad.py          the Telegram Olympiad gates and dialog
+    commands/            the same domains as the Discord side
+    catchall.py          the unfiltered handler — imported last, always
+
+  i18n/                the six localization files, plus olympiad/ and quizzes/
+  quizzes/             quiz data: <quiz id>/scoring.json
+```
+
+---
+
 ## Commands
 
 Permission roles used below:

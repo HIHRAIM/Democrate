@@ -1,0 +1,70 @@
+"""All three @bot.event handlers and nothing else — the dispatcher into
+everything the Discord half does without being asked.
+
+`on_guild_join` records the arrival and tells the service chats, because a Bot
+Admin now has seven days to bind the server to a union; the row it writes is a
+record rather than the clock, since the sweep reads Discord's own
+`Guild.me.joined_at`. `on_guild_remove` forgets the binding and the deadline
+row together, so a later re-invitation starts a fresh seven days.
+
+`on_message` is message earning and nothing else. It is independent of the
+`wait_for` dialogs and of the slash commands — discord.py dispatches those
+separately — so counting a message here never disturbs a dialog waiting for
+the same message.
+
+Not this module's zone: the earning rules themselves (economy/activity.py) and
+the seven-day policy (setup_deadline.py).
+"""
+import discord
+
+import db
+import economy
+from utils import send_service_event
+
+from discord_bot.client import bot, logger
+
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    """The bot was added to a server: record the join and tell the service
+    chats, since a Bot Admin now has seven days to bind it to a union with
+    `/setup` (setup_deadline.py).
+
+    The row is a record, not the clock — the sweep reads Discord's own
+    `Guild.me.joined_at`, so a missed event costs nothing but this notice."""
+    db.record_join("discord", guild.id)
+    await send_service_event(
+        "joined_chat",
+        platform="Discord",
+        chat=guild.name or str(guild.id),
+        chat_id=guild.id,
+    )
+
+@bot.event
+async def on_guild_remove(guild: discord.Guild):
+    """The bot was kicked from (or left) a server: forget the server's union
+    binding, and its setup-deadline row with it, so that a later
+    re-invitation is a fresh seven days rather than a settlement inherited
+    from the last time."""
+    db.remove_chat(guild.id)
+    db.forget_deadline("discord", guild.id)
+
+@bot.event
+async def on_message(message: discord.Message):
+    """Message earning. Independent of the wait_for dialogs and slash commands
+    (those are dispatched separately), so counting a message here never disturbs
+    them. A message earns only when the channel is a /set-earn earning channel,
+    the author is a verified human, and the anti-abuse gate (min length, per-user
+    cooldown, hourly cap) lets it through — see economy.earn_from_message."""
+    try:
+        if message.author.bot or message.guild is None:
+            return
+        content = (message.content or "").strip()
+        if not content or content.startswith("/"):
+            return
+        earn = db.get_earn_channel("discord", message.channel.id)
+        if not earn:
+            return
+        economy.earn_from_message("discord", message.author.id, str(message.author),
+                                  earn["bank_code"], len(content), earn["rate"])
+    except Exception as e:
+        logger.warning("on_message earning error: %s", e)

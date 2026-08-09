@@ -11,6 +11,11 @@ import html
 import re
 
 def _utf16_index_map(text: str):
+    """Map UTF-16 code-unit offsets onto Python string indices.
+
+    Telegram counts entity offsets in UTF-16 code units, Python in code points, and
+    the two diverge the moment a message contains an emoji — without this map the
+    formatting would land on the wrong characters."""
     pos_map = {0: 0}
     utf16_pos = 0
     for i, ch in enumerate(text):
@@ -19,6 +24,7 @@ def _utf16_index_map(text: str):
     return pos_map
 
 def _wrap_blockquote(segment: str) -> str:
+    """Prefix every line of a block with '> '."""
     lines = segment.splitlines() or [segment]
     return "\n".join(f"> {ln}" if ln else ">" for ln in lines)
 
@@ -36,9 +42,11 @@ def telegram_entities_to_discord(text: str, entities):
     closes = {}
 
     def add_open(i, token):
+        """Record an opening tag at this position."""
         opens.setdefault(i, []).append(token)
 
     def add_close(i, token):
+        """Record a closing tag at this position."""
         closes.setdefault(i, []).append(token)
 
     for e in entities:
@@ -129,18 +137,21 @@ def discord_to_telegram_html(text: str):
     return "\n".join(converted)
 
 def escape_html(text: str):
+    """Escape text for Telegram's HTML parse mode."""
     return html.escape(text or "")
 
 DISCORD_MSG_LIMIT = 2000
 TELEGRAM_MSG_LIMIT = 4096
 
 def clip_text(text, limit):
+    """Cut text to a platform's message limit, with an ellipsis."""
     text = text or ""
     if len(text) <= limit:
         return text
     return text[: limit - 1].rstrip() + "…"
 
 def _clip_escaped_html(escaped, limit):
+    """Cut already-escaped HTML without splitting an entity in half."""
     if len(escaped) <= limit:
         return escaped
     cut = escaped[: max(limit - 1, 0)]

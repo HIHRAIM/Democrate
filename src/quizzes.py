@@ -38,6 +38,12 @@ _scoring_cache = {}
 _content_cache = {}
 
 def _load_scoring(quiz_id):
+    """Load and cache one quiz's scoring data from
+    quizzes/<id>/scoring.json.
+
+    The path is built from this module's own directory, so quizzes.py must stay
+    directly in src/ — one level deeper and every quiz silently becomes
+    non-existent."""
     if quiz_id not in _scoring_cache:
         path = os.path.join(_QUIZ_DIR, quiz_id, "scoring.json")
         with open(path, encoding="utf-8") as f:
@@ -62,6 +68,7 @@ def _load_content(quiz_id):
     return _content_cache[quiz_id]
 
 def _quiz_meta(quiz_id):
+    """The registry entry of a quiz: its id, folder and content file."""
     for q in _REGISTRY:
         if q["id"] == quiz_id:
             return q
@@ -72,6 +79,7 @@ def list_quizzes():
     return [q["id"] for q in _REGISTRY]
 
 def quiz_exists(quiz_id):
+    """Whether a quiz id is registered."""
     return _quiz_meta(quiz_id) is not None
 
 def content(quiz_id, lang):
@@ -85,6 +93,7 @@ def content(quiz_id, lang):
     return langs.get(lang) or langs.get(default) or next(iter(langs.values()))
 
 def quiz_name(quiz_id, lang):
+    """The quiz's display name in a language."""
     return content(quiz_id, lang).get("name", quiz_id)
 
 def quiz_credit(quiz_id, lang):
@@ -92,12 +101,17 @@ def quiz_credit(quiz_id, lang):
     return content(quiz_id, lang).get("credit", "")
 
 def axes(quiz_id):
+    """The quiz's axes — the dimensions a result is broken down along."""
     return _load_scoring(quiz_id)["axes"]
 
 def questions(quiz_id):
+    """The quiz's question list, straight from the scoring data."""
     return _load_scoring(quiz_id)["questions"]
 
 def num_questions(quiz_id):
+    """How many questions the quiz has. The length every stored progress row
+    is validated against, so a quiz that gained a question invalidates the paused
+    runs rather than resuming them wrongly."""
     return len(_load_scoring(quiz_id)["questions"])
 
 def make_orders(quiz_id):
@@ -137,6 +151,7 @@ def display_options(quiz_id, lang, qindex, order, allow_prev):
     return texts, kinds
 
 def question_topic(quiz_id, lang, qindex):
+    """The topic line shown above one question."""
     q = questions(quiz_id)[qindex]
     qtext = content(quiz_id, lang).get("questions", {}).get(q["key"], {})
     return qtext.get("topic", q["key"])
@@ -163,6 +178,7 @@ def parse_answer(text):
     return num, weight
 
 def _vectorize(pair):
+    """Turn a scoring entry into a plain list of floats, one per axis."""
     label, weight = pair[0], pair[1]
     t = {}
     for d in label.split("/"):
@@ -170,6 +186,7 @@ def _vectorize(pair):
     return t
 
 def _vadd(a, b):
+    """Add two score vectors element-wise."""
     res = {}
     for key in a:
         if b.get(key + "*"):
@@ -184,6 +201,7 @@ def _vadd(a, b):
     return res
 
 def _vdot(a, b):
+    """Multiply a score vector by a weight vector element-wise."""
     res = {}
     for key in a:
         if key.endswith("*"):
@@ -196,9 +214,11 @@ def _vdot(a, b):
     return res
 
 def _vtimes(v, tms):
+    """Scale a score vector by a number."""
     return {key: v[key] * tms for key in v}
 
 def _normalize(v):
+    """Map a raw axis total onto 0..100."""
     total = 0.0
     for key in v:
         total += v[key]
@@ -207,6 +227,7 @@ def _normalize(v):
     return _vtimes(v, 1.0 / total)
 
 def _flatten(v, multiplier):
+    """Flatten nested axis groups into one ordered list."""
     m = 0
     for key in v:
         m = max(m, v[key])
@@ -215,6 +236,7 @@ def _flatten(v, multiplier):
     return _vtimes(v, multiplier / m)
 
 def _compress(nums, glob, amt, epsilon):
+    """Round a vector to the precision the results are displayed at."""
     return _normalize(_vadd(_vadd(nums, _vtimes(glob, -amt)), {"cent": epsilon}))
 
 def _round_js(x):
@@ -293,9 +315,11 @@ def score(quiz_id, answers):
     return {ax: _compute(dims[ax], globs[ax]) for ax in scoring["axes"]}
 
 def _label_name(quiz_id, lang, code):
+    """The name of the label an axis value falls under."""
     return content(quiz_id, lang).get("labels", {}).get(code, code)
 
 def _label_desc(quiz_id, lang, code):
+    """The description of that label, or an empty string."""
     return content(quiz_id, lang).get("descriptions", {}).get(code, "")
 
 def percent_str(permille):

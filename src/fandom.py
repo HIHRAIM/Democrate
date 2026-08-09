@@ -23,6 +23,8 @@ _HEADERS = {"User-Agent": "Democrate-bot/1.0 (union coordination bot)"}
 _TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 async def _fandom_user_id(session, name):
+    """Look up a Fandom user id by name, or None when there is no such
+    account."""
     params = {"action": "query", "list": "users", "ususers": name, "format": "json"}
     async with session.get(_USERS_API, params=params, headers=_HEADERS) as resp:
         data = await resp.json()
@@ -35,6 +37,7 @@ async def _fandom_user_id(session, name):
     return str(user["userid"]), user.get("name", name)
 
 async def _discord_handle(session, uid):
+    """Read the Discord handle a Fandom profile publishes, or None."""
     async with session.get(_ATTR_URL.format(uid=uid), headers=_HEADERS) as resp:
         if resp.status == 404:
             return None
@@ -67,6 +70,8 @@ async def lookup_discord_handle(name):
         return ("error", None, None, None)
 
 def _norm(s):
+    """Normalise a Discord handle for comparison: lowercased, without a
+    leading '@', and with the legacy '#0' discriminator dropped."""
     return (s or "").strip().lstrip("@").lower()
 
 def handle_matches(fandom_handle, discord_username, discord_str):

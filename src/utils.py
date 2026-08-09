@@ -1,3 +1,24 @@
+"""The shared runtime both halves of the bot lean on: localization, role
+checks, the parsers the commands take their arguments through, the rate
+limiter, and the service-event feed.
+
+The localization is the largest part and the one with a trap in it. The six
+`i18n/*.json` files are read once at import through `_load_i18n`, and the path
+is built from *this file's* directory — so utils.py must stay directly in
+`src/`. Moved one level deeper it still imports, still runs, and answers every
+`localized()` call with the bare key: no error, no log line, just a bot that
+has forgotten how to speak. `localized_help` and `localized_service_event` are
+separate entry points because their keys live under their own prefixes.
+
+`is_admin` reads config.py rather than the database, so the one role able to
+grant every other cannot itself be granted or revoked through the bot.
+`_rate_buckets` is the in-memory sliding-window limiter — one dictionary, and
+losing it to a restart costs nothing but a forgotten window.
+
+Not this module's zone: anything that knows about a platform. Nothing here
+imports discord or aiogram, which is what lets both halves and the background
+loops share it.
+"""
 import calendar
 import difflib
 import logging
@@ -18,6 +39,7 @@ PARTY_CODE_RE = re.compile(r"^[A-Za-z0-9]{4}$")
 QUIZ_PREVIOUS_WINDOW = 30 * 60
 
 def format_quiz_date(ts):
+    """A stored quiz timestamp as 'YYYY-MM-DD HH:MM' in UTC."""
     try:
         return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%Y-%m-%d")
     except Exception:
@@ -140,6 +162,7 @@ def is_founday_today(founded, now):
     return (now.month, now.day) == (founded.month, founded.day)
 
 def founday_line(lang, name, years, past):
+    """One greeting line for a wiki, in one language."""
     tense = "past" if past else "future"
     return localized(f"founday_{tense}_{plural_category(lang, years)}", lang, name=name, n=years)
 
@@ -172,6 +195,7 @@ def parse_tz_offset(text):
     return sign * (hours * 60 + minutes)
 
 def format_tz_offset(minutes):
+    """A UTC offset in minutes back as 'UTC+3' / 'UTC-05:30'."""
     minutes = int(minutes or 0)
     sign = "-" if minutes < 0 else "+"
     m = abs(minutes)
@@ -197,6 +221,7 @@ def parse_weekday(text):
     raise ValueError("invalid_weekday")
 
 def weekday_name(index, lang):
+    """The localized name of a weekday (0 = Monday)."""
     return localized(f"weekday_{int(index) % 7}", lang)
 
 CATEGORY_EMOJI = {cat: emoji for _code, cat, emoji, _name in db.BASE_GOODS}
@@ -215,6 +240,7 @@ def good_display_name(good, lang):
     return good["name"]
 
 def provision_level_label(level, lang):
+    """The localized name of a provision level."""
     return localized(f"provision_level_{level}", lang)
 
 _FIND_PERIOD_RE = re.compile(
@@ -273,6 +299,10 @@ def is_verified(platform, user_id):
     return False
 
 def is_admin(platform, user_id):
+    """Whether the user is a Bot Admin.
+
+    Read from config.py, never from the database, so that the one role able to
+    grant every other cannot be granted — or revoked — through the bot itself."""
     return user_id in ADMINS.get(platform, set())
 
 _rate_buckets = {}
@@ -350,6 +380,7 @@ LANGUAGE_NAMES = {
 LANG_ORDER = ["ru", "uk", "pl", "en", "es", "pt"]
 
 def language_name(code):
+    """A language's own name for its code, falling back to the bare code."""
     return LANGUAGE_NAMES.get(code, code)
 
 def available_locales():
@@ -361,6 +392,7 @@ def reply_keys():
     return sorted(_LOCALE_FLAT.get(DEFAULT_LANG, {}).keys())
 
 def get_reply(lang, key):
+    """The raw localization value for a key in a language, or None."""
     return _LOCALE_FLAT.get(lang, {}).get(key)
 
 def reply_status(lang, key):
@@ -394,6 +426,7 @@ def locale_stats(lang):
             "untranslated": untranslated, "percent": percent}
 
 def locale_bar(lang, width=12):
+    """A ten-cell progress bar for a language's translation state."""
     s = locale_stats(lang)
     total = s["total"] or 1
     v = round(s["verified"] / total * width)
@@ -434,17 +467,27 @@ def localized(_key, locale, **kwargs):
         return template
 
 def get_chat_lang(chat_id):
+    """The language to answer a chat in, falling back to the default.
+
+    The thin wrapper every command uses: db/settings.py does the outward
+    resolution from the specific key, and this turns a miss into DEFAULT_LANG so
+    that no caller has to."""
     lang = db.get_chat_lang(chat_id)
     if lang and lang in SUPPORTED_LANGS:
         return lang
     return DEFAULT_LANG
 
 def set_chat_lang(chat_id, lang_code, is_dm=False):
+    """Remember a chat's language. `is_dm` marks a private conversation,
+    which is kept only a year."""
     if lang_code not in SUPPORTED_LANGS:
         raise ValueError("unsupported_lang")
     db.set_chat_lang(chat_id, lang_code, is_dm=is_dm)
 
 def localized_help(event_key, lang, **kwargs):
+    """A help-section string. Kept apart from `localized` because the help
+    keys live under their own prefix and a missing one should show the key rather
+    than an empty line."""
     table = _LOCALE.get("help", {}).get(event_key, {})
     template = table.get(lang, table.get(DEFAULT_LANG, event_key))
     try:
@@ -453,6 +496,7 @@ def localized_help(event_key, lang, **kwargs):
         return template
 
 def localized_service_event(event_key, lang, **kwargs):
+    """The wording of one service event in the operator's language."""
     table = _LOCALE.get("service_event", {}).get(event_key, {})
     template = table.get(lang, table.get(DEFAULT_LANG, event_key))
     try:
@@ -461,6 +505,10 @@ def localized_service_event(event_key, lang, **kwargs):
         return template
 
 def _normalize_service_chat_key(platform, raw_key):
+    """Bring a configured chat key to the shape the platform expects: a
+    bare channel id on Discord, 'chat_id:thread_id' on Telegram.
+
+    Written for tolerance, because these come from a hand-edited config.py."""
     key = str(raw_key).strip()
     if not key:
         return None, None

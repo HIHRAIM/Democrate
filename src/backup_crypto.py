@@ -54,6 +54,10 @@ def _consistent_snapshot_bytes(db_path):
                 pass
 
 def _master_key():
+    """Derive the master key from the BACKUP_KEY environment variable.
+
+    Raises when it is unset — which is the point: a deployment without a key must
+    fail to build a backup rather than write the database out in clear."""
     key = os.environ.get("BACKUP_KEY")
     if not key:
         raise RuntimeError(
@@ -62,12 +66,15 @@ def _master_key():
     return key.encode("utf-8")
 
 def _subkeys(master):
+    """Split the master key into the keystream key and the MAC key, so that
+    one secret never does two jobs."""
     base = hashlib.sha256(master).digest()
     k_enc = hashlib.blake2b(b"enc", key=base, digest_size=32).digest()
     k_mac = hashlib.blake2b(b"mac", key=base, digest_size=32).digest()
     return k_enc, k_mac
 
 def _keystream(k_enc, nonce, length):
+    """Generate `n` bytes of BLAKE2 keystream from the key and nonce."""
     out = bytearray()
     counter = 0
     while len(out) < length:
@@ -76,6 +83,7 @@ def _keystream(k_enc, nonce, length):
     return bytes(out[:length])
 
 def _xor(a, b):
+    """XOR data with the keystream."""
     if not a:
         return b""
     return (int.from_bytes(a, "big") ^ int.from_bytes(b, "big")).to_bytes(len(a), "big")

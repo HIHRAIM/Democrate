@@ -1235,6 +1235,10 @@
     "status": "unverified",
     "text": "/add-party [founder_id] — found a party (interactive; requires a role set by /allow-parties)"
   },
+  "help.cmd_add_party_tg": {
+    "status": "unverified",
+    "text": "/add_party [founder] — found a party (interactive; needs a Fandom account known to the bot)"
+  },
   "help.cmd_add_telegram": {
     "status": "unverified",
     "text": "/add-telegram <@username> — link your Telegram account (finish with /add-discord on Telegram)"

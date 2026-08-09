@@ -9,6 +9,12 @@ import os
 _ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 
 def load_env(path=_ENV_PATH):
+    """Read src/.env into the environment, without overwriting anything
+    already set there.
+
+    The path is built from this module's own directory, so env_loader.py must stay
+    directly in src/. Already-set variables win, which is what lets a deployment
+    override the file from its process manager."""
     try:
         with open(path, encoding="utf-8-sig") as f:
             lines = f.read().splitlines()

@@ -1235,6 +1235,10 @@
     "status": "verified",
     "text": "/add-party [id_основателя] — основать партию (диалог; нужна роль, заданная /allow-parties)"
   },
+  "help.cmd_add_party_tg": {
+    "status": "unverified",
+    "text": "/add_party [основатель] — основать партию (диалог; нужен аккаунт Fandom, известный боту)"
+  },
   "help.cmd_add_telegram": {
     "status": "verified",
     "text": "/add-telegram <@username> — связать ваш аккаунт Telegram (завершите через /add-discord в Telegram)"

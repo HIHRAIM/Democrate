@@ -12,6 +12,11 @@ from backup_crypto import decrypt_bytes
 from env_loader import load_env
 
 def main():
+    """Decrypt a backup file back into a usable database.
+
+    The counterpart of backup_crypto.build_encrypted_backup, and the only reason
+    that format is not one-way: it needs the same BACKUP_KEY the snapshot was made
+    with."""
     if len(sys.argv) != 3:
         print("usage: python restore_backup.py <input.db.enc> <output.db>")
         return 2

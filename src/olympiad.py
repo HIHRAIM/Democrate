@@ -17,6 +17,25 @@ Like the quizzes, this feature keeps its own localization: one flat JSON file
 per language in `i18n/olympiad/`, read through `text()`. That keeps a few dozen
 Olympiad strings out of the main locale files, which are shared with the
 translation commands and measured by `/locale`.
+
+`LANG_FLAG` is shown before a contest's name so the language category is
+readable at a glance, and `MAX_CHOICES` is how many wikis one person may
+support in a single contest.
+
+The three conversations at the bottom of this file — creating a contest,
+editing its candidates, and voting — are the same on both messengers, so they
+live here rather than twice over in the bots. Each bot passes in its own
+`dialog`, an object with four coroutines:
+
+    send(text)                                  – say something
+    ask(prompt, validator=, error_text=,        – ask, and wait for a reply;
+        buttons=)                                 returns ('text', value),
+                                                  ('button', value) or None
+    choose(header, items, render, extra=)       – a numbered list, one pick
+    choose_numbers(header, items, render, n)    – a numbered list, several picks
+
+`ask` returning None means the person pressed Stop or stopped answering; every
+flow below simply returns when that happens, and the bot has already said so.
 """
 
 import json
@@ -118,6 +137,7 @@ def parse_period(start_raw, end_raw):
     return int(start.timestamp()), int(end.timestamp())
 
 def format_date(ts):
+    """A unix timestamp as the MM-DD-YYYY the commands accept."""
     return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%m-%d-%Y")
 
 def period(now=None):
@@ -295,6 +315,7 @@ async def run_setcontest(dialog, lang):
         order_names = ", ".join(language_name(L) for L in order)
 
         def _names(value):
+            """The contest's names as {lang: name}."""
             parts = [p.strip() for p in value.split(",")]
             return parts if len(parts) == len(order) and all(parts) else None
 
@@ -331,6 +352,7 @@ async def run_setcontest(dialog, lang):
 _CHAT_ID_RE = re.compile(r"^\d{5,25}$")
 
 def _chat_id(value):
+    """Parse a chat id out of what an admin typed, or None."""
     v = (value or "").strip()
     return v if _CHAT_ID_RE.match(v) else None
 

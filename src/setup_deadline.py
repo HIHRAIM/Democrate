@@ -82,6 +82,8 @@ def _protected_ids(platform):
     Read through getattr rather than a from-import so that a deployment whose
     config.py predates one of these settings still starts."""
     def cfg(name):
+        """One config.py value, or a default when the deployment does not set
+        it."""
         return getattr(config, name, None)
 
     raw = _collect(
