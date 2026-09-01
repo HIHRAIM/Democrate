@@ -13,10 +13,10 @@ restart. The three loops it starts are a fixed presence re-applied hourly, the
 12-hour encrypted backup sent to BOTH platforms' backup chats, and the
 per-minute wiki-anniversary check.
 
-The gates at the bottom — is_server_admin, _require_verified,
-_refuse_not_setup, parties_enabled, _chat_key — are here rather than in a
-commands module because every half of the bot asks them and none of them owns
-them. Their Telegram twins are in telegram_bot/client.py, deliberately written
+The gates and resolvers at the bottom — is_server_admin, _require_verified,
+_refuse_not_setup, parties_enabled, _chat_key, _earn_keys, chat_display_name —
+are here rather than in a commands module because every half of the bot asks
+them and none of them owns them. Their Telegram twins are in telegram_bot/client.py, deliberately written
 separately: the native half of "is this user an admin" is a different question
 on each platform.
 
@@ -221,6 +221,51 @@ def parties_enabled(union_code):
     """Whether a union has parties switched on. The first half of the party
     gate; the second is whether the chat is set up at all."""
     return db.get_party_settings(union_code)[0]
+
+def _earn_keys(channel):
+    """The channel keys an earning binding may sit on, most specific first.
+
+    A thread and a forum post are channels of their own with ids of their own,
+    so a message in one matches nothing that was set on the channel around it —
+    which is why `/set-earn` in a text channel used to leave every thread under
+    it earning nothing. Walking outwards to the parent and then to the category
+    fixes that without taking anything away: a thread that names its own
+    currency still wins, because it comes first.
+
+    Here rather than beside either caller because both halves of the question
+    ask it — events.py to pay for a message, commands/banks.py to explain what
+    `/set-earn off` did — and neither owns it."""
+    keys = [channel.id]
+    parent = getattr(channel, "parent", None)
+    holder = parent if parent is not None else channel
+    if parent is not None:
+        keys.append(parent.id)
+    category = getattr(holder, "category_id", None)
+    if category:
+        keys.append(category)
+    return keys
+
+def chat_display_name(chat_id):
+    """What to call a server or group in front of people: its name, or its bare
+    id when nothing knows the name.
+
+    A bare id is the wrong answer for a bank's central server, and the right
+    name can come from two places. A Discord server the bot is in is asked
+    directly, and the answer is written back to `chats.title` so the name
+    survives the bot losing sight of the place; anything else — a Telegram
+    group, a server the bot has left — falls back to the name `/setup`
+    remembered. Only the id is left when neither has anything."""
+    chat_id = str(chat_id)
+    guild = None
+    try:
+        guild = bot.get_guild(int(chat_id))
+    except (TypeError, ValueError):
+        guild = None
+    if guild is not None and guild.name:
+        if db.chat_title(chat_id) != guild.name:
+            db.set_chat_title(chat_id, guild.name)
+        return guild.name
+    return db.chat_title(chat_id) or chat_id
 
 def _chat_key(interaction: discord.Interaction):
     """The localization key of the channel an interaction came from,

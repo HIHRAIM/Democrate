@@ -150,33 +150,70 @@ async def economy_loop():
             logger.exception("Autoproduction run failed")
         await asyncio.sleep(3600)
 
+async def _send_progress_dm(platform, user_id, text):
+    """Tell one person privately that something of theirs has moved on.
+
+    Only ever called about the result of a run they started themselves, which
+    is the whole rule for these messages: the bot opens an account for anyone
+    who merely talks in an earning channel, and that person has not asked the
+    bot for anything and must not be written to. `/craft` is asking."""
+    try:
+        if platform == "discord":
+            from discord_bot import bot as dc
+            user = dc.get_user(int(user_id)) or await dc.fetch_user(int(user_id))
+            if user is not None:
+                await user.send(text)
+        elif platform == "telegram":
+            from telegram_bot import bot as tg
+            await tg.send_message(int(user_id), text)
+    except Exception as e:
+        logger.info("Progress DM not delivered to %s %s: %s", platform, user_id, e)
+
 async def production_loop():
     """Manual production runs take minutes; poll for finished ones and announce
-    each in the channel where it was started."""
+    each in the channel where it was started.
+
+    Two things beyond the batch itself may come out of a run, and both are
+    reported here because this is where a run ends: a batch that came out
+    lucky says so in the channel, and a run that raised the worker's quality
+    level is sent to them privately, since a level is theirs rather than the
+    channel's news."""
     while True:
         try:
             for row in db.get_due_productions(int(time.time())):
                 info = economy.finish_production(row)
-                if not info or not row["notify_key"]:
+                if not info:
                     continue
                 lang = row["lang"] or "en"
                 good = info["good"]
                 emoji = f"{good['emoji']} " if good["emoji"] else ""
-                user = format_stored_user(
-                    row["notify_platform"], row["starter_platform"],
-                    row["starter_id"], row["starter_display"])
-                dest = localized("production_dest_enterprise", lang,
-                                 code=row["owner_id"]) \
-                    if row["owner_type"] == "enterprise" \
-                    else localized("production_dest_inventory", lang)
-                text = localized("production_done", lang, user=user, qty=info["qty"],
-                                 emoji=emoji, name=good_display_name(good, lang),
-                                 level=info["level"], dest=dest)
-                try:
-                    await stats.post_to_channel(row["notify_platform"],
-                                                row["notify_key"], None, [text])
-                except Exception as e:
-                    logger.warning("Production notice failed: %s", e)
+                levelled = info["level"] > info["level_before"]
+
+                if row["notify_key"]:
+                    user = format_stored_user(
+                        row["notify_platform"], row["starter_platform"],
+                        row["starter_id"], row["starter_display"])
+                    dest = localized("production_dest_enterprise", lang,
+                                     code=row["owner_id"]) \
+                        if row["owner_type"] == "enterprise" \
+                        else localized("production_dest_inventory", lang)
+                    text = localized("production_done", lang, user=user, qty=info["qty"],
+                                     emoji=emoji, name=good_display_name(good, lang),
+                                     level=info["level"], dest=dest)
+                    if info["lucky"]:
+                        text += "\n" + localized("production_lucky", lang, qty=info["qty"])
+                    try:
+                        await stats.post_to_channel(row["notify_platform"],
+                                                    row["notify_key"], None, [text])
+                    except Exception as e:
+                        logger.warning("Production notice failed: %s", e)
+
+                if levelled:
+                    await _send_progress_dm(
+                        row["starter_platform"], row["starter_id"],
+                        localized("progress_level_up", lang, emoji=emoji,
+                                  name=good_display_name(good, lang),
+                                  level=info["level"]))
         except Exception:
             logger.exception("Production loop failed")
         await asyncio.sleep(20)

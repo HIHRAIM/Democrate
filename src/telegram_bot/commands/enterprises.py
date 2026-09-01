@@ -548,43 +548,34 @@ async def ent_salary_tg(message: Message):
 
 @router.message(Command("ent_sell", "ent-sell"))
 async def ent_sell_tg(message: Message):
-    """/ent-sell <good_code> [qty] [enterprise]"""
+    """/ent-sell <good_code> <buyer> [qty] [price] [enterprise] — sell the
+    enterprise's goods to a member or to another enterprise (leaders).
+
+    No bank buys goods, so this is a sale between two holders and the buyer has
+    to accept it. `offer_sale_tg` comes from commands/goods.py at the call site:
+    a personal sale and an enterprise's sale are the same offer with a different
+    seller, and a module-level import would drag that module's commands into
+    registration ahead of their place."""
+    from telegram_bot.commands.goods import offer_sale_tg
+
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
     parts = (message.text or "").split()[1:]
-    if not parts:
+    if len(parts) < 2:
         await message.reply(localized("ent_sell_usage", lang))
         return
     good = db.get_good(parts[0].strip().upper())
     if not good:
         await message.reply(localized("good_not_found", lang))
         return
-    qty = None
-    query = None
-    for p in parts[1:]:
-        if p.isdigit() and qty is None:
-            qty = int(p)
-        elif query is None:
-            query = p
-    ent = await _resolve_led_enterprise_tg(message, lang, query)
+    qty = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else None
+    price = parts[3] if len(parts) > 3 else None
+    ent = await _resolve_led_enterprise_tg(message, lang, parts[4] if len(parts) > 4 else None)
     if ent is None:
         return
-    owner = db.enterprise_owner(ent["code"])
-    have = db.get_inventory_qty(owner, good["code"])
-    want = qty if (qty and qty > 0) else have
-    status, info = economy.sell(owner, good, want)
-    if status == "not_sellable":
-        await message.reply(localized("sell_not_sellable", lang,
-                                      name=good_display_name(good, lang)))
-        return
-    if status == "nothing":
-        await message.reply(localized("sell_nothing", lang, name=good["name"]))
-        return
-    bank = db.get_bank(good["bank_code"])
-    await message.reply(localized("sell_done", lang, qty=info["qty"], name=good["name"],
-                                  unit=economy.format_money(info["unit"], bank),
-                                  total=economy.format_money(info["total"], bank)))
+    await offer_sale_tg(message, lang, db.enterprise_owner(ent["code"]), good, qty,
+                        parts[1], price)
 
 def _resolve_export_args_tg(target_query, price_s, currency, source):
     """(target, price, bank, error_key_or_None) — Telegram mirror."""

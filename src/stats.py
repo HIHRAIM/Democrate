@@ -14,8 +14,8 @@ import time
 import db
 import economy
 from utils import (
-    localized, get_chat_lang, category_label, good_display_name,
-    provision_level_label,
+    localized, format_stored_user, get_chat_lang, category_label,
+    good_display_name, provision_level_label,
 )
 
 logger = logging.getLogger("dem.stats")
@@ -33,6 +33,60 @@ def channel_lang(row):
     if row["platform"] == "discord":
         return get_chat_lang(f"{row['server_id']}:{row['channel_key']}")
     return get_chat_lang(row["channel_key"])
+
+TOP_KINDS = ("week", "good", "wealth")
+TOP_LIMIT = 10
+
+def leaderboard(kind, viewer_platform, platform, server_id, lang, code=None):
+    """`(title, lines)` of one `/top` board, or `(title, [])` when nobody is on
+    it yet — and `(None, None)` when the arguments do not name a board.
+
+    Three of them, because they answer the three questions people actually ask
+    of an economy: who has been busy lately (`week`, this server's production
+    over seven days), who is the best at one thing (`good`, all-time mastery)
+    and who is rich (`wealth`, balances in one currency). The first is the
+    default because it is the one a newcomer can still get onto.
+
+    Built here rather than in either half's command so that the two platforms
+    cannot drift into showing different boards, and off the same
+    `server_production` rows as the weekly statistics so that a board cannot
+    disagree with the figures posted beside it."""
+    def _name(row_platform, row_id, stored=None):
+        return format_stored_user(viewer_platform, row_platform, row_id,
+                                  stored or db.user_display_name(row_platform, row_id))
+
+    if kind == "week":
+        rows = db.top_producers(platform, server_id, int(time.time()) - 7 * 86400,
+                                limit=TOP_LIMIT)
+        return (localized("top_header_week", lang),
+                [localized("top_line_qty", lang, place=i, user=_name(r["p"], r["i"]),
+                           qty=r["qty"])
+                 for i, r in enumerate(rows, 1)])
+
+    if kind == "good":
+        good = db.get_good((code or "").strip().upper()) if code else None
+        if not good:
+            return None, None
+        rows = db.top_masters(good["code"], limit=TOP_LIMIT)
+        return (localized("top_header_good", lang,
+                          name=good_display_name(good, lang), code=good["code"]),
+                [localized("top_line_qty", lang, place=i, user=_name(r["p"], r["i"]),
+                           qty=r["produced"])
+                 for i, r in enumerate(rows, 1)])
+
+    if kind == "wealth":
+        bank = db.get_bank((code or "").strip().upper()) if code else None
+        if not bank:
+            return None, None
+        rows = db.top_balances(bank["code"], limit=TOP_LIMIT)
+        return (localized("top_header_wealth", lang, name=bank["currency_name"],
+                          code=bank["code"]),
+                [localized("top_line_money", lang, place=i,
+                           user=_name(r["p"], r["i"], r["display_name"]),
+                           amount=economy.format_money(r["balance"], bank))
+                 for i, r in enumerate(rows, 1)])
+
+    return None, None
 
 def fx_lines(union_code, lang):
     """One line per bank of the union: the published value and its change since

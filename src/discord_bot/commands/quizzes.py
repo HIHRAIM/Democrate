@@ -1,10 +1,19 @@
 """Taking a quiz on Discord, and everything around a stored result.
 
-A run is a live dialog: the question goes out as an embed with a button per
-option, and `_wait_message_or_stop` waits for either a click or a typed answer,
-whichever comes first. `_active_quizzes` maps a (channel, user) to the running
+A run is a live dialog: the question goes out as an embed with a dropdown of
+its options, and `_wait_message_or_view` waits for either a pick or a typed
+answer, whichever comes first. `_active_quizzes` maps a user to the running
 session so that `/quizzes-stop` can reach into it — it must exist exactly once,
 and its Telegram twin is `_active_quizzes_tg`.
+
+Every choice here is answerable through a component and not only by typing, and
+that is a requirement rather than a convenience. These five commands are
+`allowed_installs(users=True)`: they can be run where the app is installed on
+somebody's account rather than in the server, and there the bot receives the
+interaction but no messages at all. A dialog that waits for a typed number in
+that situation simply never hears it — the command answers, the list appears,
+and nothing happens for half an hour. Typing still works everywhere it used to;
+the dropdown is what makes the dialog answerable everywhere the command is.
 
 A result is stored only after the taker says yes, and reading it always goes
 through the identity set (db/quizzes.py), so a linked Discord+Telegram pair
@@ -32,31 +41,41 @@ from utils import (
 
 from discord_bot.client import _chat_key, bot
 from discord_bot.dialogs import (
-    DIALOG_TIMEOUT, _QuizButtons, _parse_user_ref, _wait_message,
+    _ChoiceSelect, _QuizButtons, _parse_user_ref, _wait_message_or_view,
 )
 
 _active_quizzes = {}
 
-async def _wait_message_or_stop(channel_id, user_id, stop_event, timeout=DIALOG_TIMEOUT):
-    """Race the taker's next message against a /quizzes-stop. Returns
-    ('message', msg), ('stop', None) or ('timeout', None)."""
-    def check(m):
-        """Accept the awaited person's next message, or the stop signal,
-        whichever comes first."""
-        return m.author.id == user_id and m.channel.id == channel_id
+async def _pick_from_list(interaction, lang, title, header, items, render_line,
+                          placeholder_key="quiz_pick_placeholder"):
+    """Show a numbered list and take the answer either way: a pick from the
+    dropdown, or the number typed into the chat.
 
-    msg_task = asyncio.ensure_future(bot.wait_for("message", check=check, timeout=timeout))
-    stop_task = asyncio.ensure_future(stop_event.wait())
-    done, pending = await asyncio.wait({msg_task, stop_task},
-                                       return_when=asyncio.FIRST_COMPLETED)
-    for task in pending:
-        task.cancel()
-    if stop_task in done:
-        return "stop", None
-    try:
-        return "message", msg_task.result()
-    except Exception:
-        return "timeout", None
+    Every numbered choice in this module goes through here because these
+    commands are installable on an account as well as in a server, and where the
+    bot is only installed on the account it never sees the typed reply — the
+    dropdown is what keeps the dialog answerable there. Returns the chosen item
+    or None."""
+    lines = [header] + [f"{i + 1}. {render_line(it)}" for i, it in enumerate(items)]
+    view = _ChoiceSelect(
+        interaction.user.id, lang,
+        [(f"{i + 1}. {render_line(it)}"[:100], None, str(i)) for i, it in enumerate(items)],
+        placeholder=localized(placeholder_key, lang))
+    await interaction.response.send_message(
+        embed=discord.Embed(title=title, description="\n".join(lines)[:4000],
+                            color=discord.Color(DEFAULT_EMBED_COLOR)),
+        view=view)
+    outcome, answer = await _wait_message_or_view(
+        interaction.channel_id, interaction.user.id, view)
+    if outcome == "choice" and answer is not None:
+        return items[int(answer)]
+    if outcome != "message":
+        return None
+    value = (answer.content or "").strip().rstrip(".")
+    if value.isdigit() and 1 <= int(value) <= len(items):
+        return items[int(value) - 1]
+    await interaction.channel.send(localized("choice_invalid", lang))
+    return None
 
 def _quiz_question_embed(quiz_id, lang, qindex, order, allow_prev, total):
     """One question as an embed: the topic, the question text and the
@@ -85,6 +104,28 @@ def _quiz_results_embed(quiz_id, lang, results, name):
             value += "\n\n" + a["top_desc"]
         embed.add_field(name=a["axis_name"][:256], value=value[:1024], inline=False)
     return embed
+
+async def _ask_weight(msg, channel, user_id, lang, num):
+    """Ask how strongly an option is meant and return 1.0, 1.5 or None.
+
+    A real option needs a strength as well as a number. Somebody typing their
+    answer supplies both at once ('2-Y'); somebody picking from the dropdown has
+    only given the number, so the strength is a second question. Returns None
+    when they never answer, which sends the question round again."""
+    view = _QuizButtons(user_id, lang, [
+        (localized("quiz_weight_weak", lang), ButtonStyle.secondary, 1.0),
+        (localized("quiz_weight_strong", lang), ButtonStyle.success, 1.5),
+    ])
+    prompt = await channel.send(
+        embed=discord.Embed(description=localized("quiz_answer_need_weight", lang, num=num),
+                            color=discord.Color(DEFAULT_EMBED_COLOR)),
+        view=view)
+    weight = await view.wait_click()
+    try:
+        await prompt.delete()
+    except Exception:
+        pass
+    return weight
 
 def _resume_state(row, quiz_id, n):
     """(orders, answers, qindex) of a parked attempt, or None when the saved
@@ -154,9 +195,16 @@ async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
     try:
         while qindex < n:
             allow_prev = qindex > 0
+            texts, kinds = quizzes.display_options(quiz_id, lang, qindex,
+                                                   orders[qindex], allow_prev)
+            view = _ChoiceSelect(
+                user_id, lang,
+                [(f"{i + 1}. {t}"[:100], None, str(i + 1)) for i, t in enumerate(texts)],
+                placeholder=localized("quiz_pick_placeholder", lang))
             await msg.edit(embed=_quiz_question_embed(quiz_id, lang, qindex, orders[qindex],
-                                                      allow_prev, n), view=None)
-            outcome, reply = await _wait_message_or_stop(channel.id, user_id, session["stop"])
+                                                      allow_prev, n), view=view)
+            outcome, answer = await _wait_message_or_view(
+                channel.id, user_id, view, session["stop"])
             if outcome == "stop":
                 db.save_quiz_progress("discord", user_id, quiz_id, lang, qindex,
                                       json.dumps(orders),
@@ -168,12 +216,18 @@ async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
             if outcome == "timeout":
                 await channel.send(localized("dialog_timeout", lang))
                 return
-            parsed = quizzes.parse_answer(reply.content or "")
-            if parsed is None:
-                await channel.send(localized("quiz_answer_invalid", lang))
-                continue
-            num, weight = parsed
-            _texts, kinds = quizzes.display_options(quiz_id, lang, qindex, orders[qindex], allow_prev)
+            reply = None
+            if outcome == "choice":
+                if answer is None:
+                    continue
+                num, weight = int(answer), None
+            else:
+                reply = answer
+                parsed = quizzes.parse_answer(reply.content or "")
+                if parsed is None:
+                    await channel.send(localized("quiz_answer_invalid", lang))
+                    continue
+                num, weight = parsed
             if num < 1 or num > len(kinds):
                 await channel.send(localized("quiz_answer_out_of_range", lang))
                 continue
@@ -189,12 +243,13 @@ async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
                 qindex += 1
             else:
                 if weight is None:
-                    await channel.send(localized("quiz_answer_need_weight", lang, num=num))
+                    weight = await _ask_weight(msg, channel, user_id, lang, num)
+                if weight is None:
                     accepted = False
                 else:
                     answers[qindex] = ("real", kind[1], weight)
                     qindex += 1
-            if accepted:
+            if accepted and reply is not None:
                 try:
                     await reply.delete()
                 except Exception:
@@ -231,21 +286,13 @@ async def quizzes_cmd(interaction: discord.Interaction):
     server; a paused run is offered for resuming rather than restarted."""
     lang = get_chat_lang(_chat_key(interaction))
     ids = quizzes.list_quizzes()
-    lines = [localized("quizzes_list_header", lang)]
-    for i, qid in enumerate(ids):
-        lines.append(f"{i + 1}. {quizzes.quiz_name(qid, lang)}")
-    await interaction.response.send_message(embed=discord.Embed(
-        title=localized("quizzes_title", lang),
-        description="\n".join(lines), color=discord.Color(DEFAULT_EMBED_COLOR)))
-
-    reply = await _wait_message(interaction.channel_id, interaction.user.id)
-    if reply is None:
+    chosen = await _pick_from_list(
+        interaction, lang, localized("quizzes_title", lang),
+        localized("quizzes_list_header", lang), ids,
+        lambda qid: quizzes.quiz_name(qid, lang))
+    if chosen is None:
         return
-    value = (reply.content or "").strip().rstrip(".")
-    if not value.isdigit() or not (1 <= int(value) <= len(ids)):
-        await interaction.channel.send(localized("choice_invalid", lang))
-        return
-    await _run_quiz_discord(interaction, ids[int(value) - 1])
+    await _run_quiz_discord(interaction, chosen)
 
 @bot.tree.command(name="quizzes-stop", description="pause the quiz you are taking; your progress is kept for 7 days")
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -275,21 +322,12 @@ async def quizzes_clear_cmd(interaction: discord.Interaction):
     if not rows:
         await interaction.response.send_message(localized("quizzes_clear_none", lang), ephemeral=True)
         return
-    lines = [localized("quizzes_clear_header", lang)]
-    for i, r in enumerate(rows):
-        lines.append(f"{i + 1}. {quizzes.quiz_name(r['quiz_id'], lang)} — {format_quiz_date(r['created_at'])}")
-    await interaction.response.send_message(embed=discord.Embed(
-        title=localized("quizzes_title", lang),
-        description="\n".join(lines), color=discord.Color(DEFAULT_EMBED_COLOR)))
-
-    reply = await _wait_message(interaction.channel_id, interaction.user.id)
-    if reply is None:
+    row = await _pick_from_list(
+        interaction, lang, localized("quizzes_title", lang),
+        localized("quizzes_clear_header", lang), rows,
+        lambda r: f"{quizzes.quiz_name(r['quiz_id'], lang)} — {format_quiz_date(r['created_at'])}")
+    if row is None:
         return
-    value = (reply.content or "").strip().rstrip(".")
-    if not value.isdigit() or not (1 <= int(value) <= len(rows)):
-        await interaction.channel.send(localized("choice_invalid", lang))
-        return
-    row = rows[int(value) - 1]
     db.delete_quiz_result(row["id"])
     await interaction.channel.send(localized(
         "quizzes_clear_deleted", lang,
@@ -376,21 +414,13 @@ async def quizzes_compare_cmd(interaction: discord.Interaction, user: str):
         await show(shared[0], via_channel=False)
         return
 
-    lines = [localized("quizzes_compare_header", lang)]
-    for i, qid in enumerate(shared):
-        lines.append(f"{i + 1}. {quizzes.quiz_name(qid, lang)}")
-    await interaction.response.send_message(embed=discord.Embed(
-        title=localized("quizzes_title", lang),
-        description="\n".join(lines), color=discord.Color(DEFAULT_EMBED_COLOR)))
-
-    reply = await _wait_message(interaction.channel_id, interaction.user.id)
-    if reply is None:
+    chosen = await _pick_from_list(
+        interaction, lang, localized("quizzes_title", lang),
+        localized("quizzes_compare_header", lang), shared,
+        lambda qid: quizzes.quiz_name(qid, lang))
+    if chosen is None:
         return
-    value = (reply.content or "").strip().rstrip(".")
-    if not value.isdigit() or not (1 <= int(value) <= len(shared)):
-        await interaction.channel.send(localized("choice_invalid", lang))
-        return
-    await show(shared[int(value) - 1], via_channel=True)
+    await show(chosen, via_channel=True)
 
 def _quiz_history_embed(quiz_id, lang, latest, previous):
     """The user's two most recent attempts of one quiz, side by side, each

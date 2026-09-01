@@ -5,10 +5,16 @@ gifts.
 `/craft` starts a timed run and returns immediately — the batch is announced
 later by main.py: production_loop in the chat the run was started in, which is
 why the command stores a notify key rather than awaiting anything. Energy is
-charged up front.
+charged up front. Up to five goods may be on the bench at once, one run of
+each, and the batch is divided between them.
 
 A good belongs to a person or an enterprise; the bank named at creation only
-*denominates* it, and is where `/sell` sends it.
+*denominates* it — it prices the good and it is the currency `/sell` is paid
+in, but it never buys anything itself.
+
+`offer_sale_tg` is the body of both `/sell` and `/ent-sell`, and it only puts
+the question: the goods and the money change hands in
+telegram_bot/callbacks.py: handle_econ_consent, once the buyer has agreed.
 
 Not this module's zone: enterprises and their warehouse
 (commands/enterprises.py), the production formulas (economy/production.py) and
@@ -21,6 +27,7 @@ from aiogram.types import Message
 
 import db
 import economy
+import stats
 from message_relay import clean_display_name, escape_html
 from utils import category_label, get_chat_lang, good_display_name, is_admin, localized
 
@@ -153,7 +160,11 @@ async def craft_tg(message: Message):
         starter_display=_tg_user_label(message.from_user))
     if status == "busy":
         await message.reply(localized("production_busy", lang,
+                                      name=good_display_name(good, lang),
                                       time=_fmt_duration(info["finish_at"] - int(time.time()))))
+        return
+    if status == "too_many":
+        await message.reply(localized("production_too_many", lang, limit=info["limit"]))
         return
     if status == "no_energy":
         await message.reply(localized("craft_no_energy", lang,
@@ -161,10 +172,13 @@ async def craft_tg(message: Message):
                                       have=economy.format_energy(info["have"])))
         return
     emoji = f" {good['emoji']}" if good["emoji"] else ""
-    await message.reply(localized("production_started", lang,
-                                  name=good_display_name(good, lang), emoji=emoji,
-                                  qty=info["qty"], duration=_fmt_duration(info["duration"]),
-                                  cost=economy.format_energy(info["cost"])))
+    started = localized("production_started", lang,
+                        name=good_display_name(good, lang), emoji=emoji,
+                        qty=info["qty"], duration=_fmt_duration(info["duration"]),
+                        cost=economy.format_energy(info["cost"]))
+    if info.get("first_run"):
+        started += "\n" + localized("production_first_run", lang)
+    await message.reply(started)
 
 @router.message(Command("inventory"))
 async def inventory_tg(message: Message):
@@ -181,50 +195,105 @@ async def inventory_tg(message: Message):
     for row in inv:
         m = db.get_produced(owner, row["good_code"])
         good = db.get_good(row["good_code"])
-        bank = db.get_bank(row["bank_code"])
-        val = economy.format_money(economy.unit_value(good, m), bank) if good and bank else "—"
+        bank = db.get_bank(row["bank_code"]) if row["bank_code"] else None
         emoji = f"{row['emoji']} " if row["emoji"] else ""
-        lines.append(escape_html(localized(
-            "inventory_line", lang, emoji=emoji,
-            name=good_display_name(good, lang) if good else row["name"],
-            code=row["good_code"], qty=row["qty"], value=val,
-            level=economy.mastery_level(m))))
+        name = good_display_name(good, lang) if good else row["name"]
+        level = economy.mastery_level(m)
+        if good and bank:
+            lines.append(escape_html(localized(
+                "inventory_line", lang, emoji=emoji, name=name, code=row["good_code"],
+                qty=row["qty"], level=level, max_level=economy.max_level(),
+                value=economy.format_money(economy.unit_value(good, m), bank))))
+        else:
+            lines.append(escape_html(localized(
+                "inventory_line_base", lang, emoji=emoji, name=name,
+                code=row["good_code"], qty=row["qty"], level=level,
+                max_level=economy.max_level())))
     await message.reply("\n".join(lines), parse_mode="HTML")
+
+async def _resolve_buyer_tg(message, target):
+    """(buyer_owner, display, (kind, key)) for whoever is being sold to: an
+    enterprise by code, or a Telegram account by reply, @username or id."""
+    ent = db.find_enterprise(target) if target else None
+    if ent:
+        return (db.enterprise_owner(ent["code"]), f"{ent['name']} [{ent['code']}]",
+                ("enterprise", ent["code"]))
+    uid = await _resolve_tg_target(message, target)
+    if uid is None:
+        return None, None, None
+    return (db.canonical_user("telegram", uid), await _quiz_target_label_tg(uid),
+            ("user", str(uid)))
+
+async def offer_sale_tg(message, lang, seller, good, want, target_arg, price_arg):
+    """The body behind `/sell` and `/ent-sell`: resolve the buyer and the price,
+    then put the offer to them with consent buttons.
+
+    Nothing moves here. The goods and the money change hands inside
+    telegram_bot/callbacks.py: handle_econ_consent once the buyer has pressed
+    accept, which is also where the sale can still fail on funds."""
+    from telegram_bot.dialogs import _econ_consent_keyboard, _register_econ_consent
+
+    if db.is_base_good(good["code"]):
+        await message.reply(localized("sell_not_sellable", lang,
+                                      name=good_display_name(good, lang)))
+        return
+    have = db.get_inventory_qty(seller, good["code"])
+    if want is None or want <= 0:
+        want = have
+    want = min(want, have)
+    if want <= 0:
+        await message.reply(localized("sell_nothing", lang, name=good["name"]))
+        return
+    buyer, buyer_name, consent = await _resolve_buyer_tg(message, target_arg)
+    if buyer is None:
+        await message.reply(localized("sell_bad_target", lang))
+        return
+    if buyer == seller:
+        await message.reply(localized("sell_self", lang))
+        return
+    price = economy.parse_amount(price_arg) if price_arg \
+        else economy.asking_price(seller, good, want)
+    if price is None:
+        await message.reply(localized("bad_amount", lang))
+        return
+    bank = db.get_bank(good["bank_code"]) if good["bank_code"] else None
+    if price > 0 and not bank:
+        await message.reply(localized("sell_no_bank", lang))
+        return
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    token = _register_econ_consent({
+        "action": "sell", "seller": list(seller), "buyer_owner": list(buyer),
+        "buyer_kind": consent[0], "buyer": consent[1], "buyer_name": buyer_name,
+        "good": good["code"], "qty": want, "price": price,
+        "bank": bank["code"] if bank else None, "lang": lang})
+    await message.answer(
+        localized("sell_offer", lang, qty=want, emoji=emoji,
+                  name=good_display_name(good, lang), buyer=buyer_name,
+                  price=economy.format_money(price, bank) if bank
+                  else localized("export_free", lang)),
+        reply_markup=_econ_consent_keyboard(lang, token))
 
 @router.message(Command("sell"))
 async def sell_tg(message: Message):
-    """Sell a good back to its bank at the current unit value.
+    """/sell <good_code> <buyer> [qty] [price] — sell a good to another member
+    or to an enterprise.
 
-    The economy's money source — the bank mints the proceeds. Base goods carry no
-    market value and cannot be sold."""
+    No bank buys goods: the units go to the buyer and the money comes out of
+    their account, in the good's own currency. The buyer has to accept."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
     parts = (message.text or "").split()
-    if len(parts) < 2:
+    if len(parts) < 3:
         await message.reply(localized("sell_usage", lang))
         return
     good = db.get_good(parts[1].strip().upper())
     if not good:
         await message.reply(localized("good_not_found", lang))
         return
-    owner = db.canonical_user("telegram", message.from_user.id)
-    have = db.get_inventory_qty(owner, good["code"])
-    want = have
-    if len(parts) > 2 and parts[2].isdigit() and int(parts[2]) > 0:
-        want = int(parts[2])
-    status, info = economy.sell(owner, good, want)
-    if status == "not_sellable":
-        await message.reply(localized("sell_not_sellable", lang,
-                                      name=good_display_name(good, lang)))
-        return
-    if status == "nothing":
-        await message.reply(localized("sell_nothing", lang, name=good["name"]))
-        return
-    bank = db.get_bank(good["bank_code"])
-    await message.reply(localized("sell_done", lang, qty=info["qty"], name=good["name"],
-                                  unit=economy.format_money(info["unit"], bank),
-                                  total=economy.format_money(info["total"], bank)))
+    qty = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else None
+    await offer_sale_tg(message, lang, db.canonical_user("telegram", message.from_user.id),
+                        good, qty, parts[2], parts[4] if len(parts) > 4 else None)
 
 @router.message(Command("autocraft"))
 async def autocraft_tg(message: Message):
@@ -247,10 +316,15 @@ async def autocraft_tg(message: Message):
         return
     worker = db.canonical_user("telegram", message.from_user.id)
     on = parts[2].strip().lower() in ("on", "enable", "1", "true", "yes")
+    others, limit = economy.autocraft_slots(owner, good["code"])
+    if on and others >= limit:
+        await message.reply(localized("autocraft_too_many", lang, limit=limit))
+        return
     db.set_autocraft(owner, good["code"], on,
                      starter=(worker[1], worker[2]), server=server)
     await message.reply(localized("autocraft_on" if on else "autocraft_off", lang,
-                                  name=good_display_name(good, lang)))
+                                  name=good_display_name(good, lang),
+                                  lines=others + 1 if on else others))
 
 @router.message(Command("autosend"))
 async def autosend_tg(message: Message):
@@ -401,3 +475,24 @@ async def goods_tg(message: Message):
                     value=economy.format_money(good["base_value"], bank),
                     energy=economy.format_energy(good["energy_cost"]))))
     await message.reply("\n".join(lines)[:4000], parse_mode="HTML")
+
+@router.message(Command("top"))
+async def top_tg(message: Message):
+    """Show one of the three leaderboards: /top [week|good|wealth] [code]."""
+    lang = get_chat_lang(_chat_key(message))
+    if message.chat.type not in GROUP_CHAT_TYPES:
+        await message.reply(localized("top_no_server", lang))
+        return
+    parts = (message.text or "").split()[1:]
+    kind = (parts[0].lower() if parts else "week")
+    code = parts[1] if len(parts) > 1 else None
+    title, lines = stats.leaderboard(kind, "telegram", "telegram",
+                                     str(message.chat.id), lang, code)
+    if title is None:
+        await message.reply(localized("top_bad_kind", lang))
+        return
+    if not lines:
+        await message.reply(localized("top_none", lang))
+        return
+    body = [f"<b>{escape_html(title)}</b>"] + [escape_html(line) for line in lines]
+    await message.reply("\n".join(body)[:4000], parse_mode="HTML")

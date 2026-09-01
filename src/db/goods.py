@@ -117,6 +117,46 @@ def get_produced(owner, good_code):
         " AND good_code=?", (ot, op, str(oi), good_code)).fetchone()
     return row["produced"] if row else 0
 
+def total_produced(owner):
+    """Units of everything this owner has ever produced, across all goods.
+
+    Zero means they have never made anything — which is how
+    `economy/production.py: is_first_run_ever` recognises somebody's very first
+    run and lets it finish at once."""
+    ot, op, oi = owner
+    row = cur.execute(
+        "SELECT COALESCE(SUM(produced), 0) AS total FROM mastery"
+        " WHERE owner_type=? AND owner_platform=? AND owner_id=?",
+        (ot, op, str(oi))).fetchone()
+    return row["total"] if row else 0
+
+def top_producers(platform, server_id, since_ts, limit=10, good_code=None):
+    """The people who produced the most on this server since `since_ts`:
+    ``[(producer_platform, producer_id, qty, value)]``, biggest first.
+
+    Read from `server_production`, the same rows the provision and GDP figures
+    are built from, so a leaderboard cannot disagree with the statistics beside
+    it. Enterprise output is left out — a board is between people."""
+    sql = ("SELECT producer_platform AS p, producer_id AS i,"
+           " SUM(qty) AS qty, SUM(value) AS value FROM server_production"
+           " WHERE platform=? AND server_id=? AND created_at>=?"
+           " AND producer_type='user' AND producer_id IS NOT NULL")
+    params = [platform, str(server_id), int(since_ts)]
+    if good_code:
+        sql += " AND good_code=?"
+        params.append(good_code)
+    sql += " GROUP BY producer_platform, producer_id ORDER BY qty DESC, value DESC LIMIT ?"
+    params.append(int(limit))
+    return cur.execute(sql, params).fetchall()
+
+def top_masters(good_code, limit=10):
+    """The owners with the most of one good ever produced — the all-time board
+    for a single good, straight off the mastery rows."""
+    return cur.execute(
+        "SELECT owner_platform AS p, owner_id AS i, produced FROM mastery"
+        " WHERE good_code=? AND owner_type='user' AND produced>0"
+        " ORDER BY produced DESC LIMIT ?", (good_code, int(limit))).fetchall()
+
 def add_produced(owner, good_code, delta):
     """Credit produced units to an owner's mastery.
 
@@ -199,12 +239,30 @@ def remove_earn_channel(platform, chan_key):
     return c.rowcount > 0
 
 def get_earn_channel(platform, chan_key):
-    """The earning binding of a channel, or None — read on *every* message in
-    both halves, which is why it is a single indexed lookup and why an
-    unconfigured channel costs exactly one query."""
+    """The earning binding of one exact channel key, or None — read on *every*
+    message in both halves, which is why it is a single indexed lookup and why
+    an unconfigured channel costs exactly one query."""
     return cur.execute(
         "SELECT * FROM earn_channels WHERE platform=? AND chan_key=?",
         (platform, str(chan_key))).fetchone()
+
+def resolve_earn_channel(platform, keys):
+    """The earning binding that covers a message, looked up outwards.
+
+    `keys` is the message's place from the most specific outwards — on Discord
+    a thread or forum post, then the channel it hangs under, then its category;
+    on Telegram a forum topic and then the group itself. The first key with a
+    row wins, which is what makes `/set-earn` in a channel cover the threads
+    inside it while a thread may still name a currency of its own. The same
+    outwards resolution db/settings.py does for the language, for the same
+    reason: people expect a setting on a place to apply inside it."""
+    for key in keys:
+        if key is None:
+            continue
+        row = get_earn_channel(platform, key)
+        if row:
+            return row
+    return None
 
 def set_autocraft(owner, good_code, enabled, starter=None, server=None):
     """Toggle continuous autoproduction. `starter` is the worker whose mastery
@@ -233,6 +291,23 @@ def get_autocraft_all():
     Disabled rows stay behind so that switching the line back on keeps its
     carried fraction."""
     return cur.execute("SELECT * FROM autocraft WHERE enabled=1").fetchall()
+
+def count_autocraft(owner, exclude_good=None):
+    """How many 24/7 lines an owner is running, optionally ignoring one good.
+
+    Both the limit on how many goods may run at once and the divisor the hourly
+    tick cuts each line's rate by: five lines produce what one line would, in
+    five streams. `exclude_good` is what lets `/autocraft on` ask "how many
+    others" before adding this one."""
+    ot, op, oi = owner
+    sql = ("SELECT COUNT(*) AS n FROM autocraft WHERE owner_type=? AND owner_platform=?"
+           " AND owner_id=? AND enabled=1")
+    args = [ot, op, str(oi)]
+    if exclude_good:
+        sql += " AND good_code<>?"
+        args.append(exclude_good)
+    row = cur.execute(sql, args).fetchone()
+    return int(row["n"]) if row else 0
 
 def set_autosend(owner, good_code, percent, target):
     """Set (or clear, with percent 0 or None) a daily transfer of a share of
@@ -298,11 +373,30 @@ def get_due_productions(now_ts):
         "SELECT * FROM productions WHERE finish_at<=? ORDER BY finish_at", (int(now_ts),)
     ).fetchall()
 
-def get_active_production(starter_platform, starter_id):
-    """The unfinished run a worker is busy with, if any (one job at a time)."""
+def get_active_production(starter_platform, starter_id, good_code=None):
+    """The unfinished run a worker has going, if any — of one named good when
+    `good_code` is given.
+
+    A worker may keep several goods in production at once, but only one run per
+    good: asking for a specific good is how `start_production` refuses a second
+    run of something already on the bench."""
+    if good_code:
+        return cur.execute(
+            "SELECT * FROM productions WHERE starter_platform=? AND starter_id=?"
+            " AND good_code=? ORDER BY finish_at LIMIT 1",
+            (starter_platform, str(starter_id), good_code)).fetchone()
     return cur.execute(
         "SELECT * FROM productions WHERE starter_platform=? AND starter_id=?"
         " ORDER BY finish_at LIMIT 1", (starter_platform, str(starter_id))).fetchone()
+
+def count_active_productions(starter_platform, starter_id):
+    """How many goods a worker has in production right now — the number the
+    parallel-production limit is measured against, and the divisor the batch
+    size is cut by."""
+    row = cur.execute(
+        "SELECT COUNT(*) AS n FROM productions WHERE starter_platform=? AND starter_id=?",
+        (starter_platform, str(starter_id))).fetchone()
+    return int(row["n"]) if row else 0
 
 def delete_production(prod_id):
     """Remove a finished run. `finish_production` deletes the row before

@@ -77,14 +77,37 @@ def get_union_names(code):
         for r in cur.execute("SELECT lang, name FROM union_names WHERE code=?", (code,)).fetchall()
     }
 
-def setup_chat(platform, prefix, union_code, setup_by):
-    """Register a Discord server / Telegram group (its bare prefix id) in a union."""
+def setup_chat(platform, prefix, union_code, setup_by, title=None):
+    """Register a Discord server / Telegram group (its bare prefix id) in a union.
+
+    `title` is the community's own name, remembered so that anything printing a
+    server — a bank's central chat, a service event — has something to say when
+    the bot cannot see the place at that moment. A call without one leaves any
+    name already stored alone, so re-running `/setup` never blanks it."""
     cur.execute(
-        "INSERT INTO chats (platform, chat_id, union_code, setup_by, created_at) VALUES (?,?,?,?,?)"
-        " ON CONFLICT(chat_id) DO UPDATE SET union_code=excluded.union_code, setup_by=excluded.setup_by",
-        (platform, str(prefix), union_code, str(setup_by), int(time.time()))
+        "INSERT INTO chats (platform, chat_id, union_code, setup_by, title, created_at)"
+        " VALUES (?,?,?,?,?,?)"
+        " ON CONFLICT(chat_id) DO UPDATE SET union_code=excluded.union_code,"
+        " setup_by=excluded.setup_by, title=COALESCE(excluded.title, chats.title)",
+        (platform, str(prefix), union_code, str(setup_by), title, int(time.time()))
     )
     conn.commit()
+
+def set_chat_title(prefix, title):
+    """Remember a community's current name, if it is bound to a union at all.
+
+    Cheap enough to call whenever the bot happens to see the place: it touches
+    one row and never creates one, so a chat nobody has `/setup` yet stays
+    absent rather than half-registered."""
+    if not title:
+        return
+    cur.execute("UPDATE chats SET title=? WHERE chat_id=?", (str(title)[:200], str(prefix)))
+    conn.commit()
+
+def chat_title(prefix):
+    """The stored name of a server/group, or None."""
+    row = get_chat(prefix)
+    return row["title"] if row and row["title"] else None
 
 def get_chat(prefix):
     """The chats row of a server/group by its bare id, or None when it was

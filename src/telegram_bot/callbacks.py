@@ -154,13 +154,14 @@ async def handle_quiz_button(query: CallbackQuery):
 @router.callback_query(lambda c: c.data and c.data.startswith("ec:"))
 async def handle_econ_consent(query: CallbackQuery):
     """Answer an economy button ('ec:'): bank and enterprise leadership,
-    treaties, pegs, join requests and export offers.
+    treaties, pegs, join requests, sales and export offers.
 
     The longest handler in the half, because every economy decision that needs
     somebody else's agreement lands here. Who may press depends on the action — the
     named person for a leadership offer, any leader of the other bank for a treaty
     or a peg, any leader of the receiving enterprise for a join request or an
-    export — and the money only moves after that check passes."""
+    export, and the buyer for a sale, whoever the buyer happens to be — and the
+    money only moves after that check passes."""
     from telegram_bot.commands.enterprises import _fmt_eta
 
     try:
@@ -197,6 +198,15 @@ async def handle_econ_consent(query: CallbackQuery):
             (db.is_enterprise_leader(pend["ent"], "telegram", user.id)
              or is_admin("telegram", user.id))
         deny_key = "ent_consent_not_leader"
+    elif action == "sell":
+        if pend["buyer_kind"] == "enterprise":
+            allowed = user is not None and \
+                (db.is_enterprise_leader(pend["buyer"], "telegram", user.id)
+                 or is_admin("telegram", user.id))
+            deny_key = "ent_consent_not_leader"
+        else:
+            allowed = user is not None and user.id == int(pend["buyer"])
+            deny_key = "consent_not_yours"
     else:
         await query.answer()
         return
@@ -285,6 +295,27 @@ async def handle_econ_consent(query: CallbackQuery):
                     text = localized(f"export_{status}", lang)
         else:
             text = localized("export_declined", lang)
+    elif action == "sell":
+        if accepted:
+            good = db.get_good(pend["good"])
+            if good:
+                seller = tuple(pend["seller"])
+                buyer = tuple(pend["buyer_owner"])
+                status, info = economy.sell(seller, buyer, good, pend["qty"],
+                                            pend["price"], pend["bank"])
+                bank = db.get_bank(pend["bank"]) if pend["bank"] else None
+                emoji = f"{good['emoji']} " if good["emoji"] else ""
+                if status == "ok":
+                    text = localized(
+                        "sell_done", lang, qty=info["qty"], emoji=emoji,
+                        name=good_display_name(good, lang), buyer=pend["buyer_name"],
+                        total=economy.format_money(info["total"], bank) if bank
+                        else localized("export_free", lang))
+                else:
+                    text = localized(f"sell_{status}", lang,
+                                     name=good_display_name(good, lang))
+        else:
+            text = localized("sell_declined", lang)
     elif action == "auto_export":
         if accepted:
             db.remove_auto_export(pend["from"], pend["ent"], pend["good"])

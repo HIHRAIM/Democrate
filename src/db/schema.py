@@ -265,10 +265,13 @@ def _migrate_core():
     """Schema upgrades for the party/quiz core. `chat_settings` learns when a
     language was chosen and whether the chat is a private conversation with the
     bot, so the one-year retention of DM languages can find its rows without
-    guessing at id shapes."""
+    guessing at id shapes. `chats` learns the community's own name, which is
+    what lets a bank card say where its central server is instead of printing
+    the bare id at somebody."""
     with _db_lock:
         _ensure_column("chat_settings", "updated_at", "INTEGER")
         _ensure_column("chat_settings", "is_dm", "INTEGER DEFAULT 0")
+        _ensure_column("chats", "title", "TEXT")
 
 def _ensure_column(table, column, ddl):
     """Guarded ALTER TABLE ... ADD COLUMN for SQLite (no IF NOT EXISTS there)."""

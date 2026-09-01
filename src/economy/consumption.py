@@ -4,10 +4,15 @@ whether they were fed.
 The daily meal is a purchase, not a levy: each base category is taken out of
 the warehouses of the enterprises based on that server — market goods first,
 base goods as the filler behind them — and every market unit is paid for at the
-unit value /sell would have fetched, counting into the enterprise's period
-sales like any other sale. Base goods carry no market value and feed for free.
+unit value its quality commands, counting into the enterprise's period sales
+like any other sale. Base goods carry no market value and feed for free.
 Nothing is ever taken from a personal inventory, and a server whose population
 produced nothing that day is not fed at all.
+
+This is where most of the money in the economy comes from. No bank buys goods,
+so the day's shopping and the message rewards are the only two sources there
+are — which is why `_draw_evenly` spreads the demand over every warehouse that
+has stock instead of emptying whichever one happens to sort first.
 
 Provision reads the consumption rows back rather than recomputing anything,
 which is the whole point of the design: the score answers "was everyone fed?"
@@ -54,11 +59,53 @@ def daily_need(category, population):
                       _cfg("prov_units_per_person", 5.0) / 7.0)
     return per_person * population * float(_cat_cfg("prov_category_weight", category, 1.0))
 
+def _category_sources(enterprises, cat):
+    """(market, base) lists of everything on the server that can feed one base
+    category, each entry a warehouse, a good and how much of it is left.
+
+    Split in two because the preference between them is a rule and not a
+    ranking: a category is fed from market goods first and falls back on base
+    goods only for what they could not cover."""
+    market, base = [], []
+    for ent in enterprises:
+        owner = db.enterprise_owner(ent["code"])
+        for row in db.enterprise_category_stock(ent["code"], cat):
+            good = db.get_good(row["good_code"])
+            if not good or int(row["qty"]) <= 0:
+                continue
+            entry = {"owner": owner, "good": good, "left": int(row["qty"])}
+            (base if db.is_base_good(good["code"]) else market).append(entry)
+    return market, base
+
+def _draw_evenly(sources, want):
+    """Take `want` units from `sources` a pass at a time, spreading the demand
+    over every warehouse that has stock.
+
+    The day's shopping is the enterprises' main income now that no bank buys
+    goods, so it must not be a race won by whoever sorts first: an even draw
+    means five bakeries each sell a fifth of the bread rather than the first one
+    selling all of it. Returns [(source, units)] and leaves `left` decremented."""
+    taken, remaining = [], int(want)
+    while remaining > 0:
+        alive = [s for s in sources if s["left"] > 0]
+        if not alive:
+            break
+        share = max(1, remaining // len(alive))
+        for s in alive:
+            if remaining <= 0:
+                break
+            n = min(share, s["left"], remaining)
+            s["left"] -= n
+            remaining -= n
+            taken.append((s, n))
+    return taken
+
 def _pay_for_consumed(owner, good, qty):
-    """Pay an enterprise for what the population ate, at the unit value /sell
-    would have fetched: consumption is a sale to the server, not a levy. Base
-    goods carry no market value and so pay nothing — they feed for free. Like a
-    sale, it counts into the period sales behind percent-of-sales salaries."""
+    """Pay an enterprise for what the population ate, at the unit value the
+    good's quality commands: consumption is a purchase by the server, not a
+    levy. Base goods carry no market value and so pay nothing — they feed for
+    free. Like any sale, it counts into the period sales behind
+    percent-of-sales salaries."""
     if not good["bank_code"] or db.is_base_good(good["code"]):
         return 0
     total = unit_value(good, db.get_produced(owner, good["code"])) * qty
@@ -90,29 +137,21 @@ def consume_for_server(platform, server_id, day, now=None):
         need = daily_need(cat, population)
         want = int(math.ceil(need))
         taken, satisfaction, market = 0, 0.0, False
-        for ent in enterprises:
-            if taken >= want:
-                break
-            owner = db.enterprise_owner(ent["code"])
-            for row in db.enterprise_category_stock(ent["code"], cat):
-                if taken >= want:
-                    break
-                good = db.get_good(row["good_code"])
-                if not good:
-                    continue
-                qty = min(int(row["qty"]), want - taken)
-                if qty <= 0:
-                    continue
-                db.add_inventory(owner, good["code"], -qty)
-                taken += qty
-                if db.is_base_good(good["code"]):
-                    satisfaction += qty
-                else:
-                    market = True
-                    level = mastery_level(db.get_produced(owner, good["code"]))
-                    satisfaction += qty * (1.0 + _cfg("prov_quality_bonus", 0.25)
-                                           * max(level - 1, 0))
-                    result["paid"] += _pay_for_consumed(owner, good, qty)
+        market_src, base_src = _category_sources(enterprises, cat)
+        drawn = _draw_evenly(market_src, want)
+        drawn += _draw_evenly(base_src, want - sum(n for _s, n in drawn))
+        for src, qty in drawn:
+            owner, good = src["owner"], src["good"]
+            db.add_inventory(owner, good["code"], -qty)
+            taken += qty
+            if db.is_base_good(good["code"]):
+                satisfaction += qty
+            else:
+                market = True
+                level = mastery_level(db.get_produced(owner, good["code"]))
+                satisfaction += qty * (1.0 + _cfg("prov_quality_bonus", 0.25)
+                                       * max(level - 1, 0))
+                result["paid"] += _pay_for_consumed(owner, good, qty)
         db.record_server_consumption(platform, server_id, day, cat, population,
                                      need, taken, satisfaction, not market)
         result["categories"][cat] = {"need": need, "consumed": taken,

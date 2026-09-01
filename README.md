@@ -43,7 +43,7 @@ Democrate is a cross-platform coordination bot for **unions** of wiki communitie
      - `SERVICE_CHATS` — chats that receive startup/shutdown and administrative events. Telegram format: `"-1000000000000:0"` (chat_id:thread_id); Discord format: numeric channel ID.
      - `BACKUP_CHATS` — chats that receive encrypted database backups every 12 hours. Same format.
      - `SUPPORT_CHATS` — chats that receive localization suggestions from `/loc-suggest`. Same format.
-     - `ECONOMY` — the economy's tuning constants (documented inline): message-earning anti-abuse knobs (`min_chars`, `cooldown`, `sqrt_cap`, `hourly_activity_cap`, `currency_per_activity`, `energy_per_activity`), crafting-mastery curve (`alpha`, `beta`, `autocraft_cap`), foreign-exchange behavior (`fx_daily_clamp`, `fx_activity_weight`, `fx_min_value`, `fx_initial_value`, `convert_fee`), timed-production balance (`base_good_energy`, `produce_base_sec`, `produce_min_sec`, `produce_max_sec`, `produce_level_time`, `produce_level_yield`, `auto_efficiency`, `category_time_mult`, `category_yield`), the provision model (`prov_units_per_person`, `prov_daily_units_per_person`, `prov_quality_bonus`, `prov_max_score`, `prov_task_bonus`, `prov_category_weight`), monthly-task generation (`task_growth`, `task_min_qty`, `task_optional_goods`) and export logistics (`transport_local_sec`, `transport_cross_server_sec`, `transport_cross_union_sec`, `transport_per_unit_sec`, `transport_perish_rate`).
+     - `ECONOMY` — the economy's tuning constants (documented inline): message-earning anti-abuse knobs (`min_chars`, `cooldown`, `sqrt_cap`, `hourly_activity_cap`, `currency_per_activity`, `energy_per_activity`, `starter_energy`), crafting-mastery curve (`alpha`, `mastery_cost_weight`, `mastery_max_level`, `mastery_scale`, `autocraft_cap`, `parallel_production`), foreign-exchange behavior (`fx_daily_clamp`, `fx_activity_weight`, `fx_min_value`, `fx_initial_value`, `convert_fee`), timed-production balance (`base_good_energy`, `produce_base_sec`, `produce_min_sec`, `produce_max_sec`, `produce_level_time`, `produce_level_yield`, `auto_efficiency`, `lucky_batch_chance`, `lucky_batch_multiplier`, `category_time_mult`, `category_yield`), the provision model (`prov_units_per_person`, `prov_daily_units_per_person`, `prov_quality_bonus`, `prov_max_score`, `prov_task_bonus`, `prov_category_weight`), monthly-task generation (`task_growth`, `task_min_qty`, `task_optional_goods`) and export logistics (`transport_local_sec`, `transport_cross_server_sec`, `transport_cross_union_sec`, `transport_per_unit_sec`, `transport_perish_chance`, `transport_perish_max_share`).
 
    > **Message Content intent:** message earning, the interactive dialogs and the numbered menus read ordinary messages, which requires the privileged **Message Content Intent** — enable it for the bot in the Discord Developer Portal, otherwise the bot will not start.
 
@@ -91,9 +91,9 @@ src/
     money.py             amounts, mastery, unit value, craft cost
     activity.py          earning from messages
     production.py        timed production, autocraft, autosend
-    trade.py             selling to a bank, currency values, rates, conversion
+    trade.py             selling between holders, currency values, rates, conversion
     payroll.py           the daily/weekly/monthly ticks, wages, dues, salaries
-    logistics.py         distance, transit time, perishing, shipments
+    logistics.py         distance, transit time, spoilage risk, shipments
     consumption.py       the daily meal, provision, GDP
     tasks.py             monthly task generation and evaluation
 
@@ -194,14 +194,15 @@ Only `/setolympiad` is always present. The rest are registered on the command li
 | `/open-account <code>` | Open an account (also opened automatically on first earning) | Everyone |
 | `/balance [code]` | Your money, energy and profession — all banks, or one | Everyone |
 | `/pay <user> <amount> <code>` | Transfer money to another user (same currency, atomic) | Everyone |
-| `/set-earn <code> <on\|off> [rate]` | Make the current channel earn a bank's currency (every reply is ephemeral — on Telegram, self-deleting) | Bank Leaders / Server Admins / Bot Admins |
+| `/set-earn <code> <on\|off> [rate]` | Make the current channel earn a bank's currency; threads, forum posts and Telegram topics inside it inherit the binding unless they name their own (every reply is ephemeral — on Telegram, self-deleting) | Bank Leaders / Server Admins / Bot Admins |
 | `/create-good <name> <base_value> <energy_cost> [emoji] [category] [currency] [enterprise]` | Create a good owned by you (or your enterprise), denominated in a bank of this union, optionally tied to a base category | Everyone |
 | `/goods` | The goods available here: the five base categories plus the union's market goods | Everyone |
 | `/craft <good_code> [enterprise]` | Start a timed production run (a few minutes); the batch lands in your — or your enterprise's — inventory | Everyone |
-| `/inventory` | Your goods with quantities, unit values and quality levels | Everyone |
-| `/sell <good_code> [qty]` | Sell goods back to the denominating bank at the current unit value (the bank mints the proceeds); base goods are not sellable | Everyone |
+| `/inventory` | Your goods with quantities, quality levels and unit values (base goods show no price) | Everyone |
+| `/top [week\|good\|wealth] [code]` | Leaderboards: this week's producers on this server, a good's masters of all time, a currency's largest holdings | Everyone |
+| `/sell <good_code> <buyer> [qty] [price]` | Sell goods to a member or an enterprise; the buyer accepts and pays from their account. Base goods are not sellable | Everyone |
 | `/give-good <user> <good_code> [qty]` | Hand goods from your inventory to another user | Everyone |
-| `/autocraft <good_code> <on\|off> [enterprise]` | Continuous 24/7 autoproduction — slower than manual runs, halts without energy | Everyone |
+| `/autocraft <good_code> <on\|off> [enterprise]` | Continuous 24/7 autoproduction — slower than manual runs, up to five lines sharing the tempo, halts without energy | Everyone |
 | `/autosend <good_code> <percent> <user\|party\|enterprise>` | Auto-send a share of a good's stock daily | Everyone |
 | `/set-profession <user> <good_code>` | Override a member's profession in your bank | Bank Leaders |
 | `/fine <user> <amount> [reason]` | Fine a user in your bank's currency (balance may go negative — a debt) | Bank Leaders |
@@ -225,7 +226,7 @@ Only `/setolympiad` is always present. The rest are registered on the command li
 | `/ent-position <name> <salary> [code]` | A position and its salary: an exact amount (`12.34`), a percent of period sales (`5%`), `0` removes | Enterprise Leaders |
 | `/ent-assign <user> <position> [code]` | Put a worker on a position (`-` clears) | Enterprise Leaders |
 | `/ent-salary <user> <salary> [code]` | A worker's personal salary override (amount / percent / `0`) | Enterprise Leaders |
-| `/ent-sell <good_code> [qty] [code]` | Sell the enterprise's stock to the bank; proceeds go to the enterprise's account and count as sales | Enterprise Leaders |
+| `/ent-sell <good_code> <buyer> [qty] [price] [code]` | Sell the enterprise's stock to a member or another enterprise; proceeds go to the enterprise's account and count as sales | Enterprise Leaders |
 | `/export <good_code> <qty> <target> [price] [currency] [code]` | Ship goods to another enterprise (any server). The target leader must always accept; the cargo then travels for its transit time before arriving | Enterprise Leaders |
 | `/auto-export <good_code> <qty\|off> <target> [price] [currency] [code]` | Recurring weekly shipment contract (the receiving leader accepts once; `off` cancels without consent) | Enterprise Leaders |
 | `/transit [code]` | An enterprise's goods still in transit — what, how much, to/from where, time left | Everyone |
@@ -250,7 +251,7 @@ Telegram mirrors the Discord commands (both `/cmd_name` and `/cmd-name` spelling
 | `/lang`, `/locallang` | Available to group administrators, as on Discord |
 | `/setadmin`, `/remadmin`, `/localizer_add`, `/localizer_rem` | Target may be given as an ID, a public `@username`, or by replying to the user's message |
 
-All other commands — `/setup`, `/add-unia`, `/allow-parties`, `/party`, `/govt`, `/edit-party`, `/edit-rules`, `/edit-party-admin`, `/party-join`, `/party-leave`, `/party-kick`, `/add-govt`, `/quizzes*`, `/privacy`, `/locale`, `/loc_compare`, `/loc_suggest`, `/loc_reply`, `/list_chats`, `/force_leave`, `/backup`, `/help`, `/setlogs`, `/settasks`, the whole economy set (`/create_bank`, `/bank`, `/edit_bank`, `/bank_add_leader`, `/bank_transfer`, `/open_account`, `/balance`, `/pay`, `/set_earn`, `/goods`, `/craft`, `/inventory`, `/sell`, `/give_good`, `/autocraft`, `/autosend`, `/set_profession`, `/fine`, `/treaty`, `/set_rate`, `/convert`, `/rates`, `/set_wage`, `/party_dues`) and the whole enterprise set (`/add_enterprise`, `/enterprise`, `/edit_enterprise`, `/ent_join`, `/ent_leave`, `/ent_kick`, `/ent_position`, `/ent_assign`, `/ent_salary`, `/ent_sell`, `/export`, `/auto_export`, `/transit`) — work the same as on Discord, with the same permissions.
+All other commands — `/setup`, `/add-unia`, `/allow-parties`, `/party`, `/govt`, `/edit-party`, `/edit-rules`, `/edit-party-admin`, `/party-join`, `/party-leave`, `/party-kick`, `/add-govt`, `/quizzes*`, `/privacy`, `/locale`, `/loc_compare`, `/loc_suggest`, `/loc_reply`, `/list_chats`, `/force_leave`, `/backup`, `/help`, `/setlogs`, `/settasks`, the whole economy set (`/create_bank`, `/bank`, `/edit_bank`, `/bank_add_leader`, `/bank_transfer`, `/open_account`, `/balance`, `/pay`, `/set_earn`, `/goods`, `/craft`, `/inventory`, `/top`, `/sell`, `/give_good`, `/autocraft`, `/autosend`, `/set_profession`, `/fine`, `/treaty`, `/set_rate`, `/convert`, `/rates`, `/set_wage`, `/party_dues`) and the whole enterprise set (`/add_enterprise`, `/enterprise`, `/edit_enterprise`, `/ent_join`, `/ent_leave`, `/ent_kick`, `/ent_position`, `/ent_assign`, `/ent_salary`, `/ent_sell`, `/export`, `/auto_export`, `/transit`) — work the same as on Discord, with the same permissions.
 
 ---
 
@@ -299,17 +300,25 @@ Each counted message produces one activity value **A = min(√chars, `sqrt_cap`)
 
 #### Goods, categories, mastery
 
-Goods belong to **people and enterprises**, not to banks. Any user creates one with `/create-good`; the good is only *denominated* in a bank of the current union (that bank buys it on `/sell` and mints the proceeds — the economy's money source) and receives its own unique 4-char code. A good may be tied to one of the five **base categories** — 🥕 food, 🧼 hygiene, 👘 wardrobe, 💊 pharmacy, 🧺 household — and then its quality feeds the server's [provision](#provision-and-weekly-statistics).
+Goods belong to **people and enterprises**, not to banks. Any user creates one with `/create-good`; the good is only *denominated* in a bank of the current union — that bank prices it and is the currency a sale is paid in, but **it never buys anything itself** — and receives its own unique 4-char code. A good may be tied to one of the five **base categories** — 🥕 food, 🧼 hygiene, 👘 wardrobe, 💊 pharmacy, 🧺 household — and then its quality feeds the server's [provision](#provision-and-weekly-statistics).
 
-The five categories are also producible **directly, on every server**, as built-in base goods (`FOOD`, `HYGN`, `WARD`, `PHRM`, `HOUS`). Base goods carry base quality and no market value: they cannot be sold to a bank — they exist to supply the server (provision), not to make money.
+The five categories are also producible **directly, on every server**, as built-in base goods (`FOOD`, `HYGN`, `WARD`, `PHRM`, `HOUS`). Base goods carry no market value: they cannot be sold at all, only handed over with `/give-good` — they exist to supply the server (provision), not to make money.
 
 Mastery **m** = units of that good the worker has ever produced:
 
-- quality level = `1 + floor(log₂(m+1))`
-- unit value = `base_value × (1 + alpha·√m)`
-- craft cost = `energy_cost × (1 + beta·level)`
+- quality level = `min(mastery_max_level, 1 + floor(log₂(1 + m/mastery_scale)))`
+- unit value = `base_value × (1 + alpha·√m)`, with *m* clamped at the top level's mastery
+- craft cost = `energy_cost × (1 + mastery_cost_weight·alpha·√m)`, same *m* and same clamp
 
-— the more you produce, the higher your quality and per-unit value, but crafting gets costlier, keeping value finite. `/give-good` hands stock to another user; `/autosend` moves a percentage of a good's stock daily to a chosen user, party or enterprise. A user's **profession** in a bank defaults to the good they have produced the most of; a bank leader can override it with `/set-profession`.
+— the more you produce, the higher your quality, the more a unit is worth and the more it costs to make. **Cost follows the same curve as value and at a fraction of it** (`mastery_cost_weight`, default 0.7), which is what makes skill pay: value per unit of energy rises monotonically, by about a quarter from the first unit to the last. Below 1.0 practice pays off, at 1.0 it is exactly neutral, above it every hour of it makes the crafter worse off. The curve **ends**: at `mastery_max_level` (default 10) the level, the unit value and the craft cost all freeze, so a good has a best possible quality rather than an endless creep. `mastery_scale` (default 6) stretches the ladder without reshaping it — every level still costs twice the one below — and is the single knob deciding how long the top takes: at 6 the whole ladder is 3066 units, about a month of a 24/7 line fed by a moderately active earner.
+
+`/give-good` hands stock to another user; `/autosend` moves a percentage of a good's stock daily to a chosen user, party or enterprise. A user's **profession** in a bank defaults to the good they have produced the most of; a bank leader can override it with `/set-profession`.
+
+#### Selling
+
+**No bank buys goods.** `/sell <good> <buyer> [qty] [price]` is a sale between two holders: the units go to the buyer — a member or an enterprise — and the money comes out of their account into the seller's, in the good's own currency. The buyer must accept with the consent buttons first; nothing moves until they do, and the sale can still fail there on funds. Omitting the price asks what the batch is worth at the seller's quality; omitting the quantity offers everything held. `/ent-sell` is the same offer with an enterprise as the seller (leaders only), and its proceeds count into the enterprise's **period sales** when they land in its salary currency.
+
+The currency therefore has exactly **two sources**: message earning, and the daily meal the server buys off its enterprises ([consumption](#daily-consumption)). Producing goods is not a way to print money — a good has to find a buyer.
 
 #### Production
 
@@ -317,9 +326,19 @@ Production takes **time**. `/craft` starts a run: after its duration the whole b
 
 - duration = `produce_base_sec × category_time_mult × (1 + produce_level_time·(L−1))`, clamped to `[produce_min_sec, produce_max_sec]` (≤ 5 minutes) — food is quick, pharmacy slow;
 - batch size = `category_yield × (1 + produce_level_yield·(L−1))` — bulk categories yield more units;
-- energy is charged up front (the per-unit craft cost, summed over the batch). One run per worker at a time; pending runs survive restarts.
+- energy is charged up front (the per-unit craft cost, summed over the batch). Pending runs survive restarts.
 
-`/autocraft` is the same line running **24/7**: each hour it produces `auto_efficiency` (default 50 %) of the worker's manual tempo, with fractional units carried over, and it halts while the worker's energy is empty. Base goods draw energy from the account where the worker has the most; market goods from their denominating bank.
+A worker may keep up to `parallel_production` (default 5) **different goods** in production at once — all five base categories, if they like — but only one run of each. The batch is **divided by the number of lines running**, so five goods at once yield what one good would, in five streams: breadth rather than speed. Energy follows the batch, so nothing is free either way.
+
+Two things make a run more than arithmetic. A person's **very first run ever** finishes at once instead of after minutes, and the energy for it is already on their account: the first account anybody opens carries `starter_energy` (default 30, one whole run of the bulkiest base category). Somebody who has just met the bot can therefore make something and hold it before deciding whether any of this is for them, rather than writing messages at it for a quarter of an hour first. And a manual run has a `lucky_batch_chance` (default 5 %) of coming out **double** at no extra energy — announced in the channel when it happens. It applies to `/craft` and never to a 24/7 line: the surprise belongs to the run somebody chose to start. Until this existed the only die the economy rolled was the one that spoils cargo in transit, so its every surprise was a loss.
+
+`/autocraft` is the same line running **24/7**: each hour it produces `auto_efficiency` (default 50 %) of the worker's manual tempo divided between the owner's parallel lines, with fractional units carried over, and it halts while the worker's energy is empty. The same limit of five applies. Base goods draw energy from the account where the worker has the most; market goods from their denominating bank.
+
+#### Leaderboards and progress notices
+
+`/top` shows one of three boards, ten places each: **`week`** (default) — who produced the most on this server over the last seven days, read off the same rows the weekly statistics are built from; **`good <code>`** — who has produced the most of one good, ever; **`wealth <code>`** — the largest personal holdings of one currency. Parties and enterprises are left off all three: a board is between people.
+
+The bot writes to somebody privately only about **what they set going themselves**. Raising a quality level is such a thing — it can only happen through a run they started — so it earns a direct message explaining what the new level changes. Earning money by talking is not: an account opens silently for anyone who writes in an earning channel, and that person has asked the bot for nothing. `/balance` is where they find it, as before.
 
 #### Enterprises
 
@@ -335,7 +354,7 @@ An export is a **shipment that spends time in transit**, modelled on timed produ
 - **within the union** — different servers of one union — `transport_cross_server_sec`;
 - **between unions** — `transport_cross_union_sec` (always the longest).
 
-`transport_per_unit_sec` optionally lengthens a shipment by its size. On **arrival** the goods reach the buyer and the escrowed payment is released to the seller (counting into its **period sales** when it lands in the salary currency); the bot announces the arrival in the channel where the export was launched. Perishable categories — **food** and **pharmacy** — lose a compounding fraction of the batch per hour in transit (`transport_perish_rate`), so hauling food between unions is wasteful while durable goods (wardrobe, hygiene, household) never spoil. `/transit` lists an enterprise's cargo still on the way, and the `/enterprise` card shows an *in transit* summary. If either enterprise is deleted mid-transit, the goods and any escrow are refunded to the surviving side. Shipments live in the database, so they survive a restart and arrive on schedule.
+`transport_per_unit_sec` optionally lengthens a shipment by its size. On **arrival** the goods reach the buyer and the escrowed payment is released to the seller (counting into its **period sales** when it lands in the salary currency); the bot announces the arrival in the channel where the export was launched. Perishable categories — **food** and **pharmacy** — run a *risk* of spoiling rather than paying a toll: the longest trip the map allows carries the category's full `transport_perish_chance`, a shorter one proportionally less, and durable categories (wardrobe, hygiene, household) none at all. When the risk does come true the loss is a share of the batch drawn up to `transport_perish_max_share` (a third), and at least one unit always arrives — so a long haul with food is a gamble worth weighing rather than an arithmetic certainty, and the odds are stated against the half hour a long delivery actually takes. `/transit` lists an enterprise's cargo still on the way, and the `/enterprise` card shows an *in transit* summary. If either enterprise is deleted mid-transit, the goods and any escrow are refunded to the surviving side. Shipments live in the database, so they survive a restart and arrive on schedule.
 
 **Salaries** are paid from the enterprise's account on the schedule its leader picks (weekly or monthly, in `/edit-enterprise`), in the enterprise's salary currency: a worker gets their personal override (`/ent-salary`) if set, otherwise the salary of their position (`/ent-position` + `/ent-assign`). Either kind is an exact amount or a **percent of the period's sales**; payroll stops when the account runs dry (an enterprise cannot go into payroll debt), and the sales counter resets after each payout.
 
@@ -347,7 +366,9 @@ Every day each set-up server **eats**. The daily tick counts the server's active
 need = prov_daily_units_per_person × population × category_weight
 ```
 
-The demand is served out of the warehouses of the **enterprises based on that server**, market goods first and base goods as the filler behind them, until `ceil(need)` units are taken or the warehouses run dry. Every unit is **bought**, not requisitioned: the enterprise is paid the same unit value `/sell` would have fetched (base goods carry no market value and so feed for free), and the proceeds count into its period sales like any other sale. A server with no producers that day is not fed at all, and nothing is taken from personal inventories — only enterprises supply the population.
+The demand is served out of the warehouses of the **enterprises based on that server**, market goods first and base goods as the filler behind them, until `ceil(need)` units are taken or the warehouses run dry. Within each tier the demand is spread **evenly over every warehouse holding stock**, a pass at a time, rather than emptying whichever one happens to sort first. Every unit is **bought**, not requisitioned: the enterprise is paid the unit value its quality commands (base goods carry no market value and so feed for free), and the proceeds count into its period sales like any other sale. A server with no producers that day is not fed at all, and nothing is taken from personal inventories — only enterprises supply the population.
+
+Because no bank buys goods, this daily shopping is the enterprises' **main income** and one of the currency's only two sources, which is why the even draw matters: it is a market being served, not a race being won.
 
 Each day's demand and what covered it is written to `server_consumption`, keyed by the date so a tick that runs twice cannot count the same meal into the week.
 
@@ -385,11 +406,15 @@ activity = 1 + fx_activity_weight × ln(1 + period_energy)     # message energy 
 value    = clamp(max(backing × activity, fx_min_value))       # moves at most ±fx_daily_clamp per day
 ```
 
-The rate A→B = value(A) / value(B). **Manual peg:** if two banks are each other's **only** treaty partner, their leaders may fix the rate by mutual consent with `/set-rate`, overriding the computed one; as soon as a bank has two or more partners only computed rates apply (protecting triangle consistency). `/convert` exchanges between your own accounts at the current rate, minus the `convert_fee` spread (a money sink); `/rates` shows values and rates.
+The rate A→B = value(A) / value(B). **Manual peg:** if two banks are each other's **only** treaty partner, their leaders may fix the rate by mutual consent with `/set-rate`, overriding the computed one; as soon as a bank has two or more partners only computed rates apply (protecting triangle consistency). `/convert` exchanges between your own accounts at the current rate, minus the source bank's spread; `/rates` shows values and rates.
+
+**The spread belongs to the bank the money leaves.** Its leaders set it in `/edit-bank` → *Conversion fee*: one percentage for every currency, plus a percentage of its own for any particular currency it is worth treating differently (`USD 1`, and `USD -` to drop that one again). Unset, the deployment's `convert_fee` applies. The rows are keyed by currency code and travel with it, so renaming a currency does not detach its fees.
+
+The fee is charged in the currency being sold and **paid to that bank's leaders**, split evenly, the remainder of an uneven split going to the first of them. A bank has no treasury of its own — no account row exists for one — so its leaders are where its income can go; a bank with no leaders left burns the fee instead, which is what every bank used to do with it.
 
 #### Party economy, dues, wages
 
-Parties hold accounts like users; their balances appear in `/party`. `/party-dues <code> <amount>` sets a mandatory monthly member contribution: the monthly scheduler moves it from each member's account to the party's (a shortfall pushes the member into debt to the bank). `/set-wage <profession> <amount>` sets a monthly wage in a bank: the monthly scheduler pays each account holder the wage of their profession (an emission, balanced by the sinks — fines, dues, conversion fees).
+Parties hold accounts like users; their balances appear in `/party`. `/party-dues <code> <amount>` sets a mandatory monthly member contribution: the monthly scheduler moves it from each member's account to the party's (a shortfall pushes the member into debt to the bank). `/set-wage <profession> <amount>` sets a monthly wage in a bank: the monthly scheduler pays each account holder the wage of their profession (an emission; the sinks against it are fines and — while a bank charges one — the part of a conversion spread that no leader is there to collect).
 
 #### Scheduler
 

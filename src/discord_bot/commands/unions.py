@@ -64,7 +64,8 @@ async def setup_cmd(interaction: discord.Interaction, union: str, code: str):
         )
         return
 
-    db.setup_chat("discord", interaction.guild_id, union, interaction.user.id)
+    db.setup_chat("discord", interaction.guild_id, union, interaction.user.id,
+                  title=interaction.guild.name if interaction.guild else None)
     set_chat_lang(str(interaction.guild_id), code)
     await interaction.response.send_message(
         localized("setup_success", code,

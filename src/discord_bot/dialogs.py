@@ -170,6 +170,106 @@ async def _numbered_choice(interaction, lang, header, items, render_line):
     await interaction.channel.send(localized("choice_invalid", lang))
     return None
 
+class _ChoiceSelect(ui.View):
+    """A dropdown only one person may use, resolving with the value behind the
+    option they picked.
+
+    Exists because a numbered choice typed into the chat is not always
+    available: a command marked `allowed_installs(users=True)` can be run where
+    the bot is installed on the account rather than in the server, and there it
+    receives the interaction but no messages at all — so `_wait_message` waits
+    out its half hour in silence and the dialog looks dead. A component answer
+    comes back as an interaction and therefore works everywhere the command
+    itself does. Callers still race it against a typed reply, so nobody loses
+    the old way of answering."""
+
+    def __init__(self, user_id, lang, options, placeholder=None, timeout=DIALOG_TIMEOUT):
+        """Build one dropdown from (label, description, value) triples. Discord
+        allows 25 options, a 100-character label and a 100-character
+        description, so all three are cut to fit rather than raising."""
+        super().__init__(timeout=timeout)
+        self.user_id = user_id
+        self.lang = lang
+        self.value = None
+        self._event = asyncio.Event()
+        select = ui.Select(
+            placeholder=(placeholder or "")[:150] or None,
+            options=[discord.SelectOption(label=str(label)[:100],
+                                          description=(desc or None) and str(desc)[:100],
+                                          value=str(value))
+                     for label, desc, value in options[:25]])
+        select.callback = self._make_cb(select)
+        self.add_item(select)
+
+    def _make_cb(self, select):
+        """The dropdown's callback, closing over the select so it can read what
+        was picked."""
+        async def cb(interaction2: discord.Interaction):
+            """Record the picked value, wake whoever is waiting, and stop the
+            view — refusing anyone but the person it was sent to."""
+            if interaction2.user.id != self.user_id:
+                await interaction2.response.send_message(
+                    localized("consent_not_yours", self.lang), ephemeral=True)
+                return
+            self.value = select.values[0] if select.values else None
+            try:
+                await interaction2.response.defer()
+            except Exception:
+                pass
+            self._event.set()
+            self.stop()
+        return cb
+
+    async def wait_choice(self):
+        """Wait for a pick and return the value behind it, or None on
+        timeout."""
+        try:
+            await asyncio.wait_for(self._event.wait(), timeout=self.timeout)
+        except asyncio.TimeoutError:
+            pass
+        return self.value
+
+    async def wait_value(self):
+        """The picked value, without a deadline of its own, so the caller can
+        race it against something else."""
+        await self._event.wait()
+        return self.value
+
+async def _wait_message_or_view(channel_id, user_id, view, stop_event=None,
+                                timeout=DIALOG_TIMEOUT):
+    """Race a typed answer against a component answer, and optionally against a
+    stop signal. Returns ('message', msg), ('choice', value), ('stop', None) or
+    ('timeout', None).
+
+    The shape every dialog that can be answered two ways needs: the component is
+    what works where the bot cannot read messages, the typed reply is what
+    people are used to, and whichever arrives first wins."""
+    def check(m):
+        """Accept only the awaited person's next message in this very channel."""
+        return m.author.id == user_id and m.channel.id == channel_id
+
+    tasks = {
+        "message": asyncio.ensure_future(bot.wait_for("message", check=check)),
+        "choice": asyncio.ensure_future(view.wait_value()),
+    }
+    if stop_event is not None:
+        tasks["stop"] = asyncio.ensure_future(stop_event.wait())
+    done, pending = await asyncio.wait(set(tasks.values()), timeout=timeout,
+                                       return_when=asyncio.FIRST_COMPLETED)
+    for task in pending:
+        task.cancel()
+    for kind in ("stop", "choice", "message"):
+        task = tasks.get(kind)
+        if task is None or task not in done:
+            continue
+        if kind == "stop":
+            return "stop", None
+        try:
+            return kind, task.result()
+        except Exception:
+            return "timeout", None
+    return "timeout", None
+
 class _QuizButtons(ui.View):
     """A row of buttons only one person may press; `wait_click` resolves with the
     pressed button's value (or None on timeout), `wait_value` waits without a

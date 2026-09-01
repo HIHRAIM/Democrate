@@ -8,9 +8,17 @@ a percentage is carried as the number the user typed (5 meaning five percent,
 never 0.05), because that is also how db/enterprises.py stores it.
 
 The three mastery formulas are the whole progression curve. Producing more of
-one good raises its quality level (log2 of the count), raises what a unit is
-worth (square root of the count) and raises what the next unit costs to make
-(linear in the level) — the last one is what keeps the first two finite.
+one good raises its quality level (log2 of the count over `mastery_scale`),
+raises what a unit is worth (square root of the count) and raises what the next
+unit costs to make (linear in the level) — the last one is what keeps the first
+two finite.
+
+The curve ends. `mastery_cap` is the count at which `mastery_max_level` is
+reached, and both the level and the unit value clamp to it, so the top quality
+is a real ceiling and not merely a slower climb. `mastery_scale` stretches the
+ladder without reshaping it: every level still costs twice the one below, and
+the scale is what makes the top level about a month of continuous production
+rather than an afternoon of it.
 
 `_cfg` and `_cat_cfg` live here rather than beside their callers because every
 module reads knobs and none of them owns the table: `_cfg` supplies a code-side
@@ -91,20 +99,60 @@ def parse_salary(text):
     minor = parse_amount(s)
     return ("amount", minor) if minor is not None else None
 
+def max_level():
+    """The top quality level a good can reach."""
+    return int(_cfg("mastery_max_level", 10))
+
+def mastery_scale():
+    """Units per level step at the bottom of the curve — the knob that decides
+    how long the whole ladder takes to climb."""
+    return max(float(_cfg("mastery_scale", 6)), 1.0)
+
+def mastery_cap():
+    """The mastery count at which the top level is reached, and past which
+    nothing about a good improves any further: scale * (2^(max-1) - 1).
+
+    Both `mastery_level` and `unit_value` clamp to it, so quality really does
+    stop at the top level instead of the level freezing while the price keeps
+    creeping."""
+    return mastery_scale() * (2 ** (max_level() - 1) - 1)
+
 def mastery_level(m):
-    """Quality level for someone who has produced `m` units: 1 + floor(log2(m+1))."""
-    return 1 + int(math.floor(math.log2(m + 1)))
+    """Quality level for someone who has produced `m` units:
+    1 + floor(log2(1 + m / scale)), capped at the top level.
+
+    The scale stretches the ladder without changing its shape — every level
+    still costs twice what the one below it did, so the early levels come
+    quickly and the last one is a month's work."""
+    level = 1 + int(math.floor(math.log2(1 + max(m, 0) / mastery_scale())))
+    return min(level, max_level())
 
 def unit_value(good, m):
     """Current worth of one unit for a crafter of mastery `m`, in minor units:
-    base_value * (1 + alpha * sqrt(m))."""
-    return int(round(good["base_value"] * (1 + ECONOMY["alpha"] * math.sqrt(max(m, 0)))))
+    base_value * (1 + alpha * sqrt(m)), with `m` clamped at the top level's
+    mastery so the price stops rising where the quality does."""
+    m = min(max(m, 0), mastery_cap())
+    return int(round(good["base_value"] * (1 + ECONOMY["alpha"] * math.sqrt(m))))
 
 def craft_cost(good, m):
-    """Energy to craft the next unit at mastery `m`: energy_cost * (1 + beta * level).
-    Rising with the quality level keeps a good's value finite rather than free."""
-    level = mastery_level(m)
-    return int(math.ceil(good["energy_cost"] * (1 + ECONOMY["beta"] * level)))
+    """Energy to craft the next unit at mastery `m`:
+    energy_cost * (1 + mastery_cost_weight * alpha * sqrt(m)).
+
+    Cost follows the *same curve* as `unit_value` and at a fraction of it, so
+    that skill always pays: value/cost rises monotonically from the first unit
+    to the last. It did not always. Cost used to grow with the quality *level*
+    — linearly in a number that is itself the logarithm of the count — while
+    value grew with the square root of the count, and the two shapes crossed
+    badly: a crafter's return per unit of energy fell to 73 % of a beginner's
+    around level 4 and did not recover until level 9, three thousand units
+    later. Everyone who kept at it was worse off for it, for weeks, which is
+    the one thing a mastery curve must never do.
+
+    The knob is the fraction, not the shape: below 1.0 skill pays off, at 1.0
+    it is exactly neutral, above it the old trap comes back."""
+    m = min(max(m, 0), mastery_cap())
+    weight = float(_cfg("mastery_cost_weight", 0.7))
+    return int(math.ceil(good["energy_cost"] * (1 + weight * ECONOMY["alpha"] * math.sqrt(m))))
 
 def _cfg(key, default):
     """ECONOMY knob with a code-side default, so configs written before the

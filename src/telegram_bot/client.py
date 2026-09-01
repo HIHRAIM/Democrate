@@ -47,6 +47,28 @@ def _chat_key(message: Message):
     thread = message.message_thread_id or 0
     return f"{message.chat.id}:{thread}"
 
+async def chat_display_name(chat_id):
+    """What to call a server or group in front of people: its name, or its bare
+    id when nothing knows the name.
+
+    The Telegram twin of discord_bot/client.py: chat_display_name, and async
+    for the same reason that one is not: naming a Telegram group means asking
+    the API, so this is only ever called from a command somebody typed, never
+    per message. A group the bot can see has its name written back to
+    `chats.title`, which is what lets the Discord half name a Telegram central
+    chat it could never ask about itself."""
+    chat_id = str(chat_id)
+    try:
+        chat = await bot.get_chat(int(chat_id))
+        title = getattr(chat, "title", None) or getattr(chat, "full_name", None)
+    except Exception:
+        title = None
+    if title:
+        if db.chat_title(chat_id) != title:
+            db.set_chat_title(chat_id, title)
+        return title
+    return db.chat_title(chat_id) or chat_id
+
 def _tg_user_label(user):
     """'@username' when available, otherwise the full name."""
     if user is None:

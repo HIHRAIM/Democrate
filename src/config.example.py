@@ -67,16 +67,42 @@ ECONOMY = {
     "currency_per_activity": 25,   # → 0.25 currency units per point of activity
     # Energy granted per 1.0 of activity (the crafting resource).
     "energy_per_activity": 10,
+    # Energy handed to a person on the first account they ever open, so that
+    # their first /craft works immediately instead of after a quarter of an
+    # hour of writing messages at the bot. It has to cover one whole run of the
+    # bulkiest base category, which is base_good_energy times that category's
+    # yield (8 x 3 for food) — a grant that covers only part of a run buys
+    # nothing at all. 0 switches it off.
+    "starter_energy": 30,
 
     # ── Crafting mastery ──
     # Quality/value growth. Unit value = base_value * (1 + alpha * sqrt(m)),
     # where m is how many of the good the crafter has ever produced.
     "alpha": 0.05,
-    # Craft-cost growth. cost = energy_cost * (1 + beta * quality_level), where
-    # quality_level = 1 + floor(log2(m + 1)). Rising cost keeps value finite.
-    "beta": 0.35,
+    # Craft-cost growth, as a fraction of value growth:
+    # cost = energy_cost * (1 + mastery_cost_weight * alpha * sqrt(m)).
+    # Cost follows the same curve as value and at a fraction of it, so value
+    # per unit of energy rises all the way up the ladder. Below 1.0 skill pays
+    # off, at 1.0 it is exactly neutral, above it every hour of practice makes
+    # the crafter worse off — which is what a cost curve of a different shape
+    # from the value curve did.
+    "mastery_cost_weight": 0.7,
+    # The top quality level. Mastery stops there: the level, the unit value and
+    # the craft cost all freeze once it is reached, so a good has a best
+    # possible quality rather than an endless creep.
+    "mastery_max_level": 10,
+    # How many units one level step costs at the bottom of the curve. The whole
+    # ladder is 511 * mastery_scale units long, so this is the one number that
+    # decides how long the top level takes: at 6, a 24/7 /autocraft line fed by
+    # a moderately active earner reaches level 10 in about a month.
+    "mastery_scale": 6,
     # Safety ceiling on how many units one autocraft run may produce per tick.
     "autocraft_cap": 50,
+    # How many goods one person may have in production at the same time —
+    # manual /craft runs and 24/7 /autocraft lines are counted separately, and
+    # each is capped here. The output is divided between them: five goods at
+    # once produce the same total as one, in five streams.
+    "parallel_production": 5,
 
     # ── Foreign exchange (daily recompute) ──
     # value(bank) = max(backing * activity, fx_min_value), where
@@ -106,6 +132,12 @@ ECONOMY = {
     # 24/7 autoproduction speed as a share of the manual tempo (< 1: the line
     # runs day and night but slower than a working person).
     "auto_efficiency": 0.5,
+    # Now and then a manual run comes out better than it should have: this is
+    # the chance of it and what it multiplies the batch by. It costs no extra
+    # energy and applies to /craft only, never to a 24/7 line — the surprise
+    # belongs to the run somebody chose to start. 0 switches it off.
+    "lucky_batch_chance": 0.05,
+    "lucky_batch_multiplier": 2.0,
     # Per-category tempo and batch size ("default" covers uncategorised goods).
     "category_time_mult": {
         "food": 0.8, "hygiene": 0.9, "wardrobe": 1.2,
@@ -157,8 +189,12 @@ ECONOMY = {
     "transport_cross_server_sec": 300,      # ~5 minutes within a union
     "transport_cross_union_sec": 1800,      # ~30 minutes between unions
     "transport_per_unit_sec": 0,            # extra seconds per unit shipped
-    # Perishable categories lose this fraction of the batch per hour in transit
-    # (compounding), so hauling food far is wasteful while durable goods
-    # (wardrobe, hygiene, household — absent here) never spoil.
-    "transport_perish_rate": {"food": 0.35, "pharmacy": 0.25},
+    # Spoilage is a risk, not a toll. On the longest haul a perishable category
+    # runs this chance of losing part of the batch; a shorter trip runs a
+    # proportionally smaller one, and a durable category (wardrobe, hygiene,
+    # household — absent here) runs none at all.
+    "transport_perish_chance": {"food": 0.35, "pharmacy": 0.25},
+    # When the risk does come true, at most this share of the batch is lost,
+    # and never the whole of it — at least one unit always arrives.
+    "transport_perish_max_share": 1.0 / 3.0,
 }

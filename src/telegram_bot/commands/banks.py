@@ -26,7 +26,8 @@ from utils import (
 )
 
 from telegram_bot.client import (
-    GROUP_CHAT_TYPES, _chat_key, _tg_user_label, is_server_admin, router,
+    GROUP_CHAT_TYPES, _chat_key, _tg_user_label, chat_display_name,
+    is_server_admin, router,
 )
 from telegram_bot.dialogs import (
     _dialog_text_tg, _econ_consent_keyboard, _numbered_choice_tg,
@@ -110,15 +111,20 @@ async def create_bank_tg(message: Message):
     await send_service_event("bank_created", name=currency_name, code=code, union=union,
                              user=_tg_user_label(message.from_user))
 
-def _bank_card_tg(bank, lang):
+def _bank_card_tg(bank, lang, central=None):
     """The bank card as HTML: currency, central server, leaders, published
-    value, money supply, debt and account count."""
+    value, money supply, debt and account count.
+
+    `central` is the central server's name, resolved by the caller because
+    naming a Telegram group is an API call and this function is not async. It
+    falls back to the bare id, which is what the card used to print
+    unconditionally."""
     emoji = f" {bank['emoji']}" if bank["emoji"] else ""
     lines = [f"<b>{escape_html(bank['currency_name'])} [{escape_html(bank['code'])}]{escape_html(emoji)}</b>"]
     lines.append(f"<b>{escape_html(localized('bank_field_union', lang))}:</b> "
                  f"{escape_html(db.get_union_name(bank['union_code'], lang))}")
     lines.append(f"<b>{escape_html(localized('bank_field_central', lang))}:</b> "
-                 f"{escape_html(str(bank['central_chat']))}")
+                 f"{escape_html(str(central or bank['central_chat']))}")
     leaders = db.get_bank_leaders(bank["code"])
     shown = ", ".join(format_stored_user("telegram", l["platform"], l["user_id"],
                                          l["display_name"]) for l in leaders) or "—"
@@ -146,7 +152,8 @@ async def bank_tg(message: Message):
     if not bank:
         await message.reply(localized("bank_not_found", lang))
         return
-    await message.reply(_bank_card_tg(bank, lang), parse_mode="HTML")
+    central = await chat_display_name(bank["central_chat"])
+    await message.reply(_bank_card_tg(bank, lang, central), parse_mode="HTML")
 
 async def _bank_leadership_tg(message, transfer):
     """Shared body of `/bank_add_leader` and `/bank_transfer`.
@@ -208,7 +215,7 @@ async def bank_transfer_tg(message: Message):
     acceptance they become its only leader."""
     await _bank_leadership_tg(message, transfer=True)
 
-_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "add_leader",
+_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "fee", "add_leader",
                       "transfer", "delete")
 
 async def _resolve_edit_bank_tg(message, lang, query=None):
@@ -301,6 +308,24 @@ async def edit_bank_tg(message: Message):
             return
         db.set_bank_central_chat(bank["code"], chat["chat_id"], chat["union_code"])
         await message.reply(localized("edit_bank_done", lang))
+    elif action == "fee":
+        m = await _dialog_text_tg(
+            message, lang,
+            localized("edit_bank_ask_fee", lang,
+                      current=economy.convert_fee_summary(bank["code"], lang)))
+        if m is None:
+            return
+        parsed = economy.parse_convert_fee_input(m.text)
+        if parsed is None:
+            await message.reply(localized("edit_bank_bad_fee", lang))
+            return
+        target, fee = parsed
+        if target != db.CONVERT_FEE_DEFAULT_KEY and not db.get_bank(target):
+            await message.reply(localized("bank_not_found", lang))
+            return
+        db.set_convert_fee(bank["code"], target, fee)
+        await message.reply(localized("edit_bank_fee_set", lang,
+                                      current=economy.convert_fee_summary(bank["code"], lang)))
     elif action in ("add_leader", "transfer"):
         m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_leader", lang))
         if m is None:
@@ -473,7 +498,12 @@ async def set_earn_tg(message: Message):
     action = parts[2].strip().lower()
     chan_key = _chat_key(message)
     if action in ("off", "disable", "0", "false", "no"):
-        db.remove_earn_channel("telegram", chan_key)
+        from telegram_bot.catchall import _earn_keys_tg
+
+        removed = db.remove_earn_channel("telegram", chan_key)
+        if not removed and db.resolve_earn_channel("telegram", _earn_keys_tg(message)):
+            await _reply_temp(message, localized("set_earn_off_inherited", lang))
+            return
         await _reply_temp(message, localized("set_earn_off", lang))
         return
     if action not in ("on", "enable", "1", "true", "yes"):

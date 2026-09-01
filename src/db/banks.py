@@ -143,6 +143,8 @@ _BANK_CODE_COLUMNS = (
     ("shipments", "bank_code"),
     ("treaties", "bank_a"),
     ("treaties", "bank_b"),
+    ("bank_convert_fees", "bank_code"),
+    ("bank_convert_fees", "target_code"),
 )
 
 def update_bank_field(code, field, value):
@@ -200,6 +202,8 @@ def delete_bank(code):
                       "earn_channels", "wages", "party_dues", "auto_exports"):
             cur.execute(f"DELETE FROM {table} WHERE bank_code=?", (code,))
         cur.execute("DELETE FROM treaties WHERE bank_a=? OR bank_b=?", (code, code))
+        cur.execute("DELETE FROM bank_convert_fees WHERE bank_code=? OR target_code=?",
+                    (code, code))
         cur.execute("UPDATE enterprises SET salary_bank=NULL WHERE salary_bank=?", (code,))
         cur.execute("UPDATE productions SET energy_bank=NULL WHERE energy_bank=?", (code,))
         cur.execute("DELETE FROM banks WHERE code=?", (code,))
@@ -269,8 +273,31 @@ def get_account(bank_code, owner_type, owner_platform, owner_id):
         " AND owner_id=?",
         (bank_code, owner_type, owner_platform, str(owner_id))).fetchone()
 
+def _starter_energy(owner_type, owner_platform, owner_id):
+    """The energy a brand-new person starts with — enough for one production
+    run and nothing more, or 0 for anyone who is not brand new.
+
+    It is granted on the *first account a human ever opens*, not on every
+    account: the second currency is not a second beginning, and an enterprise
+    or a party is not a beginner at all. The point is only that somebody who
+    has just been noticed by the bot can go and make something immediately
+    instead of first writing messages at it for a quarter of an hour — so the
+    grant has to cover a whole run of the bulkiest base category, three units
+    of food, not one unit of anything."""
+    if owner_type != "user":
+        return 0
+    from config import ECONOMY
+    grant = int(ECONOMY.get("starter_energy", 30))
+    if grant <= 0:
+        return 0
+    existing = cur.execute(
+        "SELECT 1 FROM accounts WHERE owner_type='user' AND owner_platform=? AND owner_id=?"
+        " LIMIT 1", (owner_platform, str(owner_id))).fetchone()
+    return 0 if existing else grant
+
 def ensure_account(bank_code, owner_type, owner_platform, owner_id, display_name=None):
-    """Return the account id, opening the account (balance 0) on first use."""
+    """Return the account id, opening the account on first use — with the
+    starter energy when it is the owner's first account anywhere."""
     with _db_lock:
         row = get_account(bank_code, owner_type, owner_platform, owner_id)
         if row:
@@ -279,12 +306,34 @@ def ensure_account(bank_code, owner_type, owner_platform, owner_id, display_name
                             (display_name, row["id"]))
                 conn.commit()
             return row["id"]
+        energy = _starter_energy(owner_type, owner_platform, owner_id)
         c = cur.execute(
             "INSERT INTO accounts (bank_code, owner_type, owner_platform, owner_id,"
-            " balance, energy, display_name, created_at) VALUES (?,?,?,?,0,0,?,?)",
-            (bank_code, owner_type, owner_platform, str(owner_id), display_name, _now()))
+            " balance, energy, display_name, created_at) VALUES (?,?,?,?,0,?,?,?)",
+            (bank_code, owner_type, owner_platform, str(owner_id), energy,
+             display_name, _now()))
         conn.commit()
         return c.lastrowid
+
+def user_display_name(platform, user_id):
+    """The name stored on any of this person's accounts, or None.
+
+    Leaderboards and production records keep only the (platform, id) pair;
+    this is where the name to show beside it comes from, without asking either
+    platform's API for something the bot already wrote down."""
+    row = cur.execute(
+        "SELECT display_name FROM accounts WHERE owner_type='user' AND owner_platform=?"
+        " AND owner_id=? AND display_name IS NOT NULL AND display_name<>''"
+        " ORDER BY id LIMIT 1", (platform, str(user_id))).fetchone()
+    return row["display_name"] if row else None
+
+def top_balances(bank_code, limit=10):
+    """The richest account holders of one currency, biggest first. People only
+    — a party's or an enterprise's treasury is not in the same contest."""
+    return cur.execute(
+        "SELECT owner_platform AS p, owner_id AS i, balance, display_name FROM accounts"
+        " WHERE bank_code=? AND owner_type='user' AND balance>0"
+        " ORDER BY balance DESC LIMIT ?", (bank_code, int(limit))).fetchall()
 
 def account_exists(bank_code, owner_type, owner_platform, owner_id):
     """Whether the owner already holds an account here. `/open-account` uses it

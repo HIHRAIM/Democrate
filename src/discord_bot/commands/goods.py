@@ -4,12 +4,17 @@ the inventory, selling, the standing orders, professions and gifts.
 `/craft` starts a timed run and returns immediately — the batch is announced
 later by main.py: production_loop in the channel the run was started in, which
 is why the command stores a notify key rather than awaiting anything. Energy is
-charged up front.
+charged up front. Up to five goods may be on the bench at once, one run of
+each, and the batch is divided between them.
 
 A good belongs to a person or an enterprise; the bank named at creation only
-*denominates* it, and is where `/sell` sends it. `/create-good` therefore needs
-a bank of the current union, and the union's shared code namespace decides
-whether the code it asks for is free.
+*denominates* it — it prices the good and it is the currency `/sell` is paid
+in, but it never buys anything itself. `/create-good` therefore needs a bank of
+the current union, and the union's shared code namespace decides whether the
+code it asks for is free.
+
+`/sell` is a sale between two holders and needs the buyer's consent, which is
+why it ends in a consent view rather than in a reply.
 
 Not this module's zone: enterprises and their warehouse
 (commands/enterprises.py), the production formulas (economy/production.py) and
@@ -21,6 +26,7 @@ from datetime import datetime, timezone
 
 import db
 import economy
+import stats
 from message_relay import clean_display_name
 from utils import (
     DEFAULT_EMBED_COLOR, category_label, get_chat_lang, good_display_name,
@@ -28,7 +34,9 @@ from utils import (
 )
 
 from discord_bot.client import _chat_key, bot
-from discord_bot.dialogs import _econ_embed, _ereply, _parse_user_ref, _say
+from discord_bot.dialogs import (
+    _ConsentView, _EntConsentView, _econ_embed, _ereply, _parse_user_ref, _say,
+)
 
 def _resolve_good_bank(chat, currency):
     """The bank a new good is denominated in: the named one (it must belong to
@@ -133,8 +141,9 @@ async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise
     """Start producing a good; the batch arrives in a few minutes.
 
     Returns immediately — main.py: production_loop announces the batch in this
-    channel when it lands. Energy for the whole batch is charged up front, and one
-    worker runs one job at a time."""
+    channel when it lands. Energy for the whole batch is charged up front. Up to
+    five goods may be in production at once, one run of each, and the batch is
+    divided by however many are running."""
     lang = get_chat_lang(_chat_key(interaction))
     good = db.get_good(good_code.strip().upper())
     if not good:
@@ -151,7 +160,11 @@ async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise
                                             starter_display=str(interaction.user))
     if status == "busy":
         await _ereply(interaction, "production_busy", lang,
+                      name=good_display_name(good, lang),
                       time=_fmt_duration(info["finish_at"] - int(datetime.now(timezone.utc).timestamp())))
+        return
+    if status == "too_many":
+        await _ereply(interaction, "production_too_many", lang, limit=info["limit"])
         return
     if status == "no_energy":
         await _ereply(interaction, "craft_no_energy", lang,
@@ -159,10 +172,13 @@ async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise
                       have=economy.format_energy(info["have"]))
         return
     emoji = f" {good['emoji']}" if good["emoji"] else ""
-    await _ereply(interaction, "production_started", lang, ephemeral=False,
-                  name=good_display_name(good, lang), emoji=emoji, qty=info["qty"],
-                  duration=_fmt_duration(info["duration"]),
-                  cost=economy.format_energy(info["cost"]))
+    started = localized("production_started", lang,
+                        name=good_display_name(good, lang), emoji=emoji, qty=info["qty"],
+                        duration=_fmt_duration(info["duration"]),
+                        cost=economy.format_energy(info["cost"]))
+    if info.get("first_run"):
+        started += "\n" + localized("production_first_run", lang)
+    await _say(interaction, embed=_econ_embed(started))
 
 @bot.tree.command(name="inventory", description="your crafted goods")
 async def inventory_cmd(interaction: discord.Interaction):
@@ -177,45 +193,125 @@ async def inventory_cmd(interaction: discord.Interaction):
     for row in inv:
         m = db.get_produced(owner, row["good_code"])
         good = db.get_good(row["good_code"])
-        bank = db.get_bank(row["bank_code"])
-        val = economy.format_money(economy.unit_value(good, m), bank) if good and bank else "—"
+        bank = db.get_bank(row["bank_code"]) if row["bank_code"] else None
         emoji = f"{row['emoji']} " if row["emoji"] else ""
-        lines.append(localized("inventory_line", lang, emoji=emoji,
-                               name=good_display_name(good, lang) if good else row["name"],
-                               code=row["good_code"], qty=row["qty"], value=val,
-                               level=economy.mastery_level(m)))
+        name = good_display_name(good, lang) if good else row["name"]
+        level = economy.mastery_level(m)
+        if good and bank:
+            lines.append(localized(
+                "inventory_line", lang, emoji=emoji, name=name, code=row["good_code"],
+                qty=row["qty"], level=level, max_level=economy.max_level(),
+                value=economy.format_money(economy.unit_value(good, m), bank)))
+        else:
+            lines.append(localized(
+                "inventory_line_base", lang, emoji=emoji, name=name,
+                code=row["good_code"], qty=row["qty"], level=level,
+                max_level=economy.max_level()))
     embed = discord.Embed(title=localized("inventory_title", lang),
                           description="\n".join(lines)[:4000],
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed, ephemeral=True)
 
-@bot.tree.command(name="sell", description="sell a good back to its bank")
-@app_commands.describe(good_code="Good code", qty="How many (default: all)")
-async def sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = None):
-    """Sell a good back to its bank at the current unit value.
+def _resolve_buyer(target):
+    """(buyer_owner, display, consent_target) for whoever is being sold to: an
+    enterprise by code, or a person by mention or id. `consent_target` is the
+    enterprise code (its leaders decide) or the user id (they decide for
+    themselves). Returns (None, None, None) when the target makes no sense."""
+    ent = db.find_enterprise(target)
+    if ent:
+        return (db.enterprise_owner(ent["code"]), f"{ent['name']} [{ent['code']}]",
+                ("enterprise", ent["code"]))
+    uid = _parse_user_ref(target)
+    if uid is None:
+        return None, None, None
+    return db.canonical_user("discord", uid), f"<@{uid}>", ("user", uid)
 
-    The economy's money source: the bank mints the proceeds. Base goods carry no
-    market value and cannot be sold. Omitting `qty` sells everything."""
+async def _offer_sale(interaction, lang, seller, buyer, good, qty, price, bank, buyer_name,
+                      consent_target):
+    """Put a sale to the buyer with consent buttons, and settle it if they
+    agree.
+
+    Nothing moves until the answer: goods and money change hands inside the
+    accept callback, which is also where the sale can still fail on funds — the
+    buyer's balance is only asked about when they have said yes."""
+    channel = interaction.channel
+    emoji = f"{good['emoji']} " if good["emoji"] else ""
+    name = good_display_name(good, lang)
+
+    async def on_accept(interaction2):
+        """Move the goods one way and the money the other, or say why not."""
+        status, info = economy.sell(seller, buyer, good, qty, price,
+                                    bank["code"] if bank else None)
+        if status == "ok":
+            text = localized("sell_done", lang, qty=info["qty"], emoji=emoji, name=name,
+                             buyer=buyer_name,
+                             total=economy.format_money(info["total"], bank) if bank
+                             else localized("export_free", lang))
+        else:
+            text = localized(f"sell_{status}", lang, name=name)
+        await channel.send(embed=_econ_embed(text))
+
+    async def on_decline(interaction2):
+        """Say the offer was turned down. Nothing left the warehouse."""
+        await channel.send(embed=_econ_embed(localized("sell_declined", lang)))
+
+    price_disp = economy.format_money(price, bank) if price and bank \
+        else localized("export_free", lang)
+    body = _econ_embed(localized("sell_offer", lang, qty=qty, emoji=emoji, name=name,
+                                 buyer=buyer_name, price=price_disp))
+    if consent_target[0] == "enterprise":
+        await _say(interaction, embed=body,
+                   view=_EntConsentView(lang, consent_target[1], on_accept, on_decline))
+        return
+    await _say(interaction, f"<@{consent_target[1]}>", embed=body,
+               view=_ConsentView(lang, consent_target[1], on_accept, on_decline),
+               allowed_mentions=discord.AllowedMentions(users=True))
+
+@bot.tree.command(name="sell", description="sell a good to another member or an enterprise")
+@app_commands.describe(good_code="Good code", buyer="Buyer: a user ID/mention or an enterprise code",
+                       qty="How many (default: all)",
+                       price="Total price (default: what the batch is worth)")
+async def sell_cmd(interaction: discord.Interaction, good_code: str, buyer: str,
+                   qty: int = None, price: str = None):
+    """Sell a good to another member or to an enterprise.
+
+    No bank buys goods: the units go to the buyer and the money comes out of
+    their account, in the good's own currency. The buyer has to accept first.
+    Omitting `price` asks what the batch is worth at your quality; omitting
+    `qty` offers everything you hold."""
     lang = get_chat_lang(_chat_key(interaction))
     good = db.get_good(good_code.strip().upper())
     if not good:
         await _ereply(interaction, "good_not_found", lang)
         return
-    owner = db.canonical_user("discord", interaction.user.id)
-    have = db.get_inventory_qty(owner, good["code"])
-    want = qty if (qty and qty > 0) else have
-    status, info = economy.sell(owner, good, want)
-    if status == "not_sellable":
+    if db.is_base_good(good["code"]):
         await _ereply(interaction, "sell_not_sellable", lang,
                       name=good_display_name(good, lang))
         return
-    if status == "nothing":
+    seller = db.canonical_user("discord", interaction.user.id)
+    have = db.get_inventory_qty(seller, good["code"])
+    want = qty if (qty and qty > 0) else have
+    if want <= 0 or have <= 0:
         await _ereply(interaction, "sell_nothing", lang, name=good["name"])
         return
-    bank = db.get_bank(good["bank_code"])
-    await _ereply(interaction, "sell_done", lang, ephemeral=False, qty=info["qty"],
-                  name=good["name"], unit=economy.format_money(info["unit"], bank),
-                  total=economy.format_money(info["total"], bank))
+    want = min(want, have)
+    target, buyer_name, consent_target = _resolve_buyer(buyer)
+    if target is None:
+        await _ereply(interaction, "sell_bad_target", lang)
+        return
+    if target == seller:
+        await _ereply(interaction, "sell_self", lang)
+        return
+    minor = economy.parse_amount(price) if price else economy.asking_price(seller, good, want)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    bank = db.get_bank(good["bank_code"]) if good["bank_code"] else None
+    if minor > 0 and not bank:
+        await _ereply(interaction, "sell_no_bank", lang)
+        return
+    await _offer_sale(interaction, lang, seller, target, good, want, minor, bank,
+                      buyer_name, consent_target)
 
 @bot.tree.command(name="autocraft", description="produce a good 24/7, slower than by hand")
 @app_commands.describe(good_code="Good code", action="on | off",
@@ -225,8 +321,9 @@ async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action
     """Run a production line 24/7, slower than by hand.
 
     Advanced hourly at a fraction of the manual tempo, with leftover fractions
-    carried over, and halted whenever the worker's energy runs out. Producing for
-    an enterprise requires working at it."""
+    carried over, and halted whenever the worker's energy runs out. Up to five
+    lines may run at once — all five base goods, if you like — and they share the
+    tempo between them. Producing for an enterprise requires working at it."""
     lang = get_chat_lang(_chat_key(interaction))
     good = db.get_good(good_code.strip().upper())
     if not good:
@@ -239,10 +336,15 @@ async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action
         return
     worker = db.canonical_user("discord", interaction.user.id)
     on = action.strip().lower() in ("on", "enable", "1", "true", "yes")
+    others, limit = economy.autocraft_slots(owner, good["code"])
+    if on and others >= limit:
+        await _ereply(interaction, "autocraft_too_many", lang, limit=limit)
+        return
     db.set_autocraft(owner, good["code"], on,
                      starter=(worker[1], worker[2]), server=server)
     await _ereply(interaction, "autocraft_on" if on else "autocraft_off", lang,
-                  ephemeral=False, name=good_display_name(good, lang))
+                  ephemeral=False, name=good_display_name(good, lang),
+                  lines=others + 1 if on else others)
 
 @bot.tree.command(name="autosend", description="auto-send a share of a good to a user or party")
 @app_commands.describe(good_code="Good code", percent="Percent 0-100 (0 to stop)",
@@ -370,5 +472,32 @@ async def goods_cmd(interaction: discord.Interaction):
         return
     embed = discord.Embed(title=localized("goods_header", lang),
                           description="\n".join(lines)[:4000],
+                          color=discord.Color(DEFAULT_EMBED_COLOR))
+    await _say(interaction, embed=embed)
+
+@bot.tree.command(name="top", description="leaderboards: this week's producers, a good, or a currency")
+@app_commands.describe(kind="week (default) | good | wealth",
+                       code="Good code for 'good', currency code for 'wealth'")
+async def top_cmd(interaction: discord.Interaction, kind: str = "week", code: str = None):
+    """Show one of the three leaderboards.
+
+    The boards themselves are built in stats.py, shared with the Telegram
+    twin and with the weekly statistics post, so that the same week never
+    reads two different ways in two places."""
+    lang = get_chat_lang(_chat_key(interaction))
+    chat = db.get_chat(str(interaction.guild_id)) if interaction.guild_id else None
+    if chat is None:
+        await _ereply(interaction, "top_no_server", lang)
+        return
+    title, lines = stats.leaderboard(
+        (kind or "week").strip().lower(), "discord", "discord",
+        str(interaction.guild_id), lang, code)
+    if title is None:
+        await _ereply(interaction, "top_bad_kind", lang)
+        return
+    if not lines:
+        await _ereply(interaction, "top_none", lang)
+        return
+    embed = discord.Embed(title=title, description="\n".join(lines)[:4000],
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed)

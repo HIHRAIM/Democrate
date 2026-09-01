@@ -77,6 +77,41 @@ def set_pegged_rate(a, b, rate):
                 (stored, x, y))
     conn.commit()
 
+CONVERT_FEE_DEFAULT_KEY = ""
+
+def set_convert_fee(bank_code, target_code, fee):
+    """Set the spread this bank takes when money leaves its currency.
+
+    `target_code` is the currency being converted into, or
+    `CONVERT_FEE_DEFAULT_KEY` for the bank's own default across all of them.
+    `fee` is a fraction (0.02 = two percent); pass None to drop the row and
+    fall back to the next step of the resolution order."""
+    target = str(target_code or CONVERT_FEE_DEFAULT_KEY)
+    if fee is None:
+        cur.execute("DELETE FROM bank_convert_fees WHERE bank_code=? AND target_code=?",
+                    (bank_code, target))
+    else:
+        cur.execute(
+            "INSERT INTO bank_convert_fees (bank_code, target_code, fee) VALUES (?,?,?)"
+            " ON CONFLICT(bank_code, target_code) DO UPDATE SET fee=excluded.fee",
+            (bank_code, target, float(fee)))
+    conn.commit()
+
+def get_convert_fee_row(bank_code, target_code):
+    """The stored spread for one pair, or None when nothing is stored for it.
+    Does not fall back — `economy/trade.py: convert_fee` owns the order."""
+    row = cur.execute(
+        "SELECT fee FROM bank_convert_fees WHERE bank_code=? AND target_code=?",
+        (bank_code, str(target_code or CONVERT_FEE_DEFAULT_KEY))).fetchone()
+    return row["fee"] if row else None
+
+def get_bank_convert_fees(bank_code):
+    """Every spread this bank has set, the default row first — what the bank's
+    settings screen lists."""
+    return cur.execute(
+        "SELECT target_code, fee FROM bank_convert_fees WHERE bank_code=?"
+        " ORDER BY (target_code<>''), target_code", (bank_code,)).fetchall()
+
 def set_wage(bank_code, good_code, amount):
     """Set the monthly wage a bank pays for one profession, or clear it.
 

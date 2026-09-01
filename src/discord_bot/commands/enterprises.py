@@ -554,15 +554,29 @@ async def ent_salary_cmd(interaction: discord.Interaction, user: str, salary: st
     await _ereply(interaction, "ent_salary_done", lang, ephemeral=False,
                   user=f"<@{target_id}>", salary=_salary_display(kind, value, lang))
 
-@bot.tree.command(name="ent-sell", description="sell your enterprise's goods to the bank (leaders)")
-@app_commands.describe(good_code="Good code", qty="How many (default: all)",
+@bot.tree.command(name="ent-sell", description="sell your enterprise's goods to a member or another enterprise (leaders)")
+@app_commands.describe(good_code="Good code",
+                       buyer="Buyer: a user ID/mention or an enterprise code",
+                       qty="How many (default: all)",
+                       price="Total price (default: what the batch is worth)",
                        enterprise="Enterprise code (when you lead several)")
-async def ent_sell_cmd(interaction: discord.Interaction, good_code: str, qty: int = None,
-                       enterprise: str = None):
-    """Sell your enterprise's goods to their bank (leaders).
+async def ent_sell_cmd(interaction: discord.Interaction, good_code: str, buyer: str,
+                       qty: int = None, price: str = None, enterprise: str = None):
+    """Sell your enterprise's goods to a member or to another enterprise
+    (leaders).
 
-    The proceeds count into the period sales that percentage salaries are taken
-    from, but only when they land in the enterprise's own salary currency."""
+    No bank buys goods, so this is a sale between two holders and the buyer has
+    to accept it. The proceeds count into the period sales that percentage
+    salaries are taken from, but only when they land in the enterprise's own
+    salary currency. Sending stock to another enterprise without a buyer on the
+    other end is `/export` instead.
+
+    The two helpers come from commands/goods.py at the call site: a personal
+    sale and an enterprise's sale are the same offer with a different seller,
+    and importing that module here at module level would drag its commands into
+    registration ahead of their place."""
+    from discord_bot.commands.goods import _offer_sale, _resolve_buyer
+
     lang = get_chat_lang(_chat_key(interaction))
     ent = await _resolve_led_enterprise(interaction, lang, enterprise)
     if ent is None:
@@ -571,21 +585,34 @@ async def ent_sell_cmd(interaction: discord.Interaction, good_code: str, qty: in
     if not good:
         await _ereply(interaction, "good_not_found", lang)
         return
-    owner = db.enterprise_owner(ent["code"])
-    have = db.get_inventory_qty(owner, good["code"])
-    want = qty if (qty and qty > 0) else have
-    status, info = economy.sell(owner, good, want)
-    if status == "not_sellable":
+    if db.is_base_good(good["code"]):
         await _ereply(interaction, "sell_not_sellable", lang,
                       name=good_display_name(good, lang))
         return
-    if status == "nothing":
+    seller = db.enterprise_owner(ent["code"])
+    have = db.get_inventory_qty(seller, good["code"])
+    want = qty if (qty and qty > 0) else have
+    if want <= 0 or have <= 0:
         await _ereply(interaction, "sell_nothing", lang, name=good["name"])
         return
-    bank = db.get_bank(good["bank_code"])
-    await _ereply(interaction, "sell_done", lang, ephemeral=False, qty=info["qty"],
-                  name=good["name"], unit=economy.format_money(info["unit"], bank),
-                  total=economy.format_money(info["total"], bank))
+    want = min(want, have)
+    target, buyer_name, consent_target = _resolve_buyer(buyer)
+    if target is None:
+        await _ereply(interaction, "sell_bad_target", lang)
+        return
+    if target == seller:
+        await _ereply(interaction, "sell_self", lang)
+        return
+    minor = economy.parse_amount(price) if price else economy.asking_price(seller, good, want)
+    if minor is None:
+        await _ereply(interaction, "bad_amount", lang)
+        return
+    bank = db.get_bank(good["bank_code"]) if good["bank_code"] else None
+    if minor > 0 and not bank:
+        await _ereply(interaction, "sell_no_bank", lang)
+        return
+    await _offer_sale(interaction, lang, seller, target, good, want, minor, bank,
+                      buyer_name, consent_target)
 
 async def _run_export(interaction, lang, source, target, good, qty, price, bank):
     """Offer a one-off export between two enterprises. A leader of the receiving

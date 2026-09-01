@@ -123,6 +123,21 @@ def init_economy():
         PRIMARY KEY (bank_a, bank_b)
     );
 
+    -- The spread a bank takes when money is converted *out of* its currency,
+    -- set by that bank's own leaders. `target_code` is the currency being
+    -- converted into, or '' for the bank's own default across every currency;
+    -- the resolution order is the specific row, then the default row, then
+    -- ECONOMY["convert_fee"]. Both columns hold bank codes and are therefore
+    -- rewritten by db/banks.py: rename_bank_code, which is what keeps a fee
+    -- attached to its currency when the currency is renamed. Read by
+    -- economy/trade.py: convert_fee.
+    CREATE TABLE IF NOT EXISTS bank_convert_fees (
+        bank_code TEXT,
+        target_code TEXT,
+        fee REAL,
+        PRIMARY KEY (bank_code, target_code)
+    );
+
     CREATE TABLE IF NOT EXISTS wages (
         bank_code TEXT,
         good_code TEXT,

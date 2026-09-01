@@ -25,7 +25,9 @@ from utils import (
     localized, send_service_event,
 )
 
-from discord_bot.client import _chat_key, bot, is_server_admin
+from discord_bot.client import (
+    _chat_key, _earn_keys, bot, chat_display_name, is_server_admin,
+)
 from discord_bot.dialogs import (
     _ConsentView, _dialog_text, _econ_embed, _ereply,
     _numbered_choice, _parse_user_ref, _say,
@@ -112,14 +114,18 @@ async def create_bank_cmd(interaction: discord.Interaction):
 
 def _build_bank_embed(bank, lang):
     """The bank card: currency, central server, leaders, published value and
-    its day-over-day change, money supply, outstanding debt and account count."""
+    its day-over-day change, money supply, outstanding debt and account count.
+
+    The central server is named, not numbered: `chat_display_name` asks Discord
+    for the server's own name and falls back on what `/setup` remembered, so a
+    card reads as a place rather than as an id."""
     emoji = f" {bank['emoji']}" if bank["emoji"] else ""
     embed = discord.Embed(title=f"{bank['currency_name']} [{bank['code']}]{emoji}",
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     embed.add_field(name=localized("bank_field_union", lang),
                     value=db.get_union_name(bank["union_code"], lang), inline=True)
     embed.add_field(name=localized("bank_field_central", lang),
-                    value=str(bank["central_chat"]), inline=True)
+                    value=chat_display_name(bank["central_chat"]), inline=True)
     leaders = db.get_bank_leaders(bank["code"])
     embed.add_field(
         name=localized("bank_field_leaders", lang),
@@ -228,7 +234,7 @@ async def bank_transfer_cmd(interaction: discord.Interaction, code: str, user: s
     acceptance they become its only leader."""
     await _bank_leadership_cmd(interaction, code, user, transfer=True)
 
-_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "add_leader",
+_EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "fee", "add_leader",
                       "transfer", "delete")
 
 async def _resolve_edit_bank(interaction, lang, query=None):
@@ -323,6 +329,26 @@ async def edit_bank_cmd(interaction: discord.Interaction, option: int = None,
             return
         db.set_bank_central_chat(bank["code"], chat["chat_id"], chat["union_code"])
         await channel.send(embed=_econ_embed(localized("edit_bank_done", lang)))
+    elif action == "fee":
+        msg = await _dialog_text(
+            interaction, lang,
+            localized("edit_bank_ask_fee", lang,
+                      current=economy.convert_fee_summary(bank["code"], lang)),
+            as_embed=True)
+        if msg is None:
+            return
+        parsed = economy.parse_convert_fee_input(msg.content)
+        if parsed is None:
+            await channel.send(embed=_econ_embed(localized("edit_bank_bad_fee", lang)))
+            return
+        target, fee = parsed
+        if target != db.CONVERT_FEE_DEFAULT_KEY and not db.get_bank(target):
+            await channel.send(embed=_econ_embed(localized("bank_not_found", lang)))
+            return
+        db.set_convert_fee(bank["code"], target, fee)
+        await channel.send(embed=_econ_embed(
+            localized("edit_bank_fee_set", lang,
+                      current=economy.convert_fee_summary(bank["code"], lang))))
     elif action in ("add_leader", "transfer"):
         msg = await _dialog_text(interaction, lang, localized("edit_bank_ask_leader", lang),
                                  as_embed=True)
@@ -454,7 +480,13 @@ async def set_earn_cmd(interaction: discord.Interaction, code: str, action: str,
 
     The chat must belong to the bank's union. `rate` multiplies the currency
     reward only — energy is never scaled — and one channel earns exactly one
-    currency, which is how several banks coexist on a server."""
+    currency, which is how several banks coexist on a server.
+
+    A binding covers what is inside the channel: threads and forum posts under
+    it earn the same currency unless one of them names its own. That is also why
+    switching it off inside a thread that never had a binding of its own says so
+    rather than pretending to have done something — the currency it earns comes
+    from the channel around it."""
     lang = get_chat_lang(_chat_key(interaction))
     if interaction.guild is None:
         await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
@@ -473,7 +505,10 @@ async def set_earn_cmd(interaction: discord.Interaction, code: str, action: str,
         return
     action = action.strip().lower()
     if action in ("off", "disable", "0", "false", "no"):
-        db.remove_earn_channel("discord", interaction.channel_id)
+        removed = db.remove_earn_channel("discord", interaction.channel_id)
+        if not removed and db.resolve_earn_channel("discord", _earn_keys(interaction.channel)):
+            await _ereply(interaction, "set_earn_off_inherited", lang)
+            return
         await _ereply(interaction, "set_earn_off", lang)
         return
     if action not in ("on", "enable", "1", "true", "yes"):

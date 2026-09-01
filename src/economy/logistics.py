@@ -10,9 +10,14 @@ surviving goods reach the buyer and the escrow is minted to the seller,
 counting into its period sales when it lands in the salary currency.
 
 Distance is a three-step ladder — same server, same union, different unions —
-and perishing is compounding per hour of transit, so hauling food between
-unions is a deliberate waste while durable categories never spoil. At least one
-unit always survives, so a long haul is a loss and never a total one.
+and spoilage is a *risk* attached to it rather than a toll taken from it. The
+longest trip the map allows carries the category's full chance of spoiling; a
+shorter one carries proportionally less, and durable categories carry none.
+When the risk does come true the loss is a share of the batch, never more than
+a third of it, and at least one unit always survives. Hauling food between
+unions is therefore a gamble worth thinking about rather than an arithmetic
+certainty, and the odds are stated against the half hour a long delivery really
+takes instead of against an hour no delivery ever lasts.
 
 If one enterprise vanishes mid-transit, everything goes to the survivor. The
 same rule, from the deletion's side, is db/enterprises.py: _refund_shipment.
@@ -21,6 +26,7 @@ Not this module's zone: the shipment rows and the standing weekly contracts
 (db/logistics.py), and the announcement of an arrival (main.py).
 """
 import math
+import random
 import time
 
 import db
@@ -53,16 +59,41 @@ def transport_time(from_ent, to_ent, qty):
     dur = int(base + _cfg("transport_per_unit_sec", 0) * max(int(qty), 0))
     return max(dur, 0), dist
 
-def perished_qty(good, qty, seconds):
-    """How many of `qty` units spoil over `seconds` in transit. Perishable
-    categories decay by transport_perish_rate per hour (compounding); durable
-    categories never spoil. At least one unit always survives a delivery."""
-    rate = _cfg("transport_perish_rate", {}).get(good["category"], 0.0)
-    if rate <= 0 or qty <= 0 or seconds <= 0:
+def longest_transit():
+    """The longest trip the map allows — a delivery between two unions. The
+    yardstick every shorter trip's spoilage risk is measured against."""
+    return max(float(_cfg("transport_cross_union_sec", 1800)), 1.0)
+
+def perish_chance(good, seconds):
+    """The probability that a shipment of `good` spoils at all over `seconds`
+    in transit.
+
+    Spoilage is a risk, not a toll. The longest haul the map allows carries the
+    category's full `transport_perish_chance`, a shorter trip a proportionally
+    smaller one, and a durable category none at all — so the odds are stated
+    against the half-hour the longest delivery actually takes, rather than
+    against an hour no delivery ever lasts."""
+    chance = _cfg("transport_perish_chance", {}).get(good["category"], 0.0)
+    if chance <= 0 or seconds <= 0:
+        return 0.0
+    return max(0.0, min(float(chance) * (seconds / longest_transit()), 1.0))
+
+def perished_qty(good, qty, seconds, roll=None):
+    """How many of `qty` units spoil in transit — usually none.
+
+    One roll decides whether the batch was unlucky; when it was, the loss is a
+    share of the batch drawn up to `transport_perish_max_share` (a third), so
+    even a spoiled delivery mostly arrives. At least one unit always survives.
+    `roll` takes a (chance) -> float pair of numbers in tests; production
+    passes nothing and gets `random`."""
+    chance = perish_chance(good, seconds)
+    if chance <= 0 or qty <= 0:
         return 0
-    hours = seconds / 3600.0
-    survivors = qty * ((1.0 - rate) ** hours)
-    lost = qty - int(math.ceil(survivors - 1e-9))
+    rand = roll or random.random
+    if rand() >= chance:
+        return 0
+    share = float(_cfg("transport_perish_max_share", 1.0 / 3.0)) * rand()
+    lost = int(math.floor(qty * max(share, 0.0)))
     return max(0, min(qty - 1, lost))
 
 def dispatch_shipment(from_code, to_code, good, qty, price, bank_code, notify, lang):

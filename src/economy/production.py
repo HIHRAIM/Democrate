@@ -15,12 +15,21 @@ auto_efficiency of the manual tempo, with the fraction of a unit left over
 carried on the autocraft row — capped below one unit, so downtime cannot bank
 a burst.
 
+Several goods may be produced at once — up to `parallel_production` of them,
+one run of each — and both halves divide by the number of lines running: a
+manual batch is cut by `split_qty` when it starts, an automatic line by its
+owner's line count on every tick. Five goods at once therefore yield what one
+good would, in five streams, which is what makes producing all five base
+categories a choice about breadth rather than a way to produce five times as
+much.
+
 Mastery is credited to the *worker* even when the batch goes to an enterprise;
 the enterprise accrues its own in parallel, which is what prices its warehouse.
 
 Not this module's zone: the formulas themselves (economy/money.py), the
 storage (db/goods.py) and the announcement of a finished batch (main.py).
 """
+import random
 import time
 
 import db
@@ -76,17 +85,38 @@ def energy_bank_for(good, worker):
             best, best_e = acc["bank_code"], acc["energy"]
     return best
 
+def parallel_limit():
+    """How many goods one person may keep in production at the same time."""
+    return max(int(_cfg("parallel_production", 5)), 1)
+
+def split_qty(qty, streams):
+    """A batch cut into `streams` parallel lines. At least one unit per line:
+    a category that yields one unit a run would otherwise produce nothing at
+    all in parallel, and the energy is charged per unit either way, so the
+    rounding buys nothing."""
+    return max(1, int(qty) // max(int(streams), 1))
+
 def start_production(worker, good, owner, server, notify, lang, starter_display=None):
     """Begin one timed manual run by `worker` (canonical user owner tuple); the
     batch lands in `owner`'s inventory (the worker, or their enterprise) when
     the run finishes. Energy is charged up front; the pending run survives
-    restarts in the productions table. One run per worker at a time.
-    Returns (status, info)."""
-    active = db.get_active_production(worker[1], worker[2])
+    restarts in the productions table.
+
+    A worker may have up to `parallel_production` goods on the bench at once,
+    but only one run of each. The batch is divided by the number of lines
+    running — five goods at once yield what one good would, in five streams —
+    and the energy follows the batch, so parallel work is a matter of breadth
+    rather than of speed. Returns (status, info)."""
+    active = db.get_active_production(worker[1], worker[2], good["code"])
     if active:
         return "busy", {"finish_at": active["finish_at"]}
+    running = db.count_active_productions(worker[1], worker[2])
+    limit = parallel_limit()
+    if running >= limit:
+        return "too_many", {"limit": limit, "running": running}
     m = db.get_produced(worker, good["code"])
     dur, qty = produce_params(good, m)
+    qty = split_qty(qty, running + 1)
     cost = production_energy_cost(good, m, qty)
     bank = energy_bank_for(good, worker)
     have = db.get_energy(bank, worker) if bank else 0
@@ -94,11 +124,23 @@ def start_production(worker, good, owner, server, notify, lang, starter_display=
         return "no_energy", {"cost": cost, "have": have}
     if not db.spend_energy(bank, worker, cost):
         return "no_energy", {"cost": cost, "have": have}
+    if is_first_run_ever(worker):
+        dur = 0
     finish_at = int(time.time()) + dur
     db.create_production(owner, (worker[1], worker[2]), good["code"], qty, bank,
                          server, notify, lang, finish_at, starter_display=starter_display)
     return "ok", {"duration": dur, "qty": qty, "cost": cost, "finish_at": finish_at,
-                  "level": mastery_level(m)}
+                  "level": mastery_level(m), "first_run": dur == 0}
+
+def is_first_run_ever(worker):
+    """Whether this worker has never produced anything, of any good.
+
+    Their first run finishes at once rather than after the usual minutes. Every
+    other run is worth waiting for — this one is worth *seeing*: a person who
+    has just met the bot should hold something they made before they decide
+    whether any of this is for them. It happens once per person for as long as
+    they play."""
+    return db.total_produced(worker) <= 0
 
 def _deliver_units(worker, owner, good, qty):
     """Credit a finished batch: inventory to the owner, mastery to the worker
@@ -114,23 +156,46 @@ def _deliver_units(worker, owner, good, qty):
         db.add_period_goods_value(good["bank_code"], total_value)
     return total_value, mastery_level(m + qty)
 
+def roll_lucky_batch(qty):
+    """`(qty, lucky)` — now and then a manual run comes out better than it
+    should have.
+
+    The only die the economy rolled until now was the one that spoils cargo in
+    transit, so the single surprise in the game was a loss. This is its
+    opposite and it is deliberately small: it costs no extra energy, it cannot
+    be aimed at, and it lands on the run somebody chose to start rather than on
+    a line running by itself, because the point of it is to make the deliberate
+    act the memorable one. Set `lucky_batch_chance` to 0 to switch it off."""
+    chance = float(_cfg("lucky_batch_chance", 0.05))
+    if chance <= 0 or random.random() >= chance:
+        return qty, False
+    factor = max(float(_cfg("lucky_batch_multiplier", 2.0)), 1.0)
+    lucky_qty = max(qty + 1, int(round(qty * factor)))
+    return lucky_qty, True
+
 def finish_production(row):
     """Complete a due production row: deliver the batch and record the server
     statistics. Returns info for the completion notice, or None when the good
-    vanished meanwhile."""
+    vanished meanwhile.
+
+    `level_before` rides along so the caller can tell a run that merely
+    finished from one that raised the worker's quality — the notice for the
+    second is worth sending where the first is not."""
     good = db.get_good(row["good_code"])
     db.delete_production(row["id"])
     if not good:
         return None
     worker = ("user", row["starter_platform"], row["starter_id"])
     owner = (row["owner_type"], row["owner_platform"], row["owner_id"])
-    qty = int(row["qty"])
+    level_before = mastery_level(db.get_produced(worker, good["code"]))
+    qty, lucky = roll_lucky_batch(int(row["qty"]))
     total_value, level = _deliver_units(worker, owner, good, qty)
     db.record_server_production(
         row["server_platform"], row["server_id"], good["code"], good["category"],
         "enterprise" if owner[0] == "enterprise" else "user",
         (worker[1], worker[2]), qty, total_value, level)
-    return {"qty": qty, "value": total_value, "level": level, "good": good}
+    return {"qty": qty, "value": total_value, "level": level, "good": good,
+            "level_before": level_before, "lucky": lucky, "worker": worker}
 
 def _dedup_owners(pairs):
     """Canonicalise (platform, user_id) pairs to wallet owners and de-duplicate,
@@ -143,13 +208,21 @@ def _dedup_owners(pairs):
             out.append(owner)
     return out
 
+def autocraft_slots(owner, good_code):
+    """(running_lines_excluding_this_good, limit) for an owner about to switch
+    a 24/7 line on — what `/autocraft` refuses on and what it reports."""
+    return db.count_autocraft(owner, exclude_good=good_code), parallel_limit()
+
 def run_autoproduce(hours=1.0):
     """Advance every 24/7 autoproduction subscription by `hours`. The line runs
-    at auto_efficiency of the worker's manual tempo; fractional units carry over
+    at auto_efficiency of the worker's manual tempo, divided between the owner's
+    parallel lines — five goods at once advance at a fifth of the speed each, so
+    breadth costs tempo rather than being free. Fractional units carry over
     between runs (capped below one unit so downtime cannot bank a burst), and a
     unit is only produced while the worker's energy covers its craft cost."""
     produced_total = 0
     cap = int(_cfg("autocraft_cap", 50))
+    lines_per_owner = {}
     for row in db.get_autocraft_all():
         good = db.get_good(row["good_code"])
         if not good:
@@ -161,9 +234,12 @@ def run_autoproduce(hours=1.0):
             worker = owner
         else:
             continue
+        if owner not in lines_per_owner:
+            lines_per_owner[owner] = max(db.count_autocraft(owner), 1)
+        streams = lines_per_owner[owner]
         m = db.get_produced(worker, good["code"])
         dur, qty_run = produce_params(good, m)
-        rate = _cfg("auto_efficiency", 0.5) * qty_run * 3600.0 / max(dur, 1)
+        rate = _cfg("auto_efficiency", 0.5) * qty_run * 3600.0 / max(dur, 1) / streams
         amount = min(float(row["carry"] or 0.0), 1.0) + rate * hours
         units = min(int(amount), cap)
         made = 0

@@ -30,9 +30,11 @@ async def _dialog_catchall(message: Message):
     """Every message that is not a command.
 
     Two jobs, in this order: hand the text to a dialog waiting for it
-    (`_pending_inputs`), and otherwise count the message for earning. A message
-    that feeds a dialog is deliberately not counted — it is an answer to the bot,
-    not a conversation in the chat.
+    (`_pending_inputs`), and *otherwise* count the message for earning. A
+    message that feeds a dialog is deliberately not counted — it is an answer to
+    the bot, not a conversation in the chat — which is why the earning call is
+    the branch that runs when no dialog wanted the message, and not a line above
+    the check.
 
     **Registered last of all handlers.** It has no filter, so aiogram would hand it
     every command as well if it came earlier, and every command below it would die
@@ -41,11 +43,26 @@ async def _dialog_catchall(message: Message):
         return
     if (message.text or "").startswith("/"):
         return
-    _try_earn_tg(message)
     key = (message.chat.id, message.from_user.id)
     fut = _pending_inputs.get(key)
     if fut and not fut.done():
         fut.set_result(message)
+        return
+    _try_earn_tg(message)
+
+def _earn_keys_tg(message: Message):
+    """The keys an earning binding may sit on for one Telegram message: its own
+    forum topic first, then the group itself.
+
+    A topic of a forum group has a key of its own ('chat:thread'), so a message
+    in one used to match nothing that was set on the group — `/set-earn` in the
+    General topic left every other topic earning nothing. The group's key comes
+    second, so a topic that names its own currency still wins."""
+    keys = [_chat_key(message)]
+    group_key = f"{message.chat.id}:0"
+    if group_key not in keys:
+        keys.append(group_key)
+    return keys
 
 def _try_earn_tg(message: Message):
     """Message earning on Telegram. Runs from the catch-all (the last handler),
@@ -59,8 +76,7 @@ def _try_earn_tg(message: Message):
         text = (message.text or message.caption or "").strip()
         if not text:
             return
-        chan_key = _chat_key(message)
-        earn = db.get_earn_channel("telegram", chan_key)
+        earn = db.resolve_earn_channel("telegram", _earn_keys_tg(message))
         if not earn:
             return
         if not message.from_user or message.from_user.is_bot:

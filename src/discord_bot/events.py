@@ -12,6 +12,11 @@ row together, so a later re-invitation starts a fresh seven days.
 separately — so counting a message here never disturbs a dialog waiting for
 the same message.
 
+Which channel a message earns in is `_earn_keys`, and it is not simply the
+channel the message is in: threads and forum posts are channels of their own,
+so the binding has to be looked for outwards through the parent channel and
+its category.
+
 Not this module's zone: the earning rules themselves (economy/activity.py) and
 the seven-day policy (setup_deadline.py).
 """
@@ -21,7 +26,7 @@ import db
 import economy
 from utils import send_service_event
 
-from discord_bot.client import bot, logger
+from discord_bot.client import _earn_keys, bot, logger
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
@@ -61,7 +66,7 @@ async def on_message(message: discord.Message):
         content = (message.content or "").strip()
         if not content or content.startswith("/"):
             return
-        earn = db.get_earn_channel("discord", message.channel.id)
+        earn = db.resolve_earn_channel("discord", _earn_keys(message.channel))
         if not earn:
             return
         economy.earn_from_message("discord", message.author.id, str(message.author),

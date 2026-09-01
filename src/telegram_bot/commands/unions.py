@@ -60,7 +60,8 @@ async def setup_cmd(message: Message):
         )
         return
 
-    db.setup_chat("telegram", message.chat.id, union, message.from_user.id)
+    db.setup_chat("telegram", message.chat.id, union, message.from_user.id,
+                  title=message.chat.title)
     set_chat_lang(str(message.chat.id), code)
     await message.reply(
         localized("setup_success", code,

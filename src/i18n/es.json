@@ -141,11 +141,15 @@
   },
   "autocraft_off": {
     "status": "unverified",
-    "text": "✅ La fabricación automática de {name} está desactivada."
+    "text": "✅ La producción 24/7 de {name} está apagada. Líneas aún en marcha: {lines}."
   },
   "autocraft_on": {
     "status": "unverified",
-    "text": "✅ La fabricación automática de {name} está activada."
+    "text": "✅ La producción 24/7 de {name} está activa. Líneas en marcha: {lines} — se reparten el ritmo."
+  },
+  "autocraft_too_many": {
+    "status": "unverified",
+    "text": "Ya tienes {limit} líneas de producción. Apaga una antes de arrancar otra."
   },
   "autocraft_usage": {
     "status": "unverified",
@@ -334,6 +338,18 @@
   "convert_done": {
     "status": "unverified",
     "text": "🔁 Convertido {amount} → {credited} (tasa {rate}, comisión {fee})."
+  },
+  "convert_fee_default": {
+    "status": "unverified",
+    "text": "{percent}% por defecto"
+  },
+  "convert_fee_for": {
+    "status": "unverified",
+    "text": "{percent}% hacia {code}"
+  },
+  "convert_fee_to_leaders": {
+    "status": "unverified",
+    "text": "La comisión va a los líderes del banco."
   },
   "convert_no_funds": {
     "status": "unverified",
@@ -535,6 +551,10 @@
     "status": "unverified",
     "text": "Envía el nuevo emoji de la moneda."
   },
+  "edit_bank_ask_fee": {
+    "status": "unverified",
+    "text": "Ahora: {current}\n\nEnvía un porcentaje para todas las monedas (por ejemplo, 2.5), o un código de moneda y un porcentaje solo para esa (USD 1). Envía \"USD -\" para quitar la comisión propia de una moneda y volver a la predeterminada."
+  },
   "edit_bank_ask_leader": {
     "status": "unverified",
     "text": "¿A quién? Envía un ID de usuario, una mención o @username."
@@ -550,6 +570,10 @@
   "edit_bank_bad_code": {
     "status": "unverified",
     "text": "El código está ocupado o no es válido. Envía 4 caracteres que no use ninguna unión, partido, moneda ni bien."
+  },
+  "edit_bank_bad_fee": {
+    "status": "unverified",
+    "text": "No se pudo leer. Envía un porcentaje de 0 a 99 — solo, o después de un código de moneda."
   },
   "edit_bank_choose": {
     "status": "unverified",
@@ -570,6 +594,10 @@
   "edit_bank_done": {
     "status": "unverified",
     "text": "✅ Hecho."
+  },
+  "edit_bank_fee_set": {
+    "status": "unverified",
+    "text": "Hecho. Comisión de conversión ahora: {current}"
   },
   "edit_bank_menu_header": {
     "status": "unverified",
@@ -598,6 +626,10 @@
   "edit_bank_opt_emoji": {
     "status": "unverified",
     "text": "Cambiar el emoji de la moneda"
+  },
+  "edit_bank_opt_fee": {
+    "status": "unverified",
+    "text": "Comisión de conversión"
   },
   "edit_bank_opt_name": {
     "status": "unverified",
@@ -913,7 +945,7 @@
   },
   "ent_sell_usage": {
     "status": "unverified",
-    "text": "Uso: /ent_sell <código del bien> [cantidad] [empresa]"
+    "text": "Uso: /ent_sell <código del bien> <comprador> [cantidad] [precio] [empresa]"
   },
   "ent_transfer_declined": {
     "status": "unverified",
@@ -1369,7 +1401,7 @@
   },
   "help.cmd_ent_sell": {
     "status": "unverified",
-    "text": "/ent-sell <bien> [cantidad] — vende los bienes de la empresa al banco (líderes)"
+    "text": "/ent-sell <bien> <comprador> [cant.] [precio] — vende los bienes de la empresa (líderes)"
   },
   "help.cmd_enterprise": {
     "status": "unverified",
@@ -1565,7 +1597,7 @@
   },
   "help.cmd_sell": {
     "status": "unverified",
-    "text": "/sell <código de bien> [cant.] — vende un bien a su banco"
+    "text": "/sell <bien> <comprador> [cant.] [precio] — vende un bien a un miembro o a una empresa"
   },
   "help.cmd_set_earn": {
     "status": "unverified",
@@ -1602,6 +1634,10 @@
   "help.cmd_setup": {
     "status": "unverified",
     "text": "/setup <unión> <idioma> — vincular el servidor/grupo a una unión y establecer el idioma (admins del bot)"
+  },
+  "help.cmd_top": {
+    "status": "unverified",
+    "text": "/top [week|good|wealth] [código] — tablas: quién produjo más esta semana, maestros de un bien, mayores saldos de una moneda"
   },
   "help.cmd_transit": {
     "status": "unverified",
@@ -1673,7 +1709,11 @@
   },
   "inventory_line": {
     "status": "unverified",
-    "text": "{emoji}{name} [{code}] ×{qty} — valor unitario {value} (nivel {level})"
+    "text": "{emoji}{name} [{code}] — {qty} u., calidad {level} de {max_level}, {value} cada una"
+  },
+  "inventory_line_base": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] — {qty} u., calidad {level} de {max_level}, bien básico (no se vende)"
   },
   "inventory_title": {
     "status": "unverified",
@@ -2113,7 +2153,7 @@
   },
   "production_busy": {
     "status": "unverified",
-    "text": "Ya estás produciendo algo: estará listo en {time} min."
+    "text": "Ya estás produciendo {name} — el lote estará listo en {time} min."
   },
   "production_dest_enterprise": {
     "status": "unverified",
@@ -2127,13 +2167,29 @@
     "status": "unverified",
     "text": "✅ {user} produjo {qty} × {emoji}{name} (nivel de calidad {level}) — {dest}."
   },
+  "production_first_run": {
+    "status": "unverified",
+    "text": "⚡ Tu primera tanda se completa al instante — las siguientes tardan unos minutos."
+  },
+  "production_lucky": {
+    "status": "unverified",
+    "text": "🍀 Una tanda con suerte — salió el doble: {qty} unidades."
+  },
   "production_started": {
     "status": "unverified",
     "text": "🏭 Producción iniciada: {name}{emoji} — lote de {qty}, listo en {duration} min, coste {cost}."
   },
+  "production_too_many": {
+    "status": "unverified",
+    "text": "Ya tienes {limit} bienes en producción. Espera a uno de los lotes o detén una línea 24/7."
+  },
   "profession_none": {
     "status": "unverified",
     "text": "ninguna"
+  },
+  "progress_level_up": {
+    "status": "unverified",
+    "text": "⭐ Tu nivel de calidad en {emoji}{name} es ahora {level}. Cada unidad vale más, y la energía que cuesta crece más despacio que su valor — cuanto más subes, mejor paga el trabajo."
   },
   "provision_level_acceptable": {
     "status": "unverified",
@@ -2153,7 +2209,7 @@
   },
   "quiz_answer_hint": {
     "status": "unverified",
-    "text": "Responde con «Número-Respuesta»: Mb = preferencia leve, Y = definida (por ejemplo «2-Y» o «3 Mb»). Las últimas opciones solo necesitan el número."
+    "text": "Elige una opción en el menú de abajo o escribe «Número-Respuesta»: Mb = preferencia leve, Y = definida (p. ej. «2-Y» o «3 Mb»). Las últimas opciones solo necesitan su número."
   },
   "quiz_answer_invalid": {
     "status": "unverified",
@@ -2161,7 +2217,7 @@
   },
   "quiz_answer_need_weight": {
     "status": "unverified",
-    "text": "Indica la fuerza de tu preferencia para esta opción: Mb (leve) o Y (definida) — por ejemplo «{num}-Y» o «{num} Mb»."
+    "text": "¿Con cuánta convicción eliges la opción {num}? Pulsa un botón abajo o responde «{num}-Y» o «{num} Mb»."
   },
   "quiz_answer_out_of_range": {
     "status": "unverified",
@@ -2195,6 +2251,10 @@
     "status": "unverified",
     "text": "De acuerdo, no guardaré tus resultados."
   },
+  "quiz_pick_placeholder": {
+    "status": "unverified",
+    "text": "Elige una opción…"
+  },
   "quiz_results_title": {
     "status": "unverified",
     "text": "Tus resultados — {name}"
@@ -2218,6 +2278,14 @@
   "quiz_stop_saved": {
     "status": "unverified",
     "text": "⏸️ Tu progreso en «{name}» se guarda 7 días. Empieza este cuestionario de nuevo para continuar desde el mismo punto; si no, el progreso se descartará."
+  },
+  "quiz_weight_strong": {
+    "status": "unverified",
+    "text": "Totalmente de acuerdo (Y)"
+  },
+  "quiz_weight_weak": {
+    "status": "unverified",
+    "text": "Más bien de acuerdo (Mb)"
   },
   "quizzes_clear_deleted": {
     "status": "unverified",
@@ -2383,21 +2451,49 @@
     "status": "unverified",
     "text": "semanal"
   },
+  "sell_bad_price": {
+    "status": "unverified",
+    "text": "Ese precio no tiene sentido."
+  },
+  "sell_bad_target": {
+    "status": "unverified",
+    "text": "No sé quién es el comprador. Indica un miembro o un código de empresa."
+  },
+  "sell_declined": {
+    "status": "unverified",
+    "text": "La oferta fue rechazada. Nada salió del almacén."
+  },
   "sell_done": {
     "status": "unverified",
-    "text": "💰 Vendido {qty} ×{name} a {unit} cada uno — {total} en total."
+    "text": "💰 Vendido {qty} × {emoji}{name} a {buyer} por {total}."
+  },
+  "sell_no_bank": {
+    "status": "unverified",
+    "text": "Este bien no está denominado en ninguna moneda, así que no se le puede poner precio."
+  },
+  "sell_no_funds": {
+    "status": "unverified",
+    "text": "El comprador no puede pagar ese precio."
   },
   "sell_not_sellable": {
     "status": "unverified",
-    "text": "«{name}» no tiene valor de mercado y no puede venderse a un banco."
+    "text": "«{name}» es un bien básico: no tiene valor de mercado y se entrega con /give-good en vez de venderse."
   },
   "sell_nothing": {
     "status": "unverified",
     "text": "No tienes {name} para vender."
   },
+  "sell_offer": {
+    "status": "unverified",
+    "text": "🤝 Oferta para {buyer}: {qty} × {emoji}{name} por {price}. ¿Aceptas?"
+  },
+  "sell_self": {
+    "status": "unverified",
+    "text": "No puedes venderte a ti mismo."
+  },
   "sell_usage": {
     "status": "unverified",
-    "text": "Uso: /sell <código de bien> [cantidad]"
+    "text": "Uso: /sell <código del bien> <comprador> [cantidad] [precio]"
   },
   "service_event.bank_created": {
     "status": "unverified",
@@ -2463,9 +2559,13 @@
     "status": "unverified",
     "text": "✅ Este canal ya no genera moneda."
   },
+  "set_earn_off_inherited": {
+    "status": "unverified",
+    "text": "Este lugar no tiene ajuste de ganancia propio: gana la moneda fijada en el canal que lo contiene. Desactívala allí o fija aquí otra moneda."
+  },
   "set_earn_on": {
     "status": "unverified",
-    "text": "✅ Este canal ahora genera {code} (tasa ×{rate})."
+    "text": "✅ Este canal ahora gana {code} (tasa ×{rate}). Los hilos y publicaciones de foro dentro ganan lo mismo, salvo que fijen su propia moneda."
   },
   "set_earn_usage": {
     "status": "unverified",
@@ -2690,6 +2790,38 @@
   "too_many_requests": {
     "status": "unverified",
     "text": "Demasiadas solicitudes — inténtalo más tarde."
+  },
+  "top_bad_kind": {
+    "status": "unverified",
+    "text": "Elige una tabla: week, good <código de bien> o wealth <código de moneda>."
+  },
+  "top_header_good": {
+    "status": "unverified",
+    "text": "🏆 Mejores en {name} ({code}), de todos los tiempos"
+  },
+  "top_header_wealth": {
+    "status": "unverified",
+    "text": "🏆 Mayores saldos en {name} ({code})"
+  },
+  "top_header_week": {
+    "status": "unverified",
+    "text": "🏆 Los que más produjeron esta semana"
+  },
+  "top_line_money": {
+    "status": "unverified",
+    "text": "{place}. {user} — {amount}"
+  },
+  "top_line_qty": {
+    "status": "unverified",
+    "text": "{place}. {user} — {qty}"
+  },
+  "top_no_server": {
+    "status": "unverified",
+    "text": "Este comando funciona en un chat de servidor, no en uno privado."
+  },
+  "top_none": {
+    "status": "unverified",
+    "text": "Todavía no hay nadie en esta tabla."
   },
   "transfer_declined": {
     "status": "unverified",

@@ -121,6 +121,7 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_goods", lang)),
         escape_html(localized_help("cmd_craft", lang)),
         escape_html(localized_help("cmd_inventory", lang)),
+        escape_html(localized_help("cmd_top", lang)),
         escape_html(localized_help("cmd_sell", lang)),
         escape_html(localized_help("cmd_give_good", lang)),
         escape_html(localized_help("cmd_autocraft", lang)),

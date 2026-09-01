@@ -141,11 +141,15 @@
   },
   "autocraft_off": {
     "status": "unverified",
-    "text": "✅ Авто-крафт {name} вимкнено."
+    "text": "✅ Цілодобове виробництво {name} вимкнено. Залишилося робочих ліній: {lines}."
   },
   "autocraft_on": {
     "status": "unverified",
-    "text": "✅ Авто-крафт {name} увімкнено."
+    "text": "✅ Цілодобове виробництво {name} увімкнено. Ліній працює: {lines} — темп ділиться між ними."
+  },
+  "autocraft_too_many": {
+    "status": "unverified",
+    "text": "У вас уже {limit} цілодобових ліній. Вимкніть одну, перш ніж запускати нову."
   },
   "autocraft_usage": {
     "status": "unverified",
@@ -334,6 +338,18 @@
   "convert_done": {
     "status": "unverified",
     "text": "🔁 Конвертовано {amount} → {credited} (курс {rate}, комісія {fee})."
+  },
+  "convert_fee_default": {
+    "status": "unverified",
+    "text": "{percent}% за замовчуванням"
+  },
+  "convert_fee_for": {
+    "status": "unverified",
+    "text": "{percent}% у {code}"
+  },
+  "convert_fee_to_leaders": {
+    "status": "unverified",
+    "text": "Комісія йде лідерам банку."
   },
   "convert_no_funds": {
     "status": "unverified",
@@ -535,6 +551,10 @@
     "status": "unverified",
     "text": "Надішліть нове емодзі валюти."
   },
+  "edit_bank_ask_fee": {
+    "status": "unverified",
+    "text": "Зараз: {current}\n\nНадішліть відсоток для всіх валют (наприклад, 2.5) або код валюти та відсоток саме для неї (USD 1). Щоб прибрати окрему комісію й повернутися до загальної, надішліть «USD -»."
+  },
   "edit_bank_ask_leader": {
     "status": "unverified",
     "text": "Кого? Надішліть ID користувача, згадку або @username."
@@ -550,6 +570,10 @@
   "edit_bank_bad_code": {
     "status": "unverified",
     "text": "Код зайнято або він хибний. Надішліть 4 символи, не зайняті ні союзом, ні партією, ні валютою, ні товаром."
+  },
+  "edit_bank_bad_fee": {
+    "status": "unverified",
+    "text": "Не вдалося прочитати. Надішліть відсоток від 0 до 99 — сам по собі або після коду валюти."
   },
   "edit_bank_choose": {
     "status": "unverified",
@@ -570,6 +594,10 @@
   "edit_bank_done": {
     "status": "unverified",
     "text": "✅ Готово."
+  },
+  "edit_bank_fee_set": {
+    "status": "unverified",
+    "text": "Готово. Комісія за обмін тепер: {current}"
   },
   "edit_bank_menu_header": {
     "status": "unverified",
@@ -598,6 +626,10 @@
   "edit_bank_opt_emoji": {
     "status": "unverified",
     "text": "Змінити емодзі валюти"
+  },
+  "edit_bank_opt_fee": {
+    "status": "unverified",
+    "text": "Комісія за обмін"
   },
   "edit_bank_opt_name": {
     "status": "unverified",
@@ -913,7 +945,7 @@
   },
   "ent_sell_usage": {
     "status": "unverified",
-    "text": "Використання: /ent_sell <код товару> [к-сть] [підприємство]"
+    "text": "Використання: /ent_sell <код товару> <покупець> [кількість] [ціна] [підприємство]"
   },
   "ent_transfer_declined": {
     "status": "unverified",
@@ -1369,7 +1401,7 @@
   },
   "help.cmd_ent_sell": {
     "status": "unverified",
-    "text": "/ent-sell <товар> [к-сть] — продати товари підприємства банку (лідери)"
+    "text": "/ent-sell <товар> <покупець> [к-сть] [ціна] — продати товари підприємства (керівники)"
   },
   "help.cmd_enterprise": {
     "status": "unverified",
@@ -1565,7 +1597,7 @@
   },
   "help.cmd_sell": {
     "status": "unverified",
-    "text": "/sell <код товару> [к-сть] — продати товар банку"
+    "text": "/sell <товар> <покупець> [к-сть] [ціна] — продати товар учаснику або підприємству"
   },
   "help.cmd_set_earn": {
     "status": "unverified",
@@ -1602,6 +1634,10 @@
   "help.cmd_setup": {
     "status": "unverified",
     "text": "/setup <союз> <мова> — прив'язати сервер/групу до союзу та встановити мову (адміни бота)"
+  },
+  "help.cmd_top": {
+    "status": "unverified",
+    "text": "/top [week|good|wealth] [код] — рейтинги: хто більше виробив за тиждень, майстри з товару, найбільші рахунки у валюті"
   },
   "help.cmd_transit": {
     "status": "unverified",
@@ -1673,7 +1709,11 @@
   },
   "inventory_line": {
     "status": "unverified",
-    "text": "{emoji}{name} [{code}] ×{qty} — вартість одиниці {value} (рівень {level})"
+    "text": "{emoji}{name} [{code}] — {qty} шт., якість {level} з {max_level}, {value} за штуку"
+  },
+  "inventory_line_base": {
+    "status": "unverified",
+    "text": "{emoji}{name} [{code}] — {qty} шт., якість {level} з {max_level}, базовий товар (не продається)"
   },
   "inventory_title": {
     "status": "unverified",
@@ -2113,7 +2153,7 @@
   },
   "production_busy": {
     "status": "unverified",
-    "text": "Ви вже щось виробляєте — буде готово за {time} хв."
+    "text": "{name} вже у виробництві — партія буде готова за {time} хв."
   },
   "production_dest_enterprise": {
     "status": "unverified",
@@ -2127,13 +2167,29 @@
     "status": "unverified",
     "text": "✅ {user} виробив(ла) {qty} × {emoji}{name} (рівень якості {level}) — {dest}."
   },
+  "production_first_run": {
+    "status": "unverified",
+    "text": "⚡ Перший цикл виконується одразу — наступні тривають кілька хвилин."
+  },
+  "production_lucky": {
+    "status": "unverified",
+    "text": "🍀 Вдала партія — вийшло вдвічі більше: {qty} од."
+  },
   "production_started": {
     "status": "unverified",
     "text": "🏭 Виробництво запущено: {name}{emoji} — партія з {qty} шт., буде готова за {duration} хв, витрати {cost}."
   },
+  "production_too_many": {
+    "status": "unverified",
+    "text": "У вас уже {limit} товарів у виробництві. Дочекайтеся однієї з партій або зупиніть цілодобову лінію."
+  },
   "profession_none": {
     "status": "unverified",
     "text": "немає"
+  },
+  "progress_level_up": {
+    "status": "unverified",
+    "text": "⭐ Ваш рівень якості з товару {emoji}{name} тепер {level}. Одиниця коштує дорожче, а енергії на неї витрачається непропорційно менше — що вищий рівень, то вигідніша робота."
   },
   "provision_level_acceptable": {
     "status": "unverified",
@@ -2153,7 +2209,7 @@
   },
   "quiz_answer_hint": {
     "status": "unverified",
-    "text": "Відповідь у форматі «Номер-Відповідь»: Mb — незначна перевага, Y — впевнена (наприклад, «2-Y» або «3 Mb»). Для останніх варіантів достатньо номера."
+    "text": "Оберіть варіант у меню нижче або напишіть «Номер-Відповідь»: Mb — слабка перевага, Y — упевнена (наприклад, «2-Y» або «3 Mb»). Для останніх варіантів достатньо номера."
   },
   "quiz_answer_invalid": {
     "status": "unverified",
@@ -2161,7 +2217,7 @@
   },
   "quiz_answer_need_weight": {
     "status": "unverified",
-    "text": "Вкажіть силу переваги для цього варіанта: Mb (незначна) або Y (впевнена) — наприклад, «{num}-Y» або «{num} Mb»."
+    "text": "Наскільки впевнено ви обираєте варіант {num}? Натисніть кнопку нижче або відповідайте «{num}-Y» чи «{num} Mb»."
   },
   "quiz_answer_out_of_range": {
     "status": "unverified",
@@ -2195,6 +2251,10 @@
     "status": "unverified",
     "text": "Гаразд, не зберігатиму результати."
   },
+  "quiz_pick_placeholder": {
+    "status": "unverified",
+    "text": "Оберіть варіант…"
+  },
   "quiz_results_title": {
     "status": "unverified",
     "text": "Ваші результати — {name}"
@@ -2218,6 +2278,14 @@
   "quiz_stop_saved": {
     "status": "unverified",
     "text": "⏸️ Прогрес за «{name}» збережено на 7 днів. Почніть цю вікторину знову, щоб продовжити з того самого місця; інакше прогрес буде скинуто."
+  },
+  "quiz_weight_strong": {
+    "status": "unverified",
+    "text": "Впевнено згоден (Y)"
+  },
+  "quiz_weight_weak": {
+    "status": "unverified",
+    "text": "Радше згоден (Mb)"
   },
   "quizzes_clear_deleted": {
     "status": "unverified",
@@ -2383,21 +2451,49 @@
     "status": "unverified",
     "text": "щотижня"
   },
+  "sell_bad_price": {
+    "status": "unverified",
+    "text": "Така ціна не має сенсу."
+  },
+  "sell_bad_target": {
+    "status": "unverified",
+    "text": "Не зрозумів, хто покупець. Вкажіть учасника або код підприємства."
+  },
+  "sell_declined": {
+    "status": "unverified",
+    "text": "Пропозицію відхилено. Зі складу нічого не пішло."
+  },
   "sell_done": {
     "status": "unverified",
-    "text": "💰 Продано {qty} ×{name} по {unit} за штуку — усього {total}."
+    "text": "💰 Продано {qty} × {emoji}{name} — покупець {buyer}, сума {total}."
+  },
+  "sell_no_bank": {
+    "status": "unverified",
+    "text": "У цього товару немає валюти, в якій він оцінюється, тому призначити ціну не можна."
+  },
+  "sell_no_funds": {
+    "status": "unverified",
+    "text": "У покупця не вистачає грошей на цю ціну."
   },
   "sell_not_sellable": {
     "status": "unverified",
-    "text": "«{name}» не має ринкової вартості й не продається банку."
+    "text": "«{name}» — базовий товар: він не має ринкової вартості, його передають командою /give-good, а не продають."
   },
   "sell_nothing": {
     "status": "unverified",
     "text": "У вас немає {name} для продажу."
   },
+  "sell_offer": {
+    "status": "unverified",
+    "text": "🤝 Пропозиція для {buyer}: {qty} × {emoji}{name} за {price}. Приймаєте?"
+  },
+  "sell_self": {
+    "status": "unverified",
+    "text": "Не можна продати самому собі."
+  },
   "sell_usage": {
     "status": "unverified",
-    "text": "Використання: /sell <код товару> [кількість]"
+    "text": "Використання: /sell <код товару> <покупець> [кількість] [ціна]"
   },
   "service_event.bank_created": {
     "status": "unverified",
@@ -2463,9 +2559,13 @@
     "status": "unverified",
     "text": "✅ Цей канал більше не заробляє валюту."
   },
+  "set_earn_off_inherited": {
+    "status": "unverified",
+    "text": "У цього місця немає власного налаштування заробітку — воно заробляє валюту, задану для каналу навколо нього. Вимкніть її там або задайте тут іншу валюту."
+  },
   "set_earn_on": {
     "status": "unverified",
-    "text": "✅ Цей канал тепер заробляє {code} (ставка ×{rate})."
+    "text": "✅ Цей канал тепер заробляє {code} (ставка ×{rate}). Гілки та пости форуму всередині нього заробляють те саме, якщо в них не задано власну валюту."
   },
   "set_earn_usage": {
     "status": "unverified",
@@ -2690,6 +2790,38 @@
   "too_many_requests": {
     "status": "unverified",
     "text": "Забагато запитів — спробуйте пізніше."
+  },
+  "top_bad_kind": {
+    "status": "unverified",
+    "text": "Оберіть рейтинг: week, good <код товару> або wealth <код валюти>."
+  },
+  "top_header_good": {
+    "status": "unverified",
+    "text": "🏆 Найкращі майстри з товару {name} ({code}) за весь час"
+  },
+  "top_header_wealth": {
+    "status": "unverified",
+    "text": "🏆 Найбільші рахунки у валюті {name} ({code})"
+  },
+  "top_header_week": {
+    "status": "unverified",
+    "text": "🏆 Найбільше виробили за тиждень"
+  },
+  "top_line_money": {
+    "status": "unverified",
+    "text": "{place}. {user} — {amount}"
+  },
+  "top_line_qty": {
+    "status": "unverified",
+    "text": "{place}. {user} — {qty}"
+  },
+  "top_no_server": {
+    "status": "unverified",
+    "text": "Ця команда працює в чаті сервера, а не в особистих повідомленнях."
+  },
+  "top_none": {
+    "status": "unverified",
+    "text": "У цьому рейтингу поки нікого немає."
   },
   "transfer_declined": {
     "status": "unverified",
