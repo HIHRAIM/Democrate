@@ -139,6 +139,18 @@ Consent buttons follow the same split. Discord uses view objects (`_ConsentView`
 
 ## Background loops
 
+`main()` starts the two clients and the seven cross-platform loops as nine
+asyncio tasks and then waits for the **first** of them to finish, never for all
+of them. That is what makes the process answer `SIGTERM`: aiogram stops its
+polling on the signal and its task returns, the other eight are cancelled, the
+service chats are told that the bot is stopping, and both clients are closed. A
+`gather` there waited for the sleeping loops as well — a loop parked in
+`asyncio.sleep(24 * 3600)` holds it open for a day — so every `systemctl stop`
+and every restart from the panel ran out of patience and became a SIGKILL: the
+process killed in the middle of whatever the economy was writing to `dem.db`,
+and no stop notice anywhere. `fd_bot/src/main.py` stops the same way, for the
+same reason.
+
 From `main.py` (cross-platform, started in `main()`):
 
 | Loop | Period | Job |

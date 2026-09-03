@@ -21,6 +21,10 @@ slow tick does not silently produce less.
 The three loops that live on the Discord client instead — presence, backups and
 the anniversary check — are in discord_bot/client.py, because they need the
 client to be ready first.
+
+`main` starts the nine tasks and stops on the first one to end, rather than
+waiting for all of them: see its docstring for why a `gather` there turned every
+`systemctl stop` into a SIGKILL.
 """
 import asyncio
 import logging
@@ -39,7 +43,7 @@ import olympiad
 import stats
 from config import DISCORD_TOKEN
 from discord_bot import bot as discord_bot
-from telegram_bot import main as tg_main
+from telegram_bot import bot as tg_bot, main as tg_main
 from utils import send_service_event, localized, format_stored_user, good_display_name
 
 db.init()
@@ -317,30 +321,67 @@ async def setup_deadline_loop():
         await asyncio.sleep(24 * 3600)
 
 async def main():
-    """Start both bots and every cross-platform loop on one asyncio loop.
+    """Start both bots and every cross-platform loop, then wait for whichever
+    of them ends first and take the others down with it.
 
-    The five-second wait before announcing the start is there so the two clients
-    are actually connected when the service chats hear about it. The stop notice is
-    in a finally, so an orderly shutdown says so."""
+    Waiting for *all* of them is what a `gather` would do, and it is wrong
+    here. aiogram installs its own SIGINT/SIGTERM handler and answers the
+    signal by stopping the polling neatly — at which point the other eight
+    tasks know nothing about it, and the seven loops sitting in an
+    `asyncio.sleep` of up to a day hold the process open. A service manager
+    waiting for it to exit runs out of patience and sends SIGKILL: an orderly
+    stop becomes a killing in the middle of whatever the economy was writing
+    to dem.db, and the `finally` below — the notice to the service chats —
+    never runs at all. Ending on the first task to finish, and cancelling the
+    rest, is what makes the bot close when it is asked to. fd_bot/src/main.py
+    stops the same way, for the same reason.
+
+    The five-second wait before announcing the start is there so the two
+    clients are actually connected when the service chats hear about it. The
+    stop notice is in a finally, so an orderly shutdown says so; it goes out
+    before either client is closed, because it is sent through both of them.
+    Closing them is last, and each on its own, so that a half which is already
+    gone cannot keep the other one open."""
     tasks = [
-        asyncio.create_task(tg_main()),
-        asyncio.create_task(discord_bot.start(DISCORD_TOKEN)),
-        asyncio.create_task(retention_loop()),
-        asyncio.create_task(economy_loop()),
-        asyncio.create_task(production_loop()),
-        asyncio.create_task(shipment_loop()),
-        asyncio.create_task(channel_post_loop()),
-        asyncio.create_task(olympiad_loop()),
-        asyncio.create_task(setup_deadline_loop()),
+        asyncio.create_task(tg_main(), name="telegram"),
+        asyncio.create_task(discord_bot.start(DISCORD_TOKEN), name="discord"),
+        asyncio.create_task(retention_loop(), name="retention"),
+        asyncio.create_task(economy_loop(), name="economy"),
+        asyncio.create_task(production_loop(), name="production"),
+        asyncio.create_task(shipment_loop(), name="shipment"),
+        asyncio.create_task(channel_post_loop(), name="channel-post"),
+        asyncio.create_task(olympiad_loop(), name="olympiad"),
+        asyncio.create_task(setup_deadline_loop(), name="setup-deadline"),
     ]
 
     await asyncio.sleep(5)
     await send_service_event("bot_started")
 
     try:
-        await asyncio.gather(*tasks)
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            if task.cancelled():
+                continue
+            error = task.exception()
+            if error:
+                logger.error("the %s task stopped: %s", task.get_name(), error)
+            else:
+                logger.info("the %s task finished, shutting down", task.get_name())
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
     finally:
-        await send_service_event("bot_stopped")
+        try:
+            await send_service_event("bot_stopped")
+        except Exception:
+            logger.warning("could not report the shutdown to the service chats")
+        finally:
+            for close in (tg_bot.session.close(), discord_bot.close()):
+                try:
+                    await close
+                except Exception:
+                    pass
 
 if __name__ == "__main__":
     asyncio.run(main())

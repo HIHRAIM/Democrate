@@ -49,8 +49,28 @@ Democrate is a cross-platform coordination bot for **unions** of wiki communitie
 
 5. **Run the bot**
    ```bash
-   python src/main.py
+   cd src && python main.py
    ```
+   The working directory must be `src/`: the database and `.env` are opened by
+   relative path, and the control panel launches the bot exactly that way.
+
+### Running as a service
+
+The bot is meant to run unattended, and the recommended way is a `systemd`
+unit with `WorkingDirectory=` pointing at `src/`. Its output goes to the
+journal — `journalctl -u dem_bot -f` — because nothing in the code opens a log
+file: `logging.basicConfig` in `src/main.py` configures the standard-error
+handler and nothing else.
+
+`src/bot_err.log` and `src/bot_run.log` are **leftovers of an older,
+shell-redirected launch**. No part of the bot writes to them any more; they are
+ignored by git and can be deleted.
+
+Stopping is orderly. aiogram answers `SIGTERM` by stopping its polling, and
+`main()` ends on the first of its nine tasks to finish, cancels the other
+eight, tells the service chats that the bot is stopping and closes both
+clients. `TimeoutStopSec=` in the unit can therefore stay at its default:
+the process no longer has to be killed.
 
 ---
 
