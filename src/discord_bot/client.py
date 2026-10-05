@@ -16,9 +16,8 @@ per-minute wiki-anniversary check.
 The gates and resolvers at the bottom — is_server_admin, _require_verified,
 _refuse_not_setup, parties_enabled, _chat_key, _earn_keys, chat_display_name —
 are here rather than in a commands module because every half of the bot asks
-them and none of them owns them. Their Telegram twins are in telegram_bot/client.py, deliberately written
-separately: the native half of "is this user an admin" is a different question
-on each platform.
+them and none of them owns them. Their Telegram twins are in telegram_bot/client.py.
+Both platforms read administrator appointments from the bot's database.
 
 Not this module's zone: the @bot.event handlers (discord_bot/events.py) and
 anything with a slash command in it.
@@ -37,16 +36,10 @@ from utils import STATUS_TEXT, get_chat_lang, is_verified, localized
 logger = logging.getLogger("dem.discord")
 
 def is_server_admin(interaction: discord.Interaction):
-    """Server Admins on Discord are members with the native Administrator or
-    Manage Server permission, plus users delegated with /setadmin."""
+    """Only an explicit /setadmin appointment grants community-admin rights."""
     if interaction.guild is None:
         return False
-    if db.is_server_admin("discord", interaction.guild.id, interaction.user.id):
-        return True
-    perms = getattr(interaction.user, "guild_permissions", None)
-    if perms is None:
-        return False
-    return perms.administrator or perms.manage_guild
+    return db.is_server_admin("discord", interaction.guild.id, interaction.user.id)
 
 async def _require_verified(interaction: discord.Interaction, lang):
     """Gate the Fandom-activity commands. Returns True when the caller may
@@ -67,6 +60,7 @@ class DemBot(discord.Client):
         intents = discord.Intents.default()
         intents.guilds = True
         intents.message_content = True
+        intents.members = True
         super().__init__(intents=intents)
         self.tree = app_commands.CommandTree(self)
 

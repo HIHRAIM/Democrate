@@ -2,6 +2,19 @@
 
 Democrate is a cross-platform coordination bot for **unions** of wiki communities that runs on Discord and Telegram. It keeps a registry of unions and the servers/groups bound to them, hosts each union's **political parties** and **governing bodies**, verifies users through their **Fandom** profiles, runs ideology **quizzes**, announces **wiki anniversaries**, and powers a cross-community **economy**: banks with their own currencies, message-based earning, timed **production** of goods owned by people and **enterprises**, salaries, fines, party dues, currency exchange, exports between enterprises, a per-server **provision** metric with weekly statistics and monthly production tasks. All replies are localized into six languages (en, ru, uk, pl, es, pt).
 
+## Sponsorship
+
+Bot Admins can manage any union. A sponsor can create and manage only their own unions and register only communities they administer. A linked Telegram account shares the Discord subscription and its limits, rather than receiving another allowance. Link the accounts with the existing `/add-telegram` and `/add_discord` commands, then use `/sponsor` on either platform to inspect usage.
+
+| One subscription | Community role | €1 | €3 | €5 |
+|---|---:|---:|---:|---:|
+| Unions | 1 | 1 | 3 | 5 |
+| Discord servers and Telegram groups combined | 2 | 2 | 6 | 10 |
+| Messages earning currency per minute | 60 | 60 | 180 | 300 |
+| Messages earning currency per UTC day | 3000 | 3000 | 9000 | 15000 |
+
+The earning budget is shared across all banks in the sponsor's unions. Either community role on the Patreon server grants the €1 allowance after seven days of continuous observed membership, with one day of continued work after loss. Paid roles have 30 days of continued work after loss. Thirty days after the applicable working grace ends, communities without a replacement sponsor or Bot Admin are erased and the bot leaves. A union whose last community departs becomes a read-only economy archive for 70 days; its currency, balances, goods and related records are then erased, including balances held outside the former union. Task history is also retained for 70 days: only the current and previous months are used in progress calculations.
+
 ## Requirements
 
 - Python **3.10+** (recommended 3.11+)
@@ -147,7 +160,7 @@ src/
 Permission roles used below:
 
 - **Everyone** — any user in a set-up chat (some commands additionally require [verification](#verification)).
-- **Server Admins** — members with the native Administrator/Manage Server permission (Discord), group creator/administrators (Telegram), plus users delegated with `/setadmin`.
+- **Server Admins** — users explicitly appointed with `/setadmin` for this community. Discord and Telegram administrator permissions alone grant no additional bot rights.
 - **Localizers** — users granted `/localizer-add`: they may edit this bot's localization through the [control panel](https://github.com/HIHRAIM/Confederate-Panel). Delegated Server Admins hold the status implicitly while they remain admins.
 - **Bot Admins** — user IDs listed in `config.py`.
 - **Party Leaders** — a party's founder and appointed leaders.
@@ -239,7 +252,7 @@ Only `/setolympiad` is always present. The rest are registered on the command li
 |---|---|---|
 | `/add-enterprise` | Found an enterprise on this server (interactive dialog: name → code → description → logo) | Everyone |
 | `/enterprise [code\|name]` | An enterprise's card (leaders, workers, balance, salaries, warehouse) — or the server's enterprise list | Everyone |
-| `/edit-enterprise [option] [code]` | Numbered management menu: texts, logo, leaders (consent buttons), transfer, salary currency, salary period (weekly/monthly), deletion | Enterprise Leaders |
+| `/edit-enterprise [option] [code]` | Numbered management menu: texts, logo, leaders (consent buttons), transfer, salary currency, salary period (weekly/monthly), deletion | Enterprise Leaders; server admins for their neutral enterprise |
 | `/ent-join <code>` | Ask to join an enterprise (a leader accepts via buttons) | Everyone |
 | `/ent-leave [code]` | Leave an enterprise | Everyone |
 | `/ent-kick <user> [code]` | Remove a worker | Enterprise Leaders |
@@ -364,6 +377,10 @@ The bot writes to somebody privately only about **what they set going themselves
 
 Any user founds an **enterprise** with `/add-enterprise` (name, 4-char code in the shared namespace, description, logo — like a party). An enterprise belongs to the server/group it was founded on, works toward that server's monthly task, and holds bank accounts like a party. Leadership mirrors parties: consent-button offers, transfer, and a numbered `/edit-enterprise` menu. Workers join with `/ent-join` (a leader approves), leave freely, and can be dismissed.
 
+Each configured Discord server and Telegram group has one **neutral enterprise**. `/setup` creates it for a new community, and startup creates one if an existing community lacks it. The bot derives its initial name from the community's name; a server admin appointed with `/setadmin` can rename it and edit its settings through `/edit-enterprise`. A transfer requires the recipient's consent, turns that company into an ordinary enterprise, and creates a replacement neutral enterprise for the community. Deleting the neutral enterprise disables its automatic supply until `/setup` is run again.
+
+Accepted message earnings from people who do not belong to any active enterprise count toward the neutral company's basic supply. One accepted message contributes up to 0.25 virtual base units in **each** of the five categories, consumed in the next UTC daily tick. That supply fills only the gap to **40%** of each category's need, the minimum acceptable provision threshold. It cannot enter an inventory, be traded, accrue mastery, pay salaries, generate GDP, back a currency, or complete a monthly production task. The bot keeps one aggregate row per person, community and UTC day; its daily sweep removes rows older than eight days. It stores no message text.
+
 A worker (leaders included) produces **for** the enterprise by naming it in `/craft` or `/autocraft`: the batch goes to the enterprise's warehouse while the mastery stays personal (the enterprise also accrues its own mastery, which prices its stock). Leaders sell stock with `/ent-sell` and **export** it to other enterprises — on the same server or any other — one-off (`/export`) or as a weekly contract (`/auto-export`).
 
 #### Export logistics
@@ -380,17 +397,17 @@ An export is a **shipment that spends time in transit**, modelled on timed produ
 
 #### Daily consumption
 
-Every day each set-up server **eats**. The daily tick counts the server's active population — the distinct people who produced anything on it in the last 24 hours — and turns that into a demand per base category:
+Every day each set-up server **eats**. The daily tick counts the server's active population on the preceding UTC day — distinct people who produced or earned eligible neutral activity there — and turns that into a demand per base category:
 
 ```
 need = prov_daily_units_per_person × population × category_weight
 ```
 
-The demand is served out of the warehouses of the **enterprises based on that server**, market goods first and base goods as the filler behind them, until `ceil(need)` units are taken or the warehouses run dry. Within each tier the demand is spread **evenly over every warehouse holding stock**, a pass at a time, rather than emptying whichever one happens to sort first. Every unit is **bought**, not requisitioned: the enterprise is paid the unit value its quality commands (base goods carry no market value and so feed for free), and the proceeds count into its period sales like any other sale. A server with no producers that day is not fed at all, and nothing is taken from personal inventories — only enterprises supply the population.
+The demand is served out of the warehouses of the **ordinary enterprises based on that server**, market goods first and base goods as the filler behind them, until `ceil(need)` units are taken or the warehouses run dry. Within each tier the demand is spread **evenly over every warehouse holding stock**, a pass at a time, rather than emptying whichever one happens to sort first. Every market unit is **bought**, not requisitioned: the enterprise is paid the unit value its quality commands (base goods carry no market value and so feed for free), and the proceeds count into its period sales like any other sale. The neutral enterprise then supplies only any remaining gap up to 40% of the need. A community with neither producers nor eligible earners has no demand; personal inventories are never touched.
 
 Because no bank buys goods, this daily shopping is the enterprises' **main income** and one of the currency's only two sources, which is why the even draw matters: it is a market being served, not a race being won.
 
-Each day's demand and what covered it is written to `server_consumption`, keyed by the date so a tick that runs twice cannot count the same meal into the week.
+Each day's demand and what covered it is written to `server_consumption`, including a separate `neutral_units` amount. The accepted earning counts are aggregated in `neutral_activity`, not stored as individual messages; the daily sweep removes rows older than eight days.
 
 #### Provision and weekly statistics
 
@@ -402,7 +419,7 @@ satisfaction = Σ qty × quality_mult    # base goods count 1.0; categorised cus
 score        = min(Σ satisfaction / Σ need, cap)
 ```
 
-While only base goods feed a category its score is capped at **1.0** — base production alone reaches *acceptable*, never higher; custom categorised goods lift the cap to `prov_max_score`. The overall score is the weight-averaged category score (+`prov_task_bonus` while last month's task stands completed), and maps to a level: < 40 % *insufficient*, ≤ 100 % *acceptable*, ≤ 150 % *good*, above — *excellent*.
+While only base goods feed a category its score is capped at **1.0** — base production alone reaches *acceptable*, never higher; custom categorised goods lift the cap to `prov_max_score`. Neutral supply alone stops at **0.4**, and the monthly task bonus applies only to the score earned from ordinary goods. The overall score is the weight-averaged category score with that eligible bonus, and maps to a level: < 40 % *insufficient*, ≤ 100 % *acceptable*, ≤ 150 % *good*, above — *excellent*.
 
 Because the score is coverage rather than output, **stock matters**: goods sitting in a warehouse feed the server, and a category nobody supplies drags the whole average down however busy the chat is. The weekly statistics mark each category that ended the week short.
 
@@ -418,13 +435,16 @@ Because the score is coverage rather than output, **stock matters**: goods sitti
 
 #### Currency exchange
 
-`/treaty <code>` proposes a conversion treaty between two banks; a leader of the other bank accepts through consent buttons, making A↔B convertible. Each day the scheduler recomputes every currency's **value** from three factors — goods backing, money supply and message activity:
+`/treaty <code>` proposes a conversion treaty between two banks; a leader of the other bank accepts through consent buttons, making A↔B convertible. Each day the scheduler recomputes every currency's **value** from goods backing, money supply and accepted message activity:
 
 ```
-backing  = period_goods_value / max(money_supply, 1 unit)     # goods crafted this period, at their unit values
-activity = 1 + fx_activity_weight × ln(1 + period_energy)     # message energy earned this period
-value    = clamp(max(backing × activity, fx_min_value))       # moves at most ±fx_daily_clamp per day
+backing         = period_goods_value / max(money_supply, 1 unit)
+goods_target    = backing × (1 + fx_activity_weight × ln(1 + period_energy))
+activity_target = fx_activity_weight × ln(1 + eligible earning messages in the last 30 days)
+value           = clamp(max(goods_target, activity_target, fx_min_value))
 ```
+
+The 30-day activity component gives a community's currency value even before its first priced good is crafted. Only messages that pass the normal earning checks count. The published value still moves at most `fx_daily_clamp` per day; currencies already at the minimum recover gradually rather than jumping in one update.
 
 The rate A→B = value(A) / value(B). **Manual peg:** if two banks are each other's **only** treaty partner, their leaders may fix the rate by mutual consent with `/set-rate`, overriding the computed one; as soon as a bank has two or more partners only computed rates apply (protecting triangle consistency). `/convert` exchanges between your own accounts at the current rate, minus the source bank's spread; `/rates` shows values and rates.
 

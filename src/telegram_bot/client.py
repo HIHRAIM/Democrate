@@ -78,15 +78,8 @@ def _tg_user_label(user):
     return user.full_name or str(user.id)
 
 async def is_server_admin(chat_id: int, user_id: int):
-    """Server Admins on Telegram are the group's native administrators,
-    plus users delegated with /setadmin."""
-    if db.is_server_admin("telegram", chat_id, user_id):
-        return True
-    try:
-        member = await bot.get_chat_member(chat_id, user_id)
-        return member.status in ("creator", "administrator")
-    except Exception:
-        return False
+    """Only an explicit /setadmin appointment grants community-admin rights."""
+    return db.is_server_admin("telegram", chat_id, user_id)
 
 async def _resolve_tg_admin_target(message: Message, arg):
     """Resolve an admin-command target to (user_id, username|None):

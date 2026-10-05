@@ -839,6 +839,8 @@
     "status": "unverified",
     "text": "Servidor"
   },
+  "ent_neutral_title": {"status": "unverified", "text": "Empresa da comunidade"},
+  "ent_neutral_description": {"status": "unverified", "text": "As mensagens de membros sem empresa fornecem bens básicos até ao nível mínimo aceitável. Um administrador da comunidade pode editar ou transferir a empresa."},
   "ent_field_transit": {
     "status": "unverified",
     "text": "Em trânsito ({count})"
@@ -2943,8 +2945,19 @@
     "status": "unverified",
     "text": "sábado"
   },
+  "sponsor_status": {"status": "unverified", "text": "Tier {tier}. Unions {unions}/{union_limit}: {names}. Servers/groups {servers}/{server_limit}. Today: earning messages {activity}/{activity_limit}, at most {activity_minute} per minute. Subscribe at {url} and connect Patreon to Discord."},
+  "sponsor_not_active": {"status": "unverified", "text": "No active Patreon role is linked to your Discord account."},
+  "sponsor_union_limit": {"status": "unverified", "text": "This subscription has reached its union limit."},
+  "sponsor_setup_forbidden": {"status": "unverified", "text": "You need an active subscription, Manage Server permission here, a union you own and a free server slot."},
+  "section_sponsors": {"status": "unverified", "text": "Sponsors and Bot Admins"},
+  "cmd_sponsor": {"status": "unverified", "text": "/sponsor — show your subscription, unions and server slots"},
   "weekday_6": {
     "status": "unverified",
     "text": "domingo"
-  }
+  },
+  "sponsor_grace_active": {"status": "unverified", "text": "O pagamento terminou; todas as funções de patrocinador continuam por mais {days} dia(s)."},
+  "sponsor_tier_community": {"status": "unverified", "text": "Community role"},
+  "sponsor_community_pending": {"status": "unverified", "text": "Community-role benefits start in about {days} day(s) after the role was first observed."},
+  "sponsor_community_grace": {"status": "unverified", "text": "Community role lost; benefits continue for {days} more day(s)."},
+  "sponsor_retention_warning": {"status": "unverified", "text": "The working grace period ended. Another active sponsor or bot administrator can take over; otherwise the bot leaves and the community data is deleted 30 days after grace ends."}
 }

@@ -6,8 +6,9 @@ the warehouses of the enterprises based on that server — market goods first,
 base goods as the filler behind them — and every market unit is paid for at the
 unit value its quality commands, counting into the enterprise's period sales
 like any other sale. Base goods carry no market value and feed for free.
-Nothing is ever taken from a personal inventory, and a server whose population
-produced nothing that day is not fed at all.
+An unaffiliated earner also supplies a small amount of neutral base goods,
+consumed immediately to fill only the gap to 40% provision. Nothing is ever
+taken from a personal inventory.
 
 This is where most of the money in the economy comes from. No bank buys goods,
 so the day's shopping and the message rewards are the only two sources there
@@ -28,8 +29,10 @@ Not this module's zone: the stored rows (db/serverstats.py), the monthly task
 whose completion lifts the score (economy/tasks.py) and the rendering
 (stats.py).
 """
+import calendar
 import math
 import time
+from datetime import date, timedelta
 
 import db
 from economy.money import _cat_cfg, _cfg, _minor, mastery_level, unit_value
@@ -40,6 +43,7 @@ PROVISION_LEVELS = (
     (1.0, "acceptable"),
     (1.5, "good"),
 )
+NEUTRAL_UNITS_PER_MESSAGE = 0.25
 
 def provision_level(score):
     """The name of the band a provision score falls into.
@@ -48,7 +52,7 @@ def provision_level(score):
     is *below* wins and anything past the last one is 'excellent'. The names are
     localization keys, not display text."""
     for bound, name in PROVISION_LEVELS:
-        if score < bound:
+        if score + 1e-9 < bound:
             return name
     return "excellent"
 
@@ -68,6 +72,8 @@ def _category_sources(enterprises, cat):
     goods only for what they could not cover."""
     market, base = [], []
     for ent in enterprises:
+        if ent["neutral"]:
+            continue
         owner = db.enterprise_owner(ent["code"])
         for row in db.enterprise_category_stock(ent["code"], cat):
             good = db.get_good(row["good_code"])
@@ -120,19 +126,23 @@ def _pay_for_consumed(owner, good, qty):
 def consume_for_server(platform, server_id, day, now=None):
     """One server's daily meal.
 
-    The population is the people who produced on the server that day; each base
-    category is then eaten out of the warehouses of the enterprises based
-    there, market goods first and base goods as the filler behind them. Every
-    unit is bought from its enterprise, so feeding the server pays as well as
-    selling to the bank. What the warehouses cannot cover is the shortfall the
-    provision score is measured against — a server that produces nothing is
-    hungry, however busy its chat is."""
+    The population is everyone who produced or earned eligible neutral activity
+    on the previous UTC day. Ordinary enterprise warehouses serve first,
+    market goods before base goods; a neutral enterprise supplies only a gap
+    below 40% of each category's need, with no stock or payment. What neither
+    source covers is the shortfall the provision score measures."""
     now = int(now or time.time())
-    population = db.server_active_producers(platform, server_id, now - 86400, now)
+    activity_day = (date.fromisoformat(day) - timedelta(days=1)).isoformat()
+    utc_start = calendar.timegm(time.strptime(activity_day, "%Y-%m-%d"))
+    population = db.server_active_population(platform, server_id,
+                                             utc_start, utc_start + 86400)
     result = {"population": population, "categories": {}, "paid": 0}
     if population <= 0:
         return result
     enterprises = db.get_server_enterprises(platform, server_id)
+    neutral = next((ent for ent in enterprises if ent["neutral"]), None)
+    neutral_supply = (db.neutral_message_count(platform, server_id, activity_day)
+                      * NEUTRAL_UNITS_PER_MESSAGE if neutral else 0.0)
     for cat in db.GOOD_CATEGORIES:
         need = daily_need(cat, population)
         want = int(math.ceil(need))
@@ -152,10 +162,14 @@ def consume_for_server(platform, server_id, day, now=None):
                 satisfaction += qty * (1.0 + _cfg("prov_quality_bonus", 0.25)
                                        * max(level - 1, 0))
                 result["paid"] += _pay_for_consumed(owner, good, qty)
+        neutral_units = min(neutral_supply, max(0.0, 0.4 * need - satisfaction))
+        satisfaction += neutral_units
         db.record_server_consumption(platform, server_id, day, cat, population,
-                                     need, taken, satisfaction, not market)
+                                     need, taken, satisfaction, not market,
+                                     neutral_units=neutral_units)
         result["categories"][cat] = {"need": need, "consumed": taken,
-                                     "satisfaction": satisfaction}
+                                     "satisfaction": satisfaction,
+                                     "neutral_units": neutral_units}
     return result
 
 def run_consumption(now=None):
@@ -174,34 +188,39 @@ def run_consumption(now=None):
 
 def provision_report(platform, server_id, now=None):
     """The server's provision over the trailing 7 days: how much of what its
-    people needed the warehouses actually covered. The daily consumption tick
-    writes the need and the satisfaction per category; this only reads them
-    back, so the score answers "was everyone fed?" rather than "was anyone
-    busy?" — stock that sits unsold now counts for something."""
+    people needed ordinary warehouse goods and limited neutral supply covered.
+    The daily tick writes both contributions per category; this reads those
+    rows back rather than recomputing them. Warehouse stock counts only when
+    consumed, and the monthly task bonus applies only to ordinary supply."""
     now = int(now or time.time())
     since = now - 7 * 86400
     rows = db.server_consumption_window(platform, server_id, since, now)
-    population = max(db.server_active_producers(platform, server_id, since, now), 1)
+    population = max(db.server_active_population(platform, server_id, since, now), 1)
     weights = {c: float(_cat_cfg("prov_category_weight", c, 1.0))
                for c in db.GOOD_CATEGORIES}
     cats = {}
+    real_scores = {}
     for cat in db.GOOD_CATEGORIES:
         cat_rows = [r for r in rows if r["category"] == cat]
         need = sum(r["need"] or 0.0 for r in cat_rows)
         produced = sum(r["satisfaction"] or 0.0 for r in cat_rows)
+        neutral = sum(r["neutral_units"] or 0.0 for r in cat_rows)
         consumed = sum(r["consumed"] or 0 for r in cat_rows)
         base_only = all(r["base_only"] for r in cat_rows) if cat_rows else True
         cap = 1.0 if base_only else _cfg("prov_max_score", 2.0)
         score = min(produced / need, cap) if need > 0 else 0.0
+        real_scores[cat] = min(max(0.0, produced - neutral) / need, cap) if need > 0 else 0.0
         cats[cat] = {"produced": produced, "need": need, "score": score,
-                     "base_only": base_only, "consumed": consumed}
+                     "base_only": base_only, "consumed": consumed,
+                     "neutral_units": neutral}
     total_w = sum(weights.values()) or 1.0
     overall = sum(cats[c]["score"] * weights[c] for c in cats) / total_w
+    real_overall = sum(real_scores[c] * weights[c] for c in cats) / total_w
     task_bonus = False
     prev = prev_month(time.strftime("%Y-%m", time.gmtime(now)))
     task = db.get_server_task(platform, server_id, prev)
     if task and task["completed"]:
-        overall = min(overall * (1 + _cfg("prov_task_bonus", 0.10)),
+        overall = min(overall + real_overall * _cfg("prov_task_bonus", 0.10),
                       _cfg("prov_max_score", 2.0))
         task_bonus = True
     return {"score": overall, "level": provision_level(overall), "categories": cats,

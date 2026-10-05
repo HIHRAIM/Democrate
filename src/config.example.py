@@ -4,6 +4,9 @@ from env_loader import load_env
 load_env()
 
 DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+PATREON_GUILD_ID = GUILD_ID
+PATREON_TIER_ROLES = {1: ROLE_ID, 2: ROLE_ID}
+SPONSOR_URL = "https://www.patreon.com/YOUR_CAMPAIGN"
 TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
 ADMINS = {
@@ -105,9 +108,11 @@ ECONOMY = {
     "parallel_production": 5,
 
     # ── Foreign exchange (daily recompute) ──
-    # value(bank) = max(backing * activity, fx_min_value), where
-    #   backing  = period_goods_value / max(money_supply, minor_units)
-    #   activity = 1 + fx_activity_weight * ln(1 + period_energy)
+    # value(bank) = max(goods_target, activity_target, fx_min_value), where
+    #   goods_target = period_goods_value / money_supply
+    #                  * (1 + fx_activity_weight * ln(1 + period_energy))
+    #   activity_target = fx_activity_weight
+    #                     * ln(1 + accepted earning messages in the last 30 days)
     # The published value may move at most ±fx_daily_clamp per day.
     "fx_daily_clamp": 0.10,     # ±10 % per day
     "fx_activity_weight": 0.10,
@@ -198,3 +203,6 @@ ECONOMY = {
     # and never the whole of it — at least one unit always arrives.
     "transport_perish_max_share": 1.0 / 3.0,
 }
+
+COMMUNITY_SPONSOR_ROLE_IDS = (1249359989282443314, 869587188327788564)
+PATREON_TIER_ROLES[3] = 1554181707672985724

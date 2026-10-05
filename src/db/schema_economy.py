@@ -172,6 +172,7 @@ def init_economy():
         name TEXT,
         platform TEXT,
         server_id TEXT,
+        archived_union_code TEXT,
         founder_platform TEXT,
         founder_id TEXT,
         founder_name TEXT,
@@ -181,7 +182,8 @@ def init_economy():
         salary_period TEXT DEFAULT 'monthly',
         salary_bank TEXT,
         period_sales INTEGER DEFAULT 0,
-        created_at INTEGER
+        created_at INTEGER,
+        neutral INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS enterprise_leaders (
@@ -261,11 +263,24 @@ def init_economy():
         consumed INTEGER,
         satisfaction REAL,
         base_only INTEGER,
+        neutral_units REAL NOT NULL DEFAULT 0,
         created_at INTEGER,
         PRIMARY KEY (platform, server_id, day, category)
     );
     CREATE INDEX IF NOT EXISTS idx_server_consumption
         ON server_consumption (platform, server_id, created_at);
+
+    -- Accepted earning messages from people outside local enterprises.
+    -- One row per person and UTC day; daily neutral production reads this,
+    -- and retention removes it after the seven-day reporting window.
+    CREATE TABLE IF NOT EXISTS neutral_activity (
+        platform TEXT NOT NULL, server_id TEXT NOT NULL, day TEXT NOT NULL,
+        user_platform TEXT NOT NULL, user_id TEXT NOT NULL,
+        messages INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL,
+        PRIMARY KEY (platform, server_id, day, user_platform, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_neutral_activity_window
+        ON neutral_activity (platform, server_id, updated_at);
 
     CREATE TABLE IF NOT EXISTS chat_channels (
         platform TEXT, server_id TEXT, kind TEXT,
@@ -335,6 +350,11 @@ def _migrate_economy():
         _ensure_column("autocraft", "server_platform", "TEXT")
         _ensure_column("autocraft", "server_id", "TEXT")
         _ensure_column("banks", "prev_value", "REAL")
+        _ensure_column("enterprises", "neutral", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column("server_consumption", "neutral_units", "REAL NOT NULL DEFAULT 0")
+        cur.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_enterprises_one_neutral"
+            " ON enterprises (platform, server_id) WHERE neutral=1")
         orphans = cur.execute(
             "SELECT code, bank_code FROM goods WHERE owner_type IS NULL"
             " AND bank_code IS NOT NULL").fetchall()

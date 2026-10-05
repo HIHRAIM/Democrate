@@ -839,6 +839,8 @@
     "status": "unverified",
     "text": "Сервер"
   },
+  "ent_neutral_title": {"status": "unverified", "text": "Предприятие сообщества"},
+  "ent_neutral_description": {"status": "unverified", "text": "Сообщения участников вне предприятий дают базовые товары до минимальной приемлемой обеспеченности. Администратор сообщества может изменить или передать предприятие."},
   "ent_field_transit": {
     "status": "unverified",
     "text": "В пути ({count})"
@@ -2943,8 +2945,19 @@
     "status": "unverified",
     "text": "суббота"
   },
+  "sponsor_status": {"status": "unverified", "text": "Уровень {tier}. Союзы {unions}/{union_limit}: {names}. Серверы и группы {servers}/{server_limit}. Сегодня: сообщений с начислением {activity}/{activity_limit}, не более {activity_minute} в минуту. Подписка: {url}; привяжите Patreon к Discord."},
+  "sponsor_not_active": {"status": "unverified", "text": "К вашему Discord-аккаунту не привязана активная роль Patreon."},
+  "sponsor_union_limit": {"status": "unverified", "text": "Достигнут лимит союзов для этой подписки."},
+  "sponsor_setup_forbidden": {"status": "unverified", "text": "Нужны активная подписка, право управления этим сервером, свой союз и свободный слот сервера."},
+  "section_sponsors": {"status": "unverified", "text": "Спонсоры и администраторы бота"},
+  "cmd_sponsor": {"status": "unverified", "text": "/sponsor — показать подписку, союзы и слоты серверов"},
   "weekday_6": {
     "status": "unverified",
     "text": "воскресенье"
-  }
+  },
+  "sponsor_grace_active": {"status": "unverified", "text": "Оплата закончилась; все спонсорские функции работают ещё {days} дн."},
+  "sponsor_tier_community": {"status": "unverified", "text": "Роль сообщества"},
+  "sponsor_community_pending": {"status": "unverified", "text": "Преимущества роли сообщества начнут действовать примерно через {days} дн. после первого обнаружения роли."},
+  "sponsor_community_grace": {"status": "unverified", "text": "Роль сообщества снята; преимущества действуют ещё {days} дн."},
+  "sponsor_retention_warning": {"status": "unverified", "text": "Льготный период работы истёк. Другой действующий спонсор или администратор бота может взять сообщество под управление; иначе через 30 дней после окончания льготного периода бот выйдет и удалит данные сообщества."}
 }

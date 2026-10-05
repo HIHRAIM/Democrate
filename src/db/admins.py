@@ -1,11 +1,8 @@
 """Delegated rights: Server Admins and Localizers.
 
-Neither table is the whole answer to "may this user do X". A Server Admin is
-also anyone holding the native Administrator / Manage Server permission on
-Discord or creator/administrator status on Telegram — the two halves ask that
-half of the question themselves (discord_bot/client.py and
-telegram_bot/client.py, both `is_server_admin`). A Localizer is also every
-delegated Server Admin implicitly, for as long as they remain one.
+Server Admins are explicitly appointed with /setadmin. Native Discord and
+Telegram permissions do not grant this role. A Localizer is also every
+appointed Server Admin implicitly, for as long as they remain one.
 
 Bot Admins are not here at all: they are hard-coded in config.py and checked
 by utils.is_admin, so that the one role able to grant the others can never be
@@ -31,9 +28,7 @@ def add_server_admin(platform, server_id, user_id, username=None, added_by=None)
     conn.commit()
 
 def remove_server_admin(platform, server_id, user_id):
-    """Revoke a delegated server-admin grant (/remadmin). Silent when there was
-    none: a member holding the native Administrator permission has no row here
-    and cannot be demoted through the bot at all."""
+    """Revoke a server-admin appointment (/remadmin); absent rows are harmless."""
     cur.execute(
         "DELETE FROM server_admins WHERE platform=? AND server_id=? AND user_id=?",
         (platform, str(server_id), str(user_id))
@@ -41,11 +36,9 @@ def remove_server_admin(platform, server_id, user_id):
     conn.commit()
 
 def is_server_admin(platform, server_id, user_id):
-    """Whether the user holds a *delegated* grant in this server.
+    """Whether /setadmin appointed this user in this community.
 
-    Only half the answer, and never the one a command should ask on its own:
-    the native platform permission is the other half, and both halves are
-    joined in discord_bot/client.py and telegram_bot/client.py."""
+    Bot Admin access, where allowed, is checked separately by the caller."""
     return cur.execute(
         "SELECT 1 FROM server_admins WHERE platform=? AND server_id=? AND user_id=?",
         (platform, str(server_id), str(user_id))

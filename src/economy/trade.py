@@ -10,11 +10,11 @@ its enterprises (economy/consumption.py), and those two are the only sources
 there are. Base goods carry no market value and are handed over rather than
 sold.
 
-`recompute_value` is run once a day, per bank, and prices a currency from three
-things measured over the period just ended: the value of the goods crafted in
-it (backing), how much money exists (supply) and how much message energy was
-earned (activity). The result is floored and clamped to a maximum daily move,
-so a quiet day cannot collapse a currency and a busy one cannot spike it.
+`recompute_value` is run once a day, per bank. It compares the goods produced
+in the previous period against the money supply and also gives independent
+weight to accepted earning messages from the last 30 days. The result is
+floored and clamped to a maximum daily move, so a quiet day cannot collapse a
+currency and a busy one cannot spike it.
 
 A conversion rate is simply value(from) / value(to). The manual peg overrides
 it, and `can_manual_peg` is narrow on purpose: two banks may fix their rate
@@ -25,6 +25,7 @@ Not this module's zone: the treaty rows and the pegged rate itself
 (db/trade.py), and the money primitives (db/banks.py).
 """
 import math
+import time
 
 import db
 from config import ECONOMY
@@ -224,19 +225,26 @@ def convert(owner, from_code, to_code, amount, fee_reason="convert_fee"):
                   "fee_rate": fee_rate, "fee_paid_to": paid}
 
 def recompute_value(bank):
-    """The daily currency value: goods backing, divided by money supply, lifted
-    by message activity, floored, and clamped to at most ±fx_daily_clamp of the
-    previous value.
+    """Price recent participation even when the bank has no crafted goods.
 
         backing  = period_goods_value / max(money_supply, minor_units)
-        activity = 1 + fx_activity_weight * ln(1 + period_energy)
-        value    = clamp(max(backing * activity, fx_min_value))
+        goods_target = backing * (1 + weight * ln(1 + period_energy))
+        activity_target = weight * ln(1 + earning_messages_last_30_days)
+        value = clamp(max(goods_target, activity_target, fx_min_value))
+
+    The old multiplication made activity worth exactly zero whenever no
+    non-base goods had been produced. The rolling message count is the
+    independent source of value, while the former goods calculation remains
+    unchanged for banks that do produce priced goods.
     """
     code = bank["code"]
     supply = max(db.bank_money_supply(code), _minor())
     backing = bank["period_goods_value"] / supply
-    activity = 1 + ECONOMY["fx_activity_weight"] * math.log1p(max(bank["period_energy"], 0))
-    target = max(backing * activity, ECONOMY["fx_min_value"])
+    weight = ECONOMY["fx_activity_weight"]
+    goods_multiplier = 1 + weight * math.log1p(max(bank["period_energy"], 0))
+    recent_messages = db.bank_recent_earning_messages(code, time.time() - 30 * 86400)
+    activity_target = weight * math.log1p(recent_messages)
+    target = max(backing * goods_multiplier, activity_target, ECONOMY["fx_min_value"])
     prev = bank["value"] or ECONOMY["fx_initial_value"]
     clamp = ECONOMY["fx_daily_clamp"]
     lo, hi = prev * (1 - clamp), prev * (1 + clamp)

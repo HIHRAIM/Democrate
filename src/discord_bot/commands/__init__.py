@@ -33,3 +33,4 @@ from discord_bot.commands import banks
 from discord_bot.commands import trade
 from discord_bot.commands import goods
 from discord_bot.commands import enterprises
+from discord_bot.commands import sponsors

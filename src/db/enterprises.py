@@ -22,6 +22,8 @@ same reason.
 Not this module's zone: shipments in normal flight (db/logistics.py), the
 payroll run (economy/payroll.py), goods (db/goods.py).
 """
+import random
+
 from db import conn, cur, _db_lock, _now
 from db.banks import get_bank, mint
 from db.goods import add_inventory
@@ -57,6 +59,63 @@ def create_enterprise(code, name, platform, server_id, founder_platform, founder
             (code, founder_platform, str(founder_id), founder_name))
         conn.commit()
 
+def ensure_neutral_enterprise(platform, server_id, title=None):
+    """Create the one community-owned base producer, including old communities.
+
+    This is idempotent. A transfer turns the old company into an ordinary
+    enterprise and this function gives the community a new neutral producer.
+    A Server Admin may instead delete it, which opts that community out until
+    `/setup` is run again. Neutral production never uses its inventory.
+    """
+    from db.unions import generate_code
+
+    with _db_lock:
+        chat = cur.execute("SELECT title, neutral_disabled FROM chats WHERE platform=? AND chat_id=?",
+                           (platform, str(server_id))).fetchone()
+        if not chat or chat["neutral_disabled"]:
+            return None
+        row = cur.execute("SELECT * FROM enterprises WHERE platform=? AND server_id=?"
+                          " AND neutral=1 LIMIT 1", (platform, str(server_id))).fetchone()
+        if row:
+            return row
+        code = generate_code()
+        if not code:
+            raise RuntimeError("No enterprise code available for neutral producer")
+        suffix = random.choice(("Works", "Company", "Industries", "Cooperative",
+                                "Collective", "Guild"))
+        base = str(title or chat["title"] or f"Community {server_id}").strip()
+        name = f"{base[:max(1, 60-len(suffix)-1)].rstrip()} {suffix}"
+        cur.execute(
+            "INSERT INTO enterprises (code, name, platform, server_id,"
+            " founder_platform, founder_id, founder_name, description, neutral, created_at)"
+            " VALUES (?,?,?,?,?,?,?,?,1,?)",
+            (code, name, platform, str(server_id), "system", "0", "Community",
+             "Base goods supplied by members who do not work for a local enterprise.", _now()))
+        conn.commit()
+        return get_enterprise(code)
+
+def is_enterprise_worker_anywhere(user_platform, user_id, canonical=None):
+    """Check active enterprises under both identities before neutral credit."""
+    identities = {(str(user_platform), str(user_id))}
+    if canonical:
+        identities.add((str(canonical[0]), str(canonical[1])))
+    for person_platform, person_id in identities:
+        row = cur.execute(
+            "SELECT 1 FROM enterprises e JOIN chats c"
+            " ON c.platform=e.platform AND c.chat_id=e.server_id"
+            " WHERE e.neutral=0"
+            " AND e.archived_union_code IS NULL"
+            " AND ((e.founder_platform=? AND e.founder_id=?)"
+            " OR EXISTS (SELECT 1 FROM enterprise_leaders l WHERE l.enterprise_code=e.code"
+            " AND l.platform=? AND l.user_id=?)"
+            " OR EXISTS (SELECT 1 FROM enterprise_members m WHERE m.enterprise_code=e.code"
+            " AND m.platform=? AND m.user_id=?)) LIMIT 1",
+            (person_platform, person_id, person_platform, person_id,
+             person_platform, person_id)).fetchone()
+        if row:
+            return True
+    return False
+
 def get_enterprise(code):
     """An enterprise's row by code, or None once it is deleted. Callers must
     check — a shipment can outlive one of its two ends."""
@@ -78,7 +137,8 @@ def get_server_enterprises(platform, server_id):
     This is the list the daily consumption tick eats out of: only enterprises
     based on the server feed its population, and personal inventories never do."""
     return cur.execute(
-        "SELECT * FROM enterprises WHERE platform=? AND server_id=? ORDER BY name",
+        "SELECT * FROM enterprises WHERE platform=? AND server_id=?"
+        " AND archived_union_code IS NULL ORDER BY name",
         (platform, str(server_id))).fetchall()
 
 def update_enterprise_field(code, field, value):
@@ -157,6 +217,10 @@ def delete_enterprise(code):
     """Remove an enterprise and its whole economy footprint. Goods still in
     transit to or from it are refunded to the surviving counterpart first."""
     with _db_lock:
+        existing = get_enterprise(code)
+        if existing and existing["neutral"]:
+            cur.execute("UPDATE chats SET neutral_disabled=1 WHERE platform=? AND chat_id=?",
+                        (existing["platform"], existing["server_id"]))
         for row in cur.execute(
                 "SELECT * FROM shipments WHERE from_ent=? OR to_ent=?",
                 (code, code)).fetchall():
@@ -197,12 +261,20 @@ def add_enterprise_leader(code, platform, user_id, display_name):
 def set_enterprise_leader(code, platform, user_id, display_name):
     """Transfer: the new user becomes the only leader."""
     with _db_lock:
+        previous = get_enterprise(code)
+        if previous:
+            cur.execute(
+                "UPDATE enterprises SET neutral=0, founder_platform=?, founder_id=?,"
+                " founder_name=? WHERE code=?",
+                (platform, str(user_id), display_name, code))
         cur.execute("DELETE FROM enterprise_leaders WHERE enterprise_code=?", (code,))
         cur.execute(
             "INSERT OR REPLACE INTO enterprise_leaders"
             " (enterprise_code, platform, user_id, display_name) VALUES (?,?,?,?)",
             (code, platform, str(user_id), display_name))
         conn.commit()
+    if previous and previous["neutral"]:
+        ensure_neutral_enterprise(previous["platform"], previous["server_id"])
 
 def remove_enterprise_leader(code, platform, user_id):
     """Strip one leader of their appointment. The founder is unaffected: their

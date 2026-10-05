@@ -8,6 +8,10 @@ day per category — what was needed, what covered it and at what quality —
 keyed by the date, so a tick that somehow runs twice cannot count one meal
 into the week twice. Provision reads those rows back rather than recomputing
 anything, which is why both tables are kept about ten weeks.
+`neutral_activity` keeps one row per unaffiliated earner/community/UTC day for
+eight days. The daily meal reads those counts and writes the consumed virtual
+base units into `server_consumption`; neutral output never enters production,
+inventory, GDP or currency backing.
 
 `chat_channels` holds the /setlogs and /settasks bindings together with the
 weekday, time and UTC offset each server chose; `last_marker` on the row is
@@ -71,6 +75,42 @@ def server_active_producers(platform, server_id, since_ts, until_ts=None):
         (platform, str(server_id), int(since_ts), int(until_ts))).fetchone()
     return row["c"] or 0
 
+def record_neutral_activity(platform, server_id, user_platform, user_id, now=None):
+    """Count one accepted message in a bounded person/day row, never its text."""
+    import time
+
+    now = int(now or _now())
+    day = time.strftime("%Y-%m-%d", time.gmtime(now))
+    cur.execute(
+        "INSERT INTO neutral_activity (platform, server_id, day, user_platform,"
+        " user_id, messages, updated_at) VALUES (?,?,?,?,?,1,?)"
+        " ON CONFLICT(platform, server_id, day, user_platform, user_id) DO UPDATE SET"
+        " messages=neutral_activity.messages+1, updated_at=excluded.updated_at",
+        (platform, str(server_id), day, user_platform, str(user_id), now))
+    conn.commit()
+
+def neutral_message_count(platform, server_id, day):
+    """Accepted non-worker messages of one UTC day for local base supply."""
+    row = cur.execute(
+        "SELECT COALESCE(SUM(messages),0) AS n FROM neutral_activity"
+        " WHERE platform=? AND server_id=? AND day=?",
+        (platform, str(server_id), day)).fetchone()
+    return int(row["n"] or 0)
+
+def server_active_population(platform, server_id, since_ts, until_ts=None):
+    """Distinct producers and unaffiliated earners, linked accounts counted once."""
+    until_ts = int(until_ts or _now())
+    row = cur.execute(
+        "SELECT COUNT(*) AS n FROM ("
+        " SELECT producer_platform AS p, producer_id AS u FROM server_production"
+        " WHERE platform=? AND server_id=? AND producer_id IS NOT NULL"
+        " AND created_at>=? AND created_at<?"
+        " UNION SELECT user_platform AS p, user_id AS u FROM neutral_activity"
+        " WHERE platform=? AND server_id=? AND updated_at>=? AND updated_at<?)",
+        (platform, str(server_id), int(since_ts), until_ts,
+         platform, str(server_id), int(since_ts), until_ts)).fetchone()
+    return int(row["n"] or 0)
+
 def server_good_qty(platform, server_id, good_code, since_ts, until_ts=None):
     """Units of one good produced on the server in a window, 0 when none —
     the per-good half of the monthly task's progress."""
@@ -82,27 +122,30 @@ def server_good_qty(platform, server_id, good_code, since_ts, until_ts=None):
     return row["q"] or 0
 
 def record_server_consumption(platform, server_id, day, category, population,
-                              need, consumed, satisfaction, base_only):
+                              need, consumed, satisfaction, base_only,
+                              neutral_units=0):
     """One day's demand and what covered it. Keyed by the day, so a tick that
     runs twice for the same date overwrites its row instead of counting the
     meal twice into the week."""
     cur.execute(
         "INSERT INTO server_consumption (platform, server_id, day, category,"
-        " population, need, consumed, satisfaction, base_only, created_at)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?)"
+        " population, need, consumed, satisfaction, base_only, neutral_units, created_at)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?)"
         " ON CONFLICT(platform, server_id, day, category) DO UPDATE SET"
         " population=excluded.population, need=excluded.need,"
         " consumed=excluded.consumed, satisfaction=excluded.satisfaction,"
-        " base_only=excluded.base_only, created_at=excluded.created_at",
+        " base_only=excluded.base_only, neutral_units=excluded.neutral_units,"
+        " created_at=excluded.created_at",
         (platform, str(server_id), day, category, int(population), float(need),
-         int(consumed), float(satisfaction), 1 if base_only else 0, _now()))
+         int(consumed), float(satisfaction), 1 if base_only else 0,
+         float(neutral_units), _now()))
     conn.commit()
 
 def server_consumption_window(platform, server_id, since_ts, until_ts=None):
     """The consumption rows of a time window — what the provision score reads."""
     until_ts = until_ts or _now()
     return cur.execute(
-        "SELECT category, population, need, consumed, satisfaction, base_only"
+        "SELECT category, population, need, consumed, satisfaction, base_only, neutral_units"
         " FROM server_consumption WHERE platform=? AND server_id=?"
         " AND created_at>=? AND created_at<=?",
         (platform, str(server_id), int(since_ts), int(until_ts))).fetchall()
@@ -123,6 +166,12 @@ def cleanup_old_server_consumption(max_age_seconds=70 * 86400):
     """Kept as long as the production statistics, for the same reason: the
     weekly report never looks further back than that."""
     cur.execute("DELETE FROM server_consumption WHERE created_at < ?",
+                (_now() - int(max_age_seconds),))
+    conn.commit()
+
+def cleanup_old_neutral_activity(max_age_seconds=8 * 86400):
+    """Only the active-day calculation and seven-day population report need rows."""
+    cur.execute("DELETE FROM neutral_activity WHERE updated_at<?",
                 (_now() - int(max_age_seconds),))
     conn.commit()
 
@@ -226,10 +275,12 @@ def set_server_task_completed(task_id, completed):
                 (1 if completed else 0, task_id))
     conn.commit()
 
-def cleanup_old_server_tasks(max_age_seconds=400 * 86400):
-    """Tasks are kept about thirteen months — a full year of history plus the
-    month being judged, which is longer than anything reads but cheap: one row
-    per server per month."""
+def cleanup_old_server_tasks(max_age_seconds=70 * 86400):
+    """Keep the current and preceding monthly task through a delayed verdict.
+
+    Only those two months are read for progress and the provision bonus; older
+    task rows are no longer needed for calculations.
+    """
     cutoff = _now() - max_age_seconds
     cur.execute("DELETE FROM server_tasks WHERE created_at<?", (cutoff,))
     conn.commit()

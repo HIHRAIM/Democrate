@@ -15,9 +15,11 @@ party rows a union holds (commands/parties.py).
 import re
 
 from aiogram.filters import Command
+from aiogram.enums import ChatMemberStatus
 from aiogram.types import Message
 
 import db
+import sponsors
 from utils import (
     LANG_ORDER, SUPPORTED_LANGS, get_chat_lang, is_admin, language_name,
     localized, send_service_event, set_chat_lang,
@@ -35,7 +37,7 @@ async def setup_cmd(message: Message):
     nothing. Also settles the seven-day deadline and reports to the service
     chats."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not is_admin("telegram", message.from_user.id):
+    if not message.from_user:
         await message.reply(localized("no_permission", lang))
         return
     if message.chat.type not in GROUP_CHAT_TYPES:
@@ -49,6 +51,19 @@ async def setup_cmd(message: Message):
 
     union = parts[1].strip().upper()
     code = parts[2].strip().lower()
+    admin = is_admin("telegram", message.from_user.id)
+    if not admin:
+        owner = sponsors.linked_sponsor_id(message.from_user.id)
+        try:
+            member = await bot.get_chat_member(message.chat.id, message.from_user.id)
+            manages = member.status in (ChatMemberStatus.CREATOR,
+                                        ChatMemberStatus.ADMINISTRATOR)
+        except Exception:
+            manages = False
+        if (not owner or not manages or
+                not sponsors.can_setup_server(owner, message.chat.id, union)):
+            await message.reply(localized("sponsor_setup_forbidden", lang))
+            return
     if not db.union_exists(union):
         await message.reply(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes()))
@@ -60,6 +75,10 @@ async def setup_cmd(message: Message):
         )
         return
 
+    if admin:
+        former = db.union_owner(union)
+        if former is not None:
+            db.operator_takeover_union(union, former)
     db.setup_chat("telegram", message.chat.id, union, message.from_user.id,
                   title=message.chat.title)
     set_chat_lang(str(message.chat.id), code)
@@ -77,9 +96,19 @@ async def add_unia_cmd(message: Message):
     """Create a union, named in any subset of the six languages (Bot
     Admins)."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not is_admin("telegram", message.from_user.id):
+    if not message.from_user:
         await message.reply(localized("no_permission", lang))
         return
+
+    admin = is_admin("telegram", message.from_user.id)
+    owner = None if admin else sponsors.linked_sponsor_id(message.from_user.id)
+    if not admin:
+        if not owner or db.sponsor_tier(owner) == 0:
+            await message.reply(localized("sponsor_not_active", lang))
+            return
+        if len(db.sponsor_unions(owner)) >= sponsors.limits(db.sponsor_tier(owner))["unions"]:
+            await message.reply(localized("sponsor_union_limit", lang))
+            return
 
     parts = (message.text or "").split(maxsplit=2)
     if len(parts) < 3:
@@ -107,7 +136,7 @@ async def add_unia_cmd(message: Message):
         await message.reply(localized("add_unia_need_name", lang))
         return
 
-    if not db.add_union(code, names):
+    if not db.add_union(code, names, owner_id=owner):
         await message.reply(localized("add_unia_exists", lang, code=code))
         return
 
@@ -226,7 +255,7 @@ async def allow_parties_tg(message: Message):
     gated on a Discord role even when the command is run from Telegram, because
     Telegram groups have no roles to gate on."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not is_admin("telegram", message.from_user.id):
+    if not message.from_user:
         await message.reply(localized("no_permission", lang))
         return
 
@@ -237,6 +266,11 @@ async def allow_parties_tg(message: Message):
 
     union = parts[1].strip().upper()
     action = parts[2].strip().lower()
+    if not (is_admin("telegram", message.from_user.id) or
+            sponsors.can_manage_union(
+                sponsors.linked_sponsor_id(message.from_user.id), union)):
+        await message.reply(localized("no_permission", lang))
+        return
     if not db.union_exists(union):
         await message.reply(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes()))

@@ -22,7 +22,7 @@ import time
 
 from db import conn, cur
 
-def add_union(code, names):
+def add_union(code, names, owner_id=None):
     """Create a union with its localized names ({lang: name} dict).
     Returns False if the union already exists. The program ships with no
     unions — every union is created at runtime with /add-unia."""
@@ -36,6 +36,11 @@ def add_union(code, names):
         cur.execute(
             "INSERT OR IGNORE INTO union_names (code, lang, name) VALUES (?,?,?)",
             (code, lang, name)
+        )
+    if owner_id is not None:
+        cur.execute(
+            "INSERT INTO sponsor_unions (code,discord_id,claimed_at) VALUES (?,?,?)",
+            (str(code), str(owner_id), int(time.time()))
         )
     conn.commit()
     return True
@@ -88,10 +93,13 @@ def setup_chat(platform, prefix, union_code, setup_by, title=None):
         "INSERT INTO chats (platform, chat_id, union_code, setup_by, title, created_at)"
         " VALUES (?,?,?,?,?,?)"
         " ON CONFLICT(chat_id) DO UPDATE SET union_code=excluded.union_code,"
-        " setup_by=excluded.setup_by, title=COALESCE(excluded.title, chats.title)",
+        " setup_by=excluded.setup_by, title=COALESCE(excluded.title, chats.title),"
+        " neutral_disabled=0",
         (platform, str(prefix), union_code, str(setup_by), title, int(time.time()))
     )
     conn.commit()
+    from db.enterprises import ensure_neutral_enterprise
+    ensure_neutral_enterprise(platform, prefix, title)
 
 def set_chat_title(prefix, title):
     """Remember a community's current name, if it is bound to a union at all.
@@ -134,6 +142,12 @@ def remove_chat(prefix):
     """Forget a server/group: its union binding, every language setting, any
     wiki anniversaries scheduled in it and its economic log/tasks channels."""
     prefix = str(prefix)
+    from db.enterprises import delete_enterprise
+    for neutral in cur.execute(
+            "SELECT code FROM enterprises WHERE server_id=? AND neutral=1",
+            (prefix,)).fetchall():
+        delete_enterprise(neutral["code"])
+    cur.execute("DELETE FROM neutral_activity WHERE server_id=?", (prefix,))
     cur.execute("DELETE FROM chats WHERE chat_id=?", (prefix,))
     cur.execute(
         "DELETE FROM chat_settings WHERE chat_id LIKE ? OR chat_id=?",

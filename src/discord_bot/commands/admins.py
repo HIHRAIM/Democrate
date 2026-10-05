@@ -31,8 +31,8 @@ from discord_bot.dialogs import USER_REF_RE
 async def setadmin_cmd(interaction: discord.Interaction, user: str):
     """Delegate server-admin rights to a user in this server (Bot Admins).
 
-    A delegated admin can do everything a native Administrator can do *through the
-    bot*, and implicitly counts as a Localizer for the control panel."""
+    The appointment grants community-scoped bot commands and implicitly
+    Localizer access to the control panel."""
     lang = get_chat_lang(_chat_key(interaction))
     if not is_admin("discord", interaction.user.id):
         await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
@@ -73,8 +73,7 @@ async def setadmin_cmd(interaction: discord.Interaction, user: str):
 async def remadmin_cmd(interaction: discord.Interaction, user: str):
     """Revoke a delegated server-admin grant (Bot Admins).
 
-    Only the delegation: a member with the native Administrator permission keeps
-    their rights and cannot be demoted through the bot."""
+    Native Discord permissions do not preserve this bot appointment."""
     lang = get_chat_lang(_chat_key(interaction))
     if not is_admin("discord", interaction.user.id):
         await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)

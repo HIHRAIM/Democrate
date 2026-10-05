@@ -47,6 +47,10 @@ HELP_SECTIONS = [
         "cmd_wiki_founday", "cmd_wiki_foundays", "cmd_wiki_founday_remove",
         "cmd_setlogs", "cmd_settasks",
     ]),
+    ("section_sponsors", [
+        "cmd_sponsor", "cmd_setup", "cmd_add_unia", "cmd_allow_parties",
+        "cmd_add_govt",
+    ]),
     ("section_bot_admins", [
         "cmd_setup", "cmd_setadmin", "cmd_remadmin",
         "cmd_localizer_add", "cmd_localizer_rem",

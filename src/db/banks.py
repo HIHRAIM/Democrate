@@ -72,24 +72,35 @@ def get_bank(code):
     `/convert`, which is why renaming goes through `rename_bank_code` rather than
     an UPDATE of a field. Callers must handle None: a deleted bank still appears
     in old transaction rows."""
-    return cur.execute("SELECT * FROM banks WHERE code=?", (code,)).fetchone()
+    return cur.execute(
+        "SELECT b.* FROM banks b LEFT JOIN sponsor_unions su"
+        " ON su.code=b.union_code WHERE b.code=?"
+        " AND (su.archived_at IS NULL)", (code,)
+    ).fetchone()
 
 def get_all_banks():
     """Every bank in the deployment, by code — the daily FX recompute's work
     list."""
-    return cur.execute("SELECT * FROM banks ORDER BY code").fetchall()
+    return cur.execute(
+        "SELECT b.* FROM banks b LEFT JOIN sponsor_unions su"
+        " ON su.code=b.union_code WHERE su.archived_at IS NULL ORDER BY b.code"
+    ).fetchall()
 
 def get_banks_in_union(union_code):
     """The banks of one union. A union may hold any number, and this is what
     decides whether a command has to ask which currency it means."""
     return cur.execute(
-        "SELECT * FROM banks WHERE union_code=? ORDER BY code", (union_code,)).fetchall()
+        "SELECT b.* FROM banks b LEFT JOIN sponsor_unions su"
+        " ON su.code=b.union_code WHERE b.union_code=?"
+        " AND su.archived_at IS NULL ORDER BY b.code", (union_code,)).fetchall()
 
 def get_banks_in_chat(chat_id):
     """The banks anchored to one server as their central chat — what
     `/create-bank` checks against and what the server's card lists."""
     return cur.execute(
-        "SELECT * FROM banks WHERE central_chat=? ORDER BY code", (str(chat_id),)).fetchall()
+        "SELECT b.* FROM banks b LEFT JOIN sponsor_unions su"
+        " ON su.code=b.union_code WHERE b.central_chat=?"
+        " AND su.archived_at IS NULL ORDER BY b.code", (str(chat_id),)).fetchall()
 
 def set_bank_value(code, value):
     """Publish a currency's new value.
@@ -260,7 +271,9 @@ def user_led_banks(platform, user_id):
     currency argument may be omitted; with several, the command asks which."""
     return cur.execute(
         "SELECT b.* FROM banks b JOIN bank_leaders l ON l.bank_code=b.code"
-        " WHERE l.platform=? AND l.user_id=? ORDER BY b.code",
+        " LEFT JOIN sponsor_unions su ON su.code=b.union_code"
+        " WHERE l.platform=? AND l.user_id=? AND su.archived_at IS NULL"
+        " ORDER BY b.code",
         (platform, str(user_id))).fetchall()
 
 def get_account(bank_code, owner_type, owner_platform, owner_id):
@@ -369,6 +382,20 @@ def bank_money_supply(bank_code):
         "SELECT COALESCE(SUM(balance),0) AS s FROM accounts WHERE bank_code=?",
         (bank_code,)).fetchone()
     return row["s"] or 0
+
+def bank_recent_earning_messages(bank_code, since):
+    """Count accepted earning messages in the rolling FX activity window.
+
+    A `message` journal entry exists only after the normal earning gates and
+    cooldowns accepted the message. Reading the journal avoids inventing a
+    second activity counter and lets a quiet day retain the recent activity
+    of a community instead of treating every overnight lull as zero demand.
+    """
+    return cur.execute(
+        "SELECT COUNT(*) FROM transactions WHERE bank_code=?"
+        " AND reason='message' AND created_at>=?",
+        (str(bank_code), int(since)),
+    ).fetchone()[0]
 
 def bank_debt(bank_code):
     """Total of all negative balances, as a positive number."""

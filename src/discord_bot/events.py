@@ -4,8 +4,9 @@ everything the Discord half does without being asked.
 `on_guild_join` records the arrival and tells the service chats, because a Bot
 Admin now has seven days to bind the server to a union; the row it writes is a
 record rather than the clock, since the sweep reads Discord's own
-`Guild.me.joined_at`. `on_guild_remove` forgets the binding and the deadline
-row together, so a later re-invitation starts a fresh seven days.
+`Guild.me.joined_at`. `on_guild_remove` forgets the setup deadline. Sponsored
+bindings stay until verified retention cleanup; operator bindings are removed
+on departure.
 
 `on_message` is message earning and nothing else. It is independent of the
 `wait_for` dialogs and of the slash commands — discord.py dispatches those
@@ -46,11 +47,15 @@ async def on_guild_join(guild: discord.Guild):
 
 @bot.event
 async def on_guild_remove(guild: discord.Guild):
-    """The bot was kicked from (or left) a server: forget the server's union
-    binding, and its setup-deadline row with it, so that a later
-    re-invitation is a fresh seven days rather than a settlement inherited
-    from the last time."""
-    db.remove_chat(guild.id)
+    """Keep sponsored bindings until their verified retention cleanup.
+
+    Operator bindings keep their older immediate removal behavior. An
+    expired sponsor's cleanup needs the original binding to find and archive
+    the union even when the bot was kicked before the retention deadline.
+    """
+    bound = db.get_chat(guild.id)
+    if not bound or db.union_owner(bound["union_code"]) is None:
+        db.remove_chat(guild.id)
     db.forget_deadline("discord", guild.id)
 
 @bot.event
@@ -70,6 +75,7 @@ async def on_message(message: discord.Message):
         if not earn:
             return
         economy.earn_from_message("discord", message.author.id, str(message.author),
-                                  earn["bank_code"], len(content), earn["rate"])
+                                  earn["bank_code"], len(content), earn["rate"],
+                                  server_id=message.guild.id)
     except Exception as e:
         logger.warning("on_message earning error: %s", e)

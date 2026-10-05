@@ -255,6 +255,32 @@ def init():
         settled_at INTEGER,
         PRIMARY KEY (platform, server_id)
     );
+
+    -- Sponsor-owned unions remain distinct from operator unions. A lapsed
+    -- tier leaves the union and its economy records in place.
+    CREATE TABLE IF NOT EXISTS sponsor_tiers (
+        discord_id TEXT PRIMARY KEY,
+        tier INTEGER NOT NULL,
+        checked_at INTEGER NOT NULL,
+        grace_since INTEGER,
+        grace_tier INTEGER,
+        community_role_since INTEGER,
+        community_role_present INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS sponsor_unions (
+        code TEXT PRIMARY KEY,
+        discord_id TEXT NOT NULL,
+        claimed_at INTEGER NOT NULL,
+        archived_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS sponsor_activity_usage (
+        discord_id TEXT NOT NULL,
+        day TEXT NOT NULL,
+        day_units INTEGER NOT NULL DEFAULT 0,
+        minute_started INTEGER NOT NULL DEFAULT 0,
+        minute_units INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (discord_id, day)
+    );
     """)
     conn.commit()
     _migrate_core()
@@ -272,10 +298,19 @@ def _migrate_core():
         _ensure_column("chat_settings", "updated_at", "INTEGER")
         _ensure_column("chat_settings", "is_dm", "INTEGER DEFAULT 0")
         _ensure_column("chats", "title", "TEXT")
+        _ensure_column("chats", "neutral_disabled", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column("sponsor_tiers", "grace_since", "INTEGER")
+        _ensure_column("sponsor_tiers", "grace_tier", "INTEGER")
+        _ensure_column("sponsor_tiers", "community_role_since", "INTEGER")
+        _ensure_column("sponsor_tiers", "community_role_present", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column("sponsor_unions", "archived_at", "INTEGER")
+        _ensure_column("enterprises", "archived_union_code", "TEXT")
 
 def _ensure_column(table, column, ddl):
     """Guarded ALTER TABLE ... ADD COLUMN for SQLite (no IF NOT EXISTS there)."""
     have = {r["name"] for r in cur.execute(f"PRAGMA table_info({table})").fetchall()}
+    if not have:
+        return
     if column not in have:
         cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 

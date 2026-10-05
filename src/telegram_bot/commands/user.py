@@ -64,6 +64,7 @@ async def help_cmd(message: Message):
 
     everyone_lines = "\n".join([
         escape_html(localized_help("cmd_add_discord", lang)),
+        escape_html(localized("cmd_sponsor", lang)),
         escape_html(localized_help("cmd_party", lang)),
         escape_html(localized_help("cmd_govt", lang)),
         escape_html(localized_help("cmd_add_party_tg", lang)),

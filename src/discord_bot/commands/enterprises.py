@@ -30,7 +30,7 @@ from utils import (
     is_admin, localized, rate_limit_ok, send_service_event,
 )
 
-from discord_bot.client import _chat_key, bot
+from discord_bot.client import _chat_key, bot, is_server_admin
 from discord_bot.dialogs import (
     _ConsentView, _EntConsentView, _LOGO_EXT, _dialog_logo, _dialog_text,
     _econ_embed, _ereply, _extract_logo, _numbered_choice, _parse_user_ref,
@@ -61,12 +61,18 @@ async def _resolve_led_enterprise(interaction, lang, query=None):
         if not ent:
             await _ereply(interaction, "enterprise_not_found", lang)
             return None
+        neutral_admin = (ent["neutral"] and ent["platform"] == "discord"
+                         and str(interaction.guild_id) == ent["server_id"]
+                         and is_server_admin(interaction))
         if not (db.is_enterprise_leader(ent["code"], "discord", interaction.user.id)
-                or is_admin("discord", interaction.user.id)):
+                or is_admin("discord", interaction.user.id) or neutral_admin):
             await _ereply(interaction, "ent_not_leader", lang)
             return None
         return ent
     ents = db.user_led_enterprises("discord", interaction.user.id)
+    if interaction.guild_id and is_server_admin(interaction):
+        ents += [e for e in db.get_server_enterprises("discord", interaction.guild_id)
+                 if e["neutral"] and e["code"] not in {x["code"] for x in ents}]
     if not ents:
         await _ereply(interaction, "ent_none_led", lang)
         return None
@@ -141,6 +147,9 @@ def _build_enterprise_embed(ent, lang, viewer_platform="discord"):
     not resolve."""
     embed = discord.Embed(title=f"{ent['name']} [{ent['code']}]",
                           color=discord.Color(DEFAULT_EMBED_COLOR))
+    if ent["neutral"]:
+        embed.add_field(name=localized("ent_neutral_title", lang),
+                        value=localized("ent_neutral_description", lang), inline=False)
     if ent["description"]:
         embed.description = ent["description"][:2000]
     guild = bot.get_guild(int(ent["server_id"])) if ent["platform"] == "discord" else None
@@ -312,7 +321,7 @@ async def edit_enterprise_cmd(interaction: discord.Interaction, option: int = No
         if target_id is None:
             await interaction.channel.send(embed=_econ_embed(localized("edit_invalid_user", lang)))
             return
-        transfer = action == "transfer"
+        transfer = action == "transfer" or bool(ent["neutral"])
         channel = interaction.channel
 
         async def on_accept(interaction2):

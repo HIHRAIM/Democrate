@@ -7,6 +7,10 @@ handler in either half) is responsible for the not-a-command / not-a-bot /
 is-this-an-earning-channel gate; this module is responsible for everything
 after it.
 
+Accepted earnings from people who work for no active enterprise also add one
+bounded daily counter to their community's neutral supply. No message text is
+stored; the following daily consumption tick converts the count to base goods.
+
 `_earn_state` is the rate limiter and must exist exactly once: it holds each
 person's last counted moment and their rolling hour of activity. It lives in
 memory on purpose. Losing it to a restart costs one extra message per person,
@@ -30,7 +34,7 @@ def message_activity(chars):
     post is rewarded but not without bound and spammy one-word posts pay ~0."""
     return min(math.sqrt(max(chars, 0)), ECONOMY["sqrt_cap"])
 
-def _grant_activity(owner, chars):
+def _grant_activity(owner, chars, permission=None):
     """Apply the per-user cooldown and rolling-hour cap. Returns the activity A
     actually granted (0 when on cooldown or the hour is already full)."""
     now = time.monotonic()
@@ -51,11 +55,14 @@ def _grant_activity(owner, chars):
     a = min(message_activity(chars), remaining)
     if a <= 0:
         return 0.0
+    if permission is not None and not permission():
+        return 0.0
     st["last"] = now
     st["window"].append((now, a))
     return a
 
-def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0):
+def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0,
+                      server_id=None):
     """Reward one counted message with currency (scaled by the channel `rate`)
     and energy at once. Returns {'currency', 'energy'} or None when the message
     earns nothing (too short, on cooldown, or the hour's cap is reached).
@@ -67,8 +74,10 @@ def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0):
     and /balance is where people find it."""
     if chars < ECONOMY["min_chars"]:
         return None
+    import sponsors
     owner = db.canonical_user(platform, user_id)
-    a = _grant_activity(owner, chars)
+    a = _grant_activity(owner, chars,
+                        permission=lambda: sponsors.allow_activity_for_bank(bank_code))
     if a <= 0:
         return None
     db.ensure_account(bank_code, *owner, display_name=display)
@@ -79,4 +88,8 @@ def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0):
     if energy > 0:
         db.add_energy(bank_code, owner, energy, display)
         db.add_period_energy(bank_code, energy)
+    chat = db.get_chat(server_id) if server_id is not None else None
+    if (chat and chat["platform"] == platform and not chat["neutral_disabled"]
+            and not db.is_enterprise_worker_anywhere(platform, user_id, owner)):
+        db.record_neutral_activity(platform, server_id, *owner)
     return {"currency": currency, "energy": energy}

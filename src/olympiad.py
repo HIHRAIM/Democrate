@@ -57,14 +57,12 @@ _CONTENT_DIR = os.path.join(_HERE, "i18n", "olympiad")
 
 INTERNATIONAL = "int"
 
-# Shown before a contest's name so the language category is readable at a glance.
 LANG_FLAG = {
     "ru": "🇷🇺", "uk": "🇺🇦", "pl": "🇵🇱",
     "en": "🇬🇧", "es": "🇪🇸", "pt": "🇵🇹",
     INTERNATIONAL: "🌐",
 }
 
-# How many wikis one person may support in a single contest.
 MAX_CHOICES = 3
 
 _content_cache = None
@@ -112,8 +110,6 @@ def contest_langs():
     """The language categories a contest may belong to: every localization, plus
     'int' for a cross-language contest."""
     return [L for L in LANG_ORDER if L in SUPPORTED_LANGS] + [INTERNATIONAL]
-
-# ── The event window ────────────────────────────────────────────────────────
 
 _DATE_RE = re.compile(r"^\s*(\d{1,2})-(\d{1,2})-(\d{4})\s*$")
 
@@ -171,8 +167,6 @@ def is_expired(now=None):
     stored = db.get_olympiad()
     return bool(stored) and int(now or time.time()) > stored[1]
 
-# ── Contests ────────────────────────────────────────────────────────────────
-
 def contest_name(contest, lang):
     """A contest's name in `lang`. A single-language contest has exactly one
     name and shows it to everybody; an international one falls back to the
@@ -215,8 +209,6 @@ def candidate_label(candidate, contest):
     line = " ".join(parts)
     return f"{line} — {candidate['url']}" if candidate["url"] else line
 
-# ── Reading the answers ─────────────────────────────────────────────────────
-
 _NUMBER_RE = re.compile(r"\d+")
 
 def parse_numbers(raw, count, limit=MAX_CHOICES):
@@ -241,8 +233,6 @@ def parse_numbers(raw, count, limit=MAX_CHOICES):
 def new_key():
     """The short key that identifies a vote in the review chat."""
     return secrets.token_hex(4)
-
-# ── Votes ───────────────────────────────────────────────────────────────────
 
 def vote_candidates(vote):
     """The candidate rows a vote supports, skipping any that were deleted since
@@ -280,21 +270,6 @@ def cleanup_expired(now=None):
     db.clear_olympiad()
     logger.info("Olympiad period over: contests and votes deleted")
     return True
-
-# ── The dialogs ─────────────────────────────────────────────────────────────
-# The three conversations are the same on both messengers, so they live here
-# rather than twice over in the bots. Each bot passes in its own `dialog`, an
-# object with four coroutines:
-#
-#   send(text)                                  – say something
-#   ask(prompt, validator=, error_text=,        – ask, and wait for a reply;
-#       buttons=)                                 returns ('text', value),
-#                                                 ('button', value) or None
-#   choose(header, items, render, extra=)       – a numbered list, one pick
-#   choose_numbers(header, items, render, n)    – a numbered list, several picks
-#
-# `ask` returning None means the person pressed Stop or stopped answering; every
-# flow below simply returns when that happens, and the bot has already said so.
 
 async def run_setcontest(dialog, lang):
     """Create a contest: its language category, its name (in every localization

@@ -47,6 +47,8 @@ from telegram_bot import bot as tg_bot, main as tg_main
 from utils import send_service_event, localized, format_stored_user, good_display_name
 
 db.init()
+for _chat in db.all_chats():
+    db.ensure_neutral_enterprise(_chat["platform"], _chat["chat_id"], _chat["title"])
 db.rule_since()
 
 async def retention_loop():
@@ -64,6 +66,7 @@ async def retention_loop():
             db.cleanup_old_quiz_results()
             db.cleanup_old_server_production()
             db.cleanup_old_server_consumption()
+            db.cleanup_old_neutral_activity()
             db.cleanup_old_server_tasks()
             db.cleanup_old_shipments()
             db.cleanup_old_dm_langs()
@@ -320,6 +323,17 @@ async def setup_deadline_loop():
             logger.exception("Setup deadline sweep failed")
         await asyncio.sleep(24 * 3600)
 
+async def sponsor_loop():
+    """Repair cached Patreon tiers after missed Discord role events."""
+    import sponsors
+    await discord_bot.wait_until_ready()
+    while True:
+        try:
+            await sponsors.reconcile()
+        except Exception:
+            logger.exception("Sponsor role reconciliation failed")
+        await asyncio.sleep(3600)
+
 async def main():
     """Start both bots and every cross-platform loop, then wait for whichever
     of them ends first and take the others down with it.
@@ -352,6 +366,7 @@ async def main():
         asyncio.create_task(channel_post_loop(), name="channel-post"),
         asyncio.create_task(olympiad_loop(), name="olympiad"),
         asyncio.create_task(setup_deadline_loop(), name="setup-deadline"),
+        asyncio.create_task(sponsor_loop(), name="sponsors"),
     ]
 
     await asyncio.sleep(5)

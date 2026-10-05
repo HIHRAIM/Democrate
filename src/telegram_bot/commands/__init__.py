@@ -31,6 +31,7 @@ from telegram_bot.commands import settings
 from telegram_bot.commands import admins
 from telegram_bot.commands import locale
 from telegram_bot.commands import user
+from telegram_bot.commands import sponsors
 from telegram_bot.commands import parties
 from telegram_bot.commands import govt
 from telegram_bot.commands import quizzes

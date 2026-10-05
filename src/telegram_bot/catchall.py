@@ -83,6 +83,7 @@ def _try_earn_tg(message: Message):
             return
         economy.earn_from_message("telegram", message.from_user.id,
                                   _tg_user_label(message.from_user),
-                                  earn["bank_code"], len(text), earn["rate"])
+                                  earn["bank_code"], len(text), earn["rate"],
+                                  server_id=message.chat.id)
     except Exception as e:
         logger.warning("telegram earning error: %s", e)

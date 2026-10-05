@@ -28,7 +28,7 @@ from utils import (
     localized, rate_limit_ok, send_service_event,
 )
 
-from telegram_bot.client import GROUP_CHAT_TYPES, _chat_key, _tg_user_label, router
+from telegram_bot.client import GROUP_CHAT_TYPES, _chat_key, _tg_user_label, router, is_server_admin
 from telegram_bot.dialogs import (
     _dialog_logo_tg, _dialog_text_tg, _econ_consent_keyboard,
     _extract_logo_tg, _numbered_choice_tg, _parse_tg_user_ref,
@@ -56,12 +56,19 @@ async def _resolve_led_enterprise_tg(message, lang, query=None):
         if not ent:
             await message.reply(localized("enterprise_not_found", lang))
             return None
+        neutral_admin = (ent["neutral"] and ent["platform"] == "telegram"
+                         and str(message.chat.id) == ent["server_id"]
+                         and await is_server_admin(message.chat.id, message.from_user.id))
         if not (db.is_enterprise_leader(ent["code"], "telegram", message.from_user.id)
-                or is_admin("telegram", message.from_user.id)):
+                or is_admin("telegram", message.from_user.id) or neutral_admin):
             await message.reply(localized("ent_not_leader", lang))
             return None
         return ent
     ents = db.user_led_enterprises("telegram", message.from_user.id)
+    if (message.chat.type in GROUP_CHAT_TYPES
+            and await is_server_admin(message.chat.id, message.from_user.id)):
+        ents += [e for e in db.get_server_enterprises("telegram", message.chat.id)
+                 if e["neutral"] and e["code"] not in {x["code"] for x in ents}]
     if not ents:
         await message.reply(localized("ent_none_led", lang))
         return None
@@ -130,6 +137,9 @@ def _enterprise_card_tg(ent, lang):
     positions and salaries, salary currency and period, stock and cargo in
     transit."""
     lines = [f"<b>{escape_html(ent['name'])} [{escape_html(ent['code'])}]</b>"]
+    if ent["neutral"]:
+        lines.append(f"<b>{escape_html(localized('ent_neutral_title', lang))}</b>: "
+                     f"{escape_html(localized('ent_neutral_description', lang))}")
     if ent["description"]:
         lines.append(escape_html(ent["description"][:1000]))
     lines.append(f"<b>{escape_html(localized('ent_field_server', lang))}:</b> "
@@ -298,7 +308,7 @@ async def edit_enterprise_tg(message: Message):
             return
         target_kind, target = ref
         mention = f"@{target}" if target_kind == "username" else str(target)
-        transfer = action == "transfer"
+        transfer = action == "transfer" or bool(ent["neutral"])
         token = _register_econ_consent({
             "action": "ent_transfer" if transfer else "ent_leader",
             "ent": ent["code"], "target_kind": target_kind, "target": target,

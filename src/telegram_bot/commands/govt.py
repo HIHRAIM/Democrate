@@ -11,6 +11,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 import db
+import sponsors
 from message_relay import clean_display_name, escape_html
 from utils import get_chat_lang, is_admin, localized
 
@@ -23,7 +24,7 @@ async def add_govt_tg(message: Message):
     """Create a governing body in a union (Bot Admins), with its own words
     for one member and for several."""
     lang = get_chat_lang(_chat_key(message))
-    if not message.from_user or not is_admin("telegram", message.from_user.id):
+    if not message.from_user:
         await message.reply(localized("no_permission", lang))
         return
 
@@ -34,6 +35,11 @@ async def add_govt_tg(message: Message):
         return
 
     union = parts[1].strip().upper()
+    if not (is_admin("telegram", message.from_user.id) or
+            sponsors.can_manage_union(
+                sponsors.linked_sponsor_id(message.from_user.id), union)):
+        await message.reply(localized("no_permission", lang))
+        return
     if not db.union_exists(union):
         await message.reply(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes()))

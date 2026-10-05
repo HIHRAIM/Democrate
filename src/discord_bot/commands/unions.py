@@ -20,6 +20,7 @@ import discord
 from discord import app_commands
 
 import db
+import sponsors
 from utils import (
     LANG_ORDER, SUPPORTED_LANGS, get_chat_lang, is_admin, language_name,
     localized, send_service_event, set_chat_lang,
@@ -42,15 +43,20 @@ async def setup_cmd(interaction: discord.Interaction, union: str, code: str):
     — the parties, banks and enterprises already there are not moved with it.
     Also settles the seven-day deadline, and reports to the service chats."""
     lang = get_chat_lang(_chat_key(interaction))
-    if not is_admin("discord", interaction.user.id):
-        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
-        return
     if interaction.guild is None:
         await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
         return
 
     union = union.strip().upper()
     code = code.strip().lower()
+    admin = is_admin("discord", interaction.user.id)
+    if not admin:
+        await sponsors.refresh_tier(interaction.user.id)
+        perms = interaction.user.guild_permissions
+        if (not (perms.administrator or perms.manage_guild) or
+                not sponsors.can_setup_server(interaction.user.id, interaction.guild_id, union)):
+            await interaction.response.send_message(localized("sponsor_setup_forbidden", lang), ephemeral=True)
+            return
     if not db.union_exists(union):
         await interaction.response.send_message(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes())),
@@ -64,6 +70,10 @@ async def setup_cmd(interaction: discord.Interaction, union: str, code: str):
         )
         return
 
+    if admin:
+        former = db.union_owner(union)
+        if former is not None:
+            db.operator_takeover_union(union, former)
     db.setup_chat("discord", interaction.guild_id, union, interaction.user.id,
                   title=interaction.guild.name if interaction.guild else None)
     set_chat_lang(str(interaction.guild_id), code)
@@ -102,9 +112,15 @@ async def add_unia_cmd(
     The code goes into the shared 4-character namespace, so a union cannot take a
     code a party or a currency already uses."""
     lang = get_chat_lang(_chat_key(interaction))
-    if not is_admin("discord", interaction.user.id):
-        await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
-        return
+    admin = is_admin("discord", interaction.user.id)
+    if not admin:
+        tier = await sponsors.refresh_tier(interaction.user.id)
+        if tier == 0:
+            await interaction.response.send_message(localized("sponsor_not_active", lang), ephemeral=True)
+            return
+        if len(db.sponsor_unions(interaction.user.id)) >= sponsors.limits(tier)["unions"]:
+            await interaction.response.send_message(localized("sponsor_union_limit", lang), ephemeral=True)
+            return
 
     code = code.strip().upper()
     if not UNION_CODE_RE.match(code):
@@ -120,7 +136,7 @@ async def add_unia_cmd(
         await interaction.response.send_message(localized("add_unia_need_name", lang), ephemeral=True)
         return
 
-    if not db.add_union(code, names):
+    if not db.add_union(code, names, owner_id=None if admin else interaction.user.id):
         await interaction.response.send_message(localized("add_unia_exists", lang, code=code), ephemeral=True)
         return
 
@@ -144,11 +160,11 @@ async def allow_parties_cmd(interaction: discord.Interaction, union: str, action
     leaves the existing ones untouched and only stops the commands — a Bot Admin
     can still tidy up through `/edit-party-admin`."""
     lang = get_chat_lang(_chat_key(interaction))
-    if not is_admin("discord", interaction.user.id):
+    union = union.strip().upper()
+    if not sponsors.can_manage_union(interaction.user.id, union):
         await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
         return
 
-    union = union.strip().upper()
     if not db.union_exists(union):
         await interaction.response.send_message(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes())),

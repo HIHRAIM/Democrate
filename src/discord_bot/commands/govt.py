@@ -15,6 +15,7 @@ import discord
 from discord import app_commands
 
 import db
+import sponsors
 from message_relay import clean_display_name
 from utils import (
     DEFAULT_EMBED_COLOR, find_close_names, format_stored_user,
@@ -38,11 +39,11 @@ async def add_govt_cmd(interaction: discord.Interaction, union: str, name: str,
     The two member words are asked for because the body names its own seats — a
     "minister" and "ministers" — and every later mention of a member uses them."""
     lang = get_chat_lang(_chat_key(interaction))
-    if not is_admin("discord", interaction.user.id):
+    union = union.strip().upper()
+    if not sponsors.can_manage_union(interaction.user.id, union):
         await interaction.response.send_message(localized("no_permission", lang), ephemeral=True)
         return
 
-    union = union.strip().upper()
     if not db.union_exists(union):
         await interaction.response.send_message(
             localized("setup_unknown_union", lang, code=union, codes=", ".join(db.get_union_codes())),
