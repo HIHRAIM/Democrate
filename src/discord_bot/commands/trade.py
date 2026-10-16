@@ -1,13 +1,13 @@
-"""What links two banks, or a bank and a party: `/treaty`, `/set-rate`,
-`/convert`, `/rates`, `/set-wage`, `/party-dues`.
+"""What links two banks, or a bank and a party: `/bank treaty`, `/bank rate`,
+`/bank convert`, `/bank rates`, `/bank wage`, `/party dues`.
 
 A treaty needs the other bank's leader to accept it with the consent buttons,
-which is why proposing one is a dialog and not a write. `/set-rate` refuses
+which is why proposing one is a dialog and not a write. `/bank rate` refuses
 whenever either bank has a second treaty partner — the check is
 economy/trade.py: can_manual_peg — because a fixed edge inside a triangle of
 currencies lets the triangle disagree with itself.
 
-`/set-wage` and `/party-dues` set monthly obligations rather than moving
+`/bank wage` and `/party dues` set monthly obligations rather than moving
 anything; the transfers happen on the monthly tick (economy/payroll.py). Both
 are stored in minor units, and a `0` clears them.
 
@@ -24,9 +24,10 @@ from utils import DEFAULT_EMBED_COLOR, get_chat_lang, localized
 from discord_bot.client import _chat_key, bot
 from discord_bot.commands.banks import _resolve_led_bank
 from discord_bot.dialogs import _LeaderConsentView, _econ_embed, _ereply, _say
+from discord_bot.groups import bank_group, party_group
 from discord_bot.parties import _resolve_led_party
 
-@bot.tree.command(name="treaty", description="propose a currency-conversion treaty with another bank (bank leaders)")
+@bank_group.command(name="treaty", description="propose a currency-conversion treaty with another bank (bank leaders)")
 @app_commands.describe(code="Currency code of the other bank")
 async def treaty_cmd(interaction: discord.Interaction, code: str):
     """Propose a currency-conversion treaty to another bank (bank leaders).
@@ -63,10 +64,10 @@ async def treaty_cmd(interaction: discord.Interaction, code: str):
 
     await _say(interaction, embed=_econ_embed(
         localized("treaty_offer", lang, proposer=mine["code"], code=other["code"],
-                  name=other["currency_name"])),
+                  name=economy.currency_name(other))),
         view=_LeaderConsentView(lang, other["code"], on_accept, on_decline))
 
-@bot.tree.command(name="set-rate", description="fix a pegged rate with your bank's sole treaty partner (bank leaders)")
+@bank_group.command(name="rate", description="fix a pegged rate with your bank's sole treaty partner (bank leaders)")
 @app_commands.describe(code="The partner bank's currency code",
                        rate="Units of the partner currency per 1 unit of yours")
 async def set_rate_cmd(interaction: discord.Interaction, code: str, rate: float):
@@ -109,7 +110,7 @@ async def set_rate_cmd(interaction: discord.Interaction, code: str, rate: float)
         localized("set_rate_offer", lang, a=mine["code"], rate=f"{rate:g}", b=other["code"])),
         view=_LeaderConsentView(lang, other["code"], on_accept, on_decline))
 
-@bot.tree.command(name="convert", description="convert between your accounts at the current rate")
+@bank_group.command(name="convert", description="convert between your accounts at the current rate")
 @app_commands.describe(amount="Amount in the source currency", from_code="Source currency", to_code="Target currency")
 async def convert_cmd(interaction: discord.Interaction, amount: str, from_code: str, to_code: str):
     """Convert between your own accounts at the current rate.
@@ -139,7 +140,7 @@ async def convert_cmd(interaction: discord.Interaction, amount: str, from_code: 
                   credited=economy.format_money(info["credited"], tb),
                   rate=f"{info['rate']:.4f}", fee=economy.format_money(info["fee"], fb))
 
-@bot.tree.command(name="rates", description="current currency values and conversion rates")
+@bank_group.command(name="rates", description="current currency values and conversion rates")
 @app_commands.describe(code="Currency code (omit for all currency values)")
 async def rates_cmd(interaction: discord.Interaction, code: str = None):
     """Show currency values, or one currency's rates against its treaty
@@ -174,7 +175,7 @@ async def rates_cmd(interaction: discord.Interaction, code: str = None):
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed)
 
-@bot.tree.command(name="set-wage", description="set the monthly wage for a profession in your bank (bank leaders)")
+@bank_group.command(name="wage", description="set the monthly wage for a profession in your bank (bank leaders)")
 @app_commands.describe(profession="Good code or name defining the profession", amount="Monthly wage (0 to clear)")
 async def set_wage_cmd(interaction: discord.Interaction, profession: str, amount: str):
     """Set the monthly wage for a profession in your bank (bank leaders).
@@ -202,7 +203,7 @@ async def set_wage_cmd(interaction: discord.Interaction, profession: str, amount
     await _ereply(interaction, "set_wage_done", lang, ephemeral=False, name=good["name"],
                   amount=economy.format_money(minor, bank))
 
-@bot.tree.command(name="party-dues", description="set your party's monthly member dues (party leaders)")
+@party_group.command(name="dues", description="set your party's monthly member dues (party leaders)")
 @app_commands.describe(code="Currency code", amount="Monthly dues per member (0 to clear)")
 async def party_dues_cmd(interaction: discord.Interaction, code: str, amount: str):
     """Set your party's monthly member dues in one currency (party leaders).

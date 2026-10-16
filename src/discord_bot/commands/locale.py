@@ -2,9 +2,9 @@
 comparing one reply across them, suggesting a better wording and answering a
 suggestion.
 
-`/loc-suggest` writes a row and posts it into the operator's SUPPORT_CHATS on
+`/locale suggest` writes a row and posts it into the operator's SUPPORT_CHATS on
 *both* platforms — the suggestion is about the bot, not about the chat it was
-written in — and `/loc-reply` answers by that row's code and deletes it. The
+written in — and `/locale reply` answers by that row's code and deletes it. The
 Telegram half of the delivery is reached at the call site, as everywhere
 between the halves.
 
@@ -27,6 +27,7 @@ from utils import (
 )
 
 from discord_bot.client import _chat_key, _refuse_not_setup, bot
+from discord_bot.groups import locale_group
 
 async def post_loc_suggestion(*, lang, key, suggestion, code, ui_lang, username, user_id, avatar_url=None):
     """Post a localization suggestion to the Discord and Telegram support chat(s)."""
@@ -66,7 +67,7 @@ async def post_loc_suggestion(*, lang, key, suggestion, code, ui_lang, username,
                 pass
 
 async def post_loc_reply(*, admin, code, ui_lang, title, body):
-    """Publish an admin's /loc-reply to the support chat(s)."""
+    """Publish an admin's /locale reply to the support chat(s)."""
     prefix = localized("loc_reply_support_prefix", ui_lang, admin=admin, code=code)
     text = f"{prefix}\n\n{body}"
 
@@ -99,13 +100,13 @@ async def post_loc_reply(*, admin, code, ui_lang, title, body):
             except Exception:
                 pass
 
-@bot.tree.command(name="locale", description="localization status, or a language's file")
+@locale_group.command(name="info", description="localization status, or a language's file")
 @app_commands.describe(lang="Language code (optional). With a code, sends that language's localization file.")
 async def locale_cmd(interaction: discord.Interaction, lang: str = None):
     """Show the six languages' progress bars, or send one language's raw file.
 
     With no argument it is a status board anyone may read. With a code it uploads
-    the JSON, which is what a localizer edits and what `/loc-suggest` refers to by
+    the JSON, which is what a localizer edits and what `/locale suggest` refers to by
     key."""
     ui_lang = get_chat_lang(_chat_key(interaction))
     if interaction.guild is not None and not db.is_setup(interaction.guild_id) \
@@ -144,7 +145,7 @@ async def locale_cmd(interaction: discord.Interaction, lang: str = None):
     except Exception:
         await interaction.response.send_message(caption, ephemeral=True)
 
-@bot.tree.command(name="loc-compare", description="compare a reply across languages")
+@locale_group.command(name="compare", description="compare a reply across languages")
 @app_commands.describe(key="Reply code (as shown in the localization file)")
 async def loc_compare_cmd(interaction: discord.Interaction, key: str):
     """Show one reply key across all six languages, so a translator can see
@@ -179,14 +180,14 @@ async def loc_compare_cmd(interaction: discord.Interaction, key: str):
         msg = msg[:1990]
     await interaction.response.send_message(msg)
 
-@bot.tree.command(name="loc-suggest", description="suggest a localization")
+@locale_group.command(name="suggest", description="suggest a localization")
 @app_commands.describe(language="Language code", code="Reply code", text="Suggested text")
 async def loc_suggest_cmd(interaction: discord.Interaction, language: str, code: str, text: str):
     """Propose a better wording for one key in one language.
 
     Stores the suggestion under a short code and delivers it to the operator's
     SUPPORT_CHATS on both platforms — it concerns the bot, not the chat it was
-    written in. The code is what `/loc-reply` answers by."""
+    written in. The code is what `/locale reply` answers by."""
     ui_lang = get_chat_lang(_chat_key(interaction))
     if interaction.guild is not None and not db.is_setup(interaction.guild_id) \
             and not is_admin("discord", interaction.user.id):
@@ -216,7 +217,7 @@ async def loc_suggest_cmd(interaction: discord.Interaction, language: str, code:
                               user_id=interaction.user.id, avatar_url=avatar_url)
     await interaction.response.send_message(localized("loc_suggest_confirm", ui_lang, code=msg_code), ephemeral=True)
 
-@bot.tree.command(name="loc-reply", description="reply to a localization suggestion (bot admins)")
+@locale_group.command(name="reply", description="reply to a localization suggestion (bot admins)")
 @app_commands.describe(code="Message code from the suggestion", text="Reply text")
 async def loc_reply_cmd(interaction: discord.Interaction, code: str, text: str):
     """Answer a localization suggestion by its code (Bot Admins).

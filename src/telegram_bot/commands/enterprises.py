@@ -1,4 +1,4 @@
-"""Enterprises on Telegram: founding one, its card, the `/edit_enterprise`
+"""Enterprises on Telegram: founding one, its card, the `/enterprise_edit`
 menu, its workers and positions, and everything it sells or exports.
 
 An enterprise is a party with a warehouse and a payroll, and the commands
@@ -77,7 +77,7 @@ async def _resolve_led_enterprise_tg(message, lang, query=None):
     return await _numbered_choice_tg(message, lang, localized("ent_choose", lang),
                                      ents, _ent_line_tg)
 
-@router.message(Command("add_enterprise", "add-enterprise"))
+@router.message(Command("enterprise_add", "enterprise-add", "add_enterprise", "add-enterprise"))
 async def add_enterprise_tg(message: Message):
     """Found an enterprise on this group through a dialog: name, code,
     description, logo.
@@ -137,17 +137,22 @@ def _enterprise_card_tg(ent, lang):
     positions and salaries, salary currency and period, stock and cargo in
     transit."""
     lines = [f"<b>{escape_html(ent['name'])} [{escape_html(ent['code'])}]</b>"]
+    own = db.own_description(ent)
+    if own:
+        lines.append(escape_html(own[:1000]))
     if ent["neutral"]:
-        lines.append(f"<b>{escape_html(localized('ent_neutral_title', lang))}</b>: "
+        lines.append(f"<b>{escape_html(localized('ent_neutral_title', lang))}.</b> "
                      f"{escape_html(localized('ent_neutral_description', lang))}")
-    if ent["description"]:
-        lines.append(escape_html(ent["description"][:1000]))
-    lines.append(f"<b>{escape_html(localized('ent_field_server', lang))}:</b> "
-                 f"{escape_html(str(ent['server_id']))}")
-    leaders = db.get_enterprise_leaders(ent["code"])
-    shown = ", ".join(format_stored_user("telegram", l["platform"], l["user_id"],
-                                         l["display_name"]) for l in leaders) or "—"
-    lines.append(f"<b>{escape_html(localized('ent_field_leaders', lang))}:</b> {escape_html(shown)}")
+    community = db.chat_title(ent["server_id"])
+    if community:
+        lines.append(f"<b>{escape_html(localized('ent_field_server', lang))}:</b> "
+                     f"{escape_html(community)}")
+    if not ent["neutral"]:
+        leaders = db.get_enterprise_leaders(ent["code"])
+        shown = ", ".join(format_stored_user("telegram", l["platform"], l["user_id"],
+                                             l["display_name"]) for l in leaders) or "—"
+        lines.append(f"<b>{escape_html(localized('ent_field_leaders', lang))}:</b> "
+                     f"{escape_html(shown)}")
     members = db.get_enterprise_members(ent["code"])
     if members:
         mlines = []
@@ -163,13 +168,15 @@ def _enterprise_card_tg(ent, lang):
     for acc in db.get_owner_accounts(*db.enterprise_owner(ent["code"])):
         bank = db.get_bank(acc["bank_code"])
         if bank:
-            balances.append(escape_html(economy.format_money(acc["balance"], bank)))
+            balances.append(escape_html(economy.format_money(acc["balance"], bank, lang)))
     if balances:
         lines.append(f"<b>{escape_html(localized('ent_field_balance', lang))}:</b> "
                      + ", ".join(balances))
-    period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
-    lines.append(f"<b>{escape_html(localized('ent_field_salary', lang))}:</b> "
-                 f"{escape_html(period)} · {escape_html(ent['salary_bank'] or '—')}")
+    if not ent["neutral"]:
+        period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
+        currency = db.salary_currency_label(ent) or localized("ent_salary_no_currency", lang)
+        lines.append(f"<b>{escape_html(localized('ent_field_salary', lang))}:</b> "
+                     f"{escape_html(period)} · {escape_html(currency)}")
     positions = db.get_enterprise_positions(ent["code"])
     if positions:
         plines = []
@@ -217,7 +224,7 @@ def _transit_lines_tg(ent_code, shipments, lang):
                              other=label, eta=eta))
     return out
 
-@router.message(Command("enterprise"))
+@router.message(Command("enterprise_info", "enterprise-info", "enterprise"))
 async def enterprise_tg(message: Message):
     """Show an enterprise's card, or list this group's enterprises."""
     lang = get_chat_lang(_chat_key(message))
@@ -249,9 +256,9 @@ async def enterprise_tg(message: Message):
 _EDIT_ENT_OPTIONS = ("name", "description", "logo", "add_leader", "transfer",
                      "salary_bank", "salary_period", "delete")
 
-@router.message(Command("edit_enterprise", "edit-enterprise"))
+@router.message(Command("enterprise_edit", "enterprise-edit", "edit_enterprise", "edit-enterprise"))
 async def edit_enterprise_tg(message: Message):
-    """/edit-enterprise [option] [code] — numbered management menu."""
+    """/enterprise_edit [option] [code] — numbered management menu."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -350,7 +357,7 @@ async def edit_enterprise_tg(message: Message):
         await send_service_event("enterprise_deleted", name=ent["name"], code=ent["code"],
                                  user=_tg_user_label(message.from_user))
 
-@router.message(Command("ent_join", "ent-join"))
+@router.message(Command("enterprise_join", "enterprise-join", "ent_join", "ent-join"))
 async def ent_join_tg(message: Message):
     """Ask to join an enterprise; a leader approves with the inline
     buttons."""
@@ -376,7 +383,7 @@ async def ent_join_tg(message: Message):
         localized("ent_join_request", lang, user=display, name=ent["name"], code=ent["code"]),
         reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("ent_leave", "ent-leave"))
+@router.message(Command("enterprise_leave", "enterprise-leave", "ent_leave", "ent-leave"))
 async def ent_leave_tg(message: Message):
     """Leave an enterprise you work at. Your personal salary override goes
     with you."""
@@ -400,9 +407,9 @@ async def ent_leave_tg(message: Message):
     db.remove_enterprise_member(ent["code"], "telegram", message.from_user.id)
     await message.reply(localized("ent_leave_done", lang, name=ent["name"]))
 
-@router.message(Command("ent_kick", "ent-kick"))
+@router.message(Command("enterprise_kick", "enterprise-kick", "ent_kick", "ent-kick"))
 async def ent_kick_tg(message: Message):
-    """/ent-kick <user> [code] — or reply to the worker with /ent-kick [code]."""
+    """/enterprise_kick <user> [code] — or reply to the worker with /enterprise_kick [code]."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -436,9 +443,9 @@ def _salary_display(kind, value, lang):
         return localized("salary_percent", lang, percent=f"{value:g}")
     return economy.format_amount(value)
 
-@router.message(Command("ent_position", "ent-position"))
+@router.message(Command("enterprise_position", "enterprise-position", "ent_position", "ent-position"))
 async def ent_position_tg(message: Message):
-    """/ent-position <name> | <salary> [| <enterprise>]"""
+    """/enterprise_position <name> | <salary> [| <enterprise>]"""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -467,10 +474,10 @@ async def ent_position_tg(message: Message):
     await message.reply(localized("ent_position_done", lang, position=pos,
                                   salary=_salary_display(kind, value, lang)))
 
-@router.message(Command("ent_assign", "ent-assign"))
+@router.message(Command("enterprise_assign", "enterprise-assign", "ent_assign", "ent-assign"))
 async def ent_assign_tg(message: Message):
-    """/ent-assign <user> | <position> [| <enterprise>] — or a reply with
-    /ent-assign <position> [| <enterprise>]."""
+    """/enterprise_assign <user> | <position> [| <enterprise>] — or a reply with
+    /enterprise_assign <position> [| <enterprise>]."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -509,10 +516,10 @@ async def ent_assign_tg(message: Message):
     await message.reply(localized("ent_assign_done", lang, user=escape_html(disp),
                                   position=pos))
 
-@router.message(Command("ent_salary", "ent-salary"))
+@router.message(Command("enterprise_salary", "enterprise-salary", "ent_salary", "ent-salary"))
 async def ent_salary_tg(message: Message):
-    """/ent-salary <user> <salary> [enterprise] — or a reply with
-    /ent-salary <salary> [enterprise]."""
+    """/enterprise_salary <user> <salary> [enterprise] — or a reply with
+    /enterprise_salary <salary> [enterprise]."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -556,9 +563,9 @@ async def ent_salary_tg(message: Message):
     await message.reply(localized("ent_salary_done", lang, user=escape_html(disp),
                                   salary=_salary_display(kind, value, lang)))
 
-@router.message(Command("ent_sell", "ent-sell"))
+@router.message(Command("enterprise_sell", "enterprise-sell", "ent_sell", "ent-sell"))
 async def ent_sell_tg(message: Message):
-    """/ent-sell <good_code> <buyer> [qty] [price] [enterprise] — sell the
+    """/enterprise_sell <good_code> <buyer> [qty] [price] [enterprise] — sell the
     enterprise's goods to a member or to another enterprise (leaders).
 
     No bank buys goods, so this is a sale between two holders and the buyer has
@@ -606,9 +613,9 @@ def _resolve_export_args_tg(target_query, price_s, currency, source):
             return None, None, None, "export_need_currency"
     return target, price, bank, None
 
-@router.message(Command("export"))
+@router.message(Command("enterprise_export", "enterprise-export", "export"))
 async def export_tg(message: Message):
-    """/export <good_code> <qty> <target_ent> [price] [currency] [your_ent]"""
+    """/enterprise_export <good_code> <qty> <target_ent> [price] [currency] [your_ent]"""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -647,9 +654,9 @@ async def export_tg(message: Message):
                   qty=qty, emoji=emoji, name=name, price=price_disp),
         reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("auto_export", "auto-export"))
+@router.message(Command("enterprise_autoexport", "enterprise-autoexport", "auto_export", "auto-export"))
 async def auto_export_tg(message: Message):
-    """/auto-export <good_code> <qty|off> <target_ent> [price] [currency] [your_ent]"""
+    """/enterprise_autoexport <good_code> <qty|off> <target_ent> [price] [currency] [your_ent]"""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -698,9 +705,9 @@ async def auto_export_tg(message: Message):
                   target=_ent_line_tg(tgt), qty=qty, emoji=emoji, name=name, price=price_disp),
         reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("transit"))
+@router.message(Command("enterprise_transit", "enterprise-transit", "transit"))
 async def transit_tg(message: Message):
-    """/transit [code] — an enterprise's goods in transit."""
+    """/enterprise_transit [code] — an enterprise's goods in transit."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return

@@ -91,7 +91,7 @@ async def _edit_quiz_msg(chat_id, msg_id, text, reply_markup=None, parse_mode=No
 async def _run_quiz_tg(message: Message, quiz_id):
     """Run one quiz from the first question to the stored result.
 
-    The session is registered in `_active_quizzes_tg` so `/quizzes_stop` can reach
+    The session is registered in `_active_quizzes_tg` so `/quiz_stop` can reach
     into it, and each question waits for either an option button or a typed answer,
     whichever comes first. A paused run keeps its shuffled option order, so
     resuming shows the same options in the same places. The result is stored only
@@ -207,7 +207,7 @@ async def _run_quiz_tg(message: Message, quiz_id):
     if not await _edit_quiz_msg(chat_id, msg_id, text, parse_mode="HTML"):
         await message.answer(text, parse_mode="HTML")
 
-@router.message(Command("quizzes"))
+@router.message(Command("quiz_take", "quiz-take", "quizzes"))
 async def quizzes_tg(message: Message):
     """Take a quiz. A paused run is offered for resuming rather than
     restarted."""
@@ -229,7 +229,7 @@ async def quizzes_tg(message: Message):
         return
     await _run_quiz_tg(message, ids[int(value) - 1])
 
-@router.message(Command("quizzes_stop", "quizzes-stop"))
+@router.message(Command("quiz_stop", "quiz-stop", "quizzes_stop", "quizzes-stop"))
 async def quizzes_stop_tg(message: Message):
     """Pause the quiz you are taking; the progress is kept for seven
     days."""
@@ -242,7 +242,7 @@ async def quizzes_stop_tg(message: Message):
         return
     session["stop"].set()
 
-@router.message(Command("quizzes_clear", "quizzes-clear"))
+@router.message(Command("quiz_clear", "quiz-clear", "quizzes_clear", "quizzes-clear"))
 async def quizzes_clear_tg(message: Message):
     """Delete your saved quiz results — one quiz's, or all of them, across
     your linked accounts."""
@@ -271,11 +271,11 @@ async def quizzes_clear_tg(message: Message):
                                   name=quizzes.quiz_name(row["quiz_id"], lang),
                                   date=format_quiz_date(row["created_at"])))
 
-@router.message(Command("quizzes_compare", "quizzes-compare"))
+@router.message(Command("quiz_compare", "quiz-compare", "quizzes_compare", "quizzes-compare"))
 async def quizzes_compare_tg(message: Message):
     """Compare quiz results with another user.
 
-    Refused when the other person forbade comparison in `/privacy` — theirs is the
+    Refused when the other person forbade comparison in `/account_privacy` — theirs is the
     veto, not the caller's."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
@@ -351,7 +351,7 @@ def _quiz_history_text_tg(quiz_id, lang, latest, previous):
         title=localized("quizzes_previous_title", lang, name=quizzes.quiz_name(quiz_id, lang)),
     )
 
-@router.message(Command("quizzes_previous", "quizzes-previous"))
+@router.message(Command("quiz_previous", "quiz-previous", "quizzes_previous", "quizzes-previous"))
 async def quizzes_previous_tg(message: Message):
     """Compare your latest result with the one before it.
 

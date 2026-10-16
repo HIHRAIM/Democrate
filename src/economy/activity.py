@@ -62,16 +62,20 @@ def _grant_activity(owner, chars, permission=None):
     return a
 
 def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0,
-                      server_id=None):
+                      server_id=None, chan_key=None):
     """Reward one counted message with currency (scaled by the channel `rate`)
     and energy at once. Returns {'currency', 'energy'} or None when the message
     earns nothing (too short, on cooldown, or the hour's cap is reached).
-    The caller is responsible for the not-a-command / not-a-bot gate.
+    The caller is responsible for the not-a-command / not-a-bot gate. The
+    community tax of the server the message was written in is taken off the
+    reward before it is minted (economy/taxes.py). `chan_key` is the earning
+    binding the message fell under; each counted message is added to its
+    daily statistics for /bank earn-info.
 
     A message that passes the gate opens the account before anything is paid
     out, so writing in an earning channel is enough to have one even when both
     rewards round down to zero. Nobody is told: the account appears silently,
-    and /balance is where people find it."""
+    and /bank balance is where people find it."""
     if chars < ECONOMY["min_chars"]:
         return None
     import sponsors
@@ -82,6 +86,9 @@ def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0,
         return None
     db.ensure_account(bank_code, *owner, display_name=display)
     currency = int(round(a * float(rate) * ECONOMY["currency_per_activity"]))
+    if currency > 0 and server_id is not None:
+        from economy.taxes import earning_after_tax
+        currency = earning_after_tax(currency, (platform, str(server_id)))
     energy = int(round(a * ECONOMY["energy_per_activity"]))
     if currency > 0:
         db.mint(bank_code, owner, currency, "message", display)
@@ -92,4 +99,6 @@ def earn_from_message(platform, user_id, display, bank_code, chars, rate=1.0,
     if (chat and chat["platform"] == platform and not chat["neutral_disabled"]
             and not db.is_enterprise_worker_anywhere(platform, user_id, owner)):
         db.record_neutral_activity(platform, server_id, *owner)
+    if chan_key is not None:
+        db.record_earn_stat(platform, chan_key, max(currency, 0))
     return {"currency": currency, "energy": energy}

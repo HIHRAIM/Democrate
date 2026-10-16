@@ -26,7 +26,7 @@ from aiogram.types import ChatMemberUpdated, Message
 
 import db
 from config import TELEGRAM_TOKEN
-from utils import is_admin, send_service_event
+from utils import is_admin, send_service_event, set_command_platform
 
 logger = logging.getLogger("dem.telegram")
 
@@ -34,6 +34,15 @@ bot = Bot(TELEGRAM_TOKEN)
 dp = Dispatcher()
 router = Router()
 dp.include_router(router)
+
+@dp.update.outer_middleware()
+async def _telegram_spelling(handler, event, data):
+    """Make every text produced while this update is handled spell commands
+    the Telegram way, `/bank_pay` rather than Discord's `/bank pay`
+    (utils.command_spelling). An outer middleware, not a handler: it runs for
+    every update before any filter, and registers nothing."""
+    set_command_platform("telegram")
+    return await handler(event, data)
 
 GROUP_CHAT_TYPES = ("group", "supergroup")
 
@@ -78,7 +87,7 @@ def _tg_user_label(user):
     return user.full_name or str(user.id)
 
 async def is_server_admin(chat_id: int, user_id: int):
-    """Only an explicit /setadmin appointment grants community-admin rights."""
+    """Only an explicit /admin_add appointment grants community-admin rights."""
     return db.is_server_admin("telegram", chat_id, user_id)
 
 async def _resolve_tg_admin_target(message: Message, arg):
@@ -121,7 +130,7 @@ async def my_chat_member_update(update: ChatMemberUpdated):
 
     Being removed drops the row, so that a later re-invitation is a fresh
     seven days. The group's union binding is deliberately left alone: only
-    `/setup` and the Discord side's on_guild_remove touch that."""
+    `/server_setup` and the Discord side's on_guild_remove touch that."""
     try:
         if not update.new_chat_member or update.new_chat_member.user.id != bot.id:
             return

@@ -1,7 +1,7 @@
 """The Olympiad's storage: the event itself, its contests, their candidate
 wikis, the votes cast, and the wiki accounts reviewers chose to remember.
 
-The wiki Olympiad is a bounded event: /setolympiad opens it, contests and
+The wiki Olympiad is a bounded event: /olympiad set opens it, contests and
 their candidate wikis are set up by Bot Admins, people vote from their private
 chat with the bot, and every trace of the contests and the votes is deleted
 the moment the voting period is over (`clear_olympiad_data`). Only two things
@@ -199,7 +199,7 @@ def add_vote(key, contest_id, platform, user_id, username, lang, candidates_json
 
 def get_vote(key):
     """One vote by the short key printed in its review embed, or None. The key
-    is what a reviewer types into `/accepted` and `/denied`, so it is a lookup by
+    is what a reviewer types into `/olympiad accept` and `/olympiad deny`, so it is a lookup by
     something typed by hand."""
     return cur.execute("SELECT * FROM olympiad_votes WHERE key=?", (key,)).fetchone()
 
@@ -219,7 +219,7 @@ def delete_vote(key):
 def set_wiki_account(platform, user_id, fandom_name, linked_by=None):
     """Remember which wiki account a messenger account belongs to.
 
-    Written by `/accepted … remember` and by nothing else, so that a voter is not
+    Written by `/olympiad accept … remember` and by nothing else, so that a voter is not
     asked again next time. One of only two things that outlive an Olympiad, and it
     expires after a year of its own."""
     cur.execute(
@@ -246,9 +246,9 @@ def cleanup_old_wiki_accounts(max_age_seconds=365 * 24 * 3600):
     conn.commit()
 
 def known_fandom_name(platform, user_id):
-    """The Fandom username the bot already knows for someone: from /verify (their
+    """The Fandom username the bot already knows for someone: from /account verify (their
     own Discord account, or the Discord account their Telegram is linked to),
-    otherwise from a reviewer's /accepted … remember. None when unknown."""
+    otherwise from a reviewer's /olympiad accept … remember. None when unknown."""
     uid = str(user_id)
     discord_id = uid if platform == "discord" else None
     if platform == "telegram":

@@ -8,7 +8,7 @@ from config import SPONSOR_URL
 from telegram_bot.client import router
 from utils import get_chat_lang, localized
 
-@router.message(Command("sponsor"))
+@router.message(Command("sponsor_info", "sponsor-info", "sponsor"))
 async def sponsor_cmd(message: Message):
     """Use the same union, community and earning budget as Discord."""
     lang = get_chat_lang(str(message.chat.id))
@@ -31,3 +31,16 @@ async def sponsor_cmd(message: Message):
     if addendum:
         status += "\n" + addendum
     await message.answer(status)
+
+@router.message(Command("sponsor_limit", "sponsor-limit", "limit"))
+async def limit_cmd(message: Message):
+    """Share the Discord subscriber's usage through their authenticated link."""
+    lang = get_chat_lang(str(message.chat.id))
+    owner = sponsors.linked_sponsor_id(message.from_user.id) if message.from_user else None
+    if owner is None:
+        await message.answer(localized("limit_sponsors_only", lang))
+        return
+    await sponsors.refresh_tier(owner)
+    text = (sponsors.limit_text(owner, lang) if db.sponsor_tier(owner) != 0
+            else localized("limit_sponsors_only", lang))
+    await message.answer(text)

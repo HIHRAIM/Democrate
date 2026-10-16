@@ -1,5 +1,5 @@
-"""The localization workflow on Telegram: `/locale`, `/loc_compare`,
-`/loc_suggest`, `/loc_reply`.
+"""The localization workflow on Telegram: `/locale_info`, `/locale_compare`,
+`/locale_suggest`, `/locale_reply`.
 
 A suggestion written here reaches the operator's SUPPORT_CHATS on both
 platforms — it is about the bot, not about the chat it came from — and the
@@ -25,7 +25,7 @@ from utils import (
 
 from telegram_bot.client import _chat_key, _setup_gate_ok, bot, router
 
-@router.message(Command("locale"))
+@router.message(Command("locale_info", "locale-info", "locale"))
 async def locale_cmd(message: Message):
     """Show the six languages' progress, or send one language's raw file."""
     chat_key = _chat_key(message)
@@ -66,7 +66,7 @@ async def locale_cmd(message: Message):
     except Exception:
         await message.reply(caption)
 
-@router.message(Command("loc_compare", "loc-compare"))
+@router.message(Command("locale_compare", "locale-compare", "loc_compare", "loc-compare"))
 async def loc_compare_cmd(message: Message):
     """Show one reply key across all six languages."""
     ui_lang = get_chat_lang(_chat_key(message))
@@ -103,12 +103,12 @@ async def loc_compare_cmd(message: Message):
         msg = msg[:4000]
     await message.reply(msg)
 
-@router.message(Command("loc_suggest", "loc-suggest"))
+@router.message(Command("locale_suggest", "locale-suggest", "loc_suggest", "loc-suggest"))
 async def loc_suggest_cmd(message: Message):
     """Propose a better wording for one key in one language.
 
     Delivered to the operator's SUPPORT_CHATS on both platforms under a short code,
-    which `/loc_reply` answers by."""
+    which `/locale_reply` answers by."""
     ui_lang = get_chat_lang(_chat_key(message))
     if not _setup_gate_ok(message):
         await message.reply(localized("chat_not_setup", ui_lang))
@@ -141,7 +141,7 @@ async def loc_suggest_cmd(message: Message):
                               ui_lang=ui_lang, username=str(username), user_id=user_id)
     await message.reply(localized("loc_suggest_confirm", ui_lang, code=msg_code))
 
-@router.message(Command("loc_reply", "loc-reply"))
+@router.message(Command("locale_reply", "locale-reply", "loc_reply", "loc-reply"))
 async def loc_reply_cmd(message: Message):
     """Answer a localization suggestion by its code (Bot Admins).
 

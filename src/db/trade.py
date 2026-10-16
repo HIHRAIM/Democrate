@@ -43,7 +43,7 @@ def get_treaty(a, b):
     return cur.execute("SELECT * FROM treaties WHERE bank_a=? AND bank_b=?", (x, y)).fetchone()
 
 def has_treaty(a, b):
-    """Whether two banks are convertible at all. `/convert` refuses without
+    """Whether two banks are convertible at all. `/bank convert` refuses without
     one, and a bank is always convertible with itself without a row."""
     return get_treaty(a, b) is not None
 
@@ -115,7 +115,7 @@ def get_bank_convert_fees(bank_code):
 def set_wage(bank_code, good_code, amount):
     """Set the monthly wage a bank pays for one profession, or clear it.
 
-    `amount` is in minor units and `None` deletes the row — `/set-wage` maps a
+    `amount` is in minor units and `None` deletes the row — `/bank wage` maps a
     typed `0` onto that, so there is no such thing as a wage of zero. The
     profession is named by the good that defines it (db/goods.py:
     get_profession), which is why the key is a good code."""

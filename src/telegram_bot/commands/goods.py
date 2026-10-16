@@ -2,17 +2,17 @@
 crafting it, the inventory, selling, the standing orders, professions and
 gifts.
 
-`/craft` starts a timed run and returns immediately — the batch is announced
+`/good_craft` starts a timed run and returns immediately — the batch is announced
 later by main.py: production_loop in the chat the run was started in, which is
 why the command stores a notify key rather than awaiting anything. Energy is
 charged up front. Up to five goods may be on the bench at once, one run of
 each, and the batch is divided between them.
 
 A good belongs to a person or an enterprise; the bank named at creation only
-*denominates* it — it prices the good and it is the currency `/sell` is paid
+*denominates* it — it prices the good and it is the currency `/good_sell` is paid
 in, but it never buys anything itself.
 
-`offer_sale_tg` is the body of both `/sell` and `/ent-sell`, and it only puts
+`offer_sale_tg` is the body of both `/good_sell` and `/enterprise_sell`, and it only puts
 the question: the goods and the money change hands in
 telegram_bot/callbacks.py: handle_econ_consent, once the buyer has agreed.
 
@@ -56,9 +56,9 @@ def _normalize_category(raw):
         return None, True
     return (s, True) if s in db.GOOD_CATEGORIES else (None, False)
 
-@router.message(Command("create_good", "create-good"))
+@router.message(Command("good_add", "good-add", "create_good", "create-good"))
 async def create_good_tg(message: Message):
-    """/create-good <name> | <base_value> | <energy> | [emoji] | [category]
+    """/good_add <name> | <base_value> | <energy> | [emoji] | [category]
     | [currency] | [enterprise] — the good belongs to the caller (or their
     enterprise) and is denominated in a bank of this group's union."""
     lang = get_chat_lang(_chat_key(message))
@@ -134,9 +134,9 @@ def _resolve_production_target_tg(message, enterprise_query):
         if message.chat.type in GROUP_CHAT_TYPES else (None, None)
     return owner, server, None
 
-@router.message(Command("craft"))
+@router.message(Command("good_craft", "good-craft", "craft"))
 async def craft_tg(message: Message):
-    """/craft <good_code> [enterprise] — start a timed production run."""
+    """/good_craft <good_code> [enterprise] — start a timed production run."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -180,7 +180,7 @@ async def craft_tg(message: Message):
         started += "\n" + localized("production_first_run", lang)
     await message.reply(started)
 
-@router.message(Command("inventory"))
+@router.message(Command("good_inventory", "good-inventory", "inventory"))
 async def inventory_tg(message: Message):
     """Show your crafted goods."""
     lang = get_chat_lang(_chat_key(message))
@@ -225,7 +225,7 @@ async def _resolve_buyer_tg(message, target):
             ("user", str(uid)))
 
 async def offer_sale_tg(message, lang, seller, good, want, target_arg, price_arg):
-    """The body behind `/sell` and `/ent-sell`: resolve the buyer and the price,
+    """The body behind `/good_sell` and `/enterprise_sell`: resolve the buyer and the price,
     then put the offer to them with consent buttons.
 
     Nothing moves here. The goods and the money change hands inside
@@ -273,9 +273,9 @@ async def offer_sale_tg(message, lang, seller, good, want, target_arg, price_arg
                   else localized("export_free", lang)),
         reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("sell"))
+@router.message(Command("good_sell", "good-sell", "sell"))
 async def sell_tg(message: Message):
-    """/sell <good_code> <buyer> [qty] [price] — sell a good to another member
+    """/good_sell <good_code> <buyer> [qty] [price] — sell a good to another member
     or to an enterprise.
 
     No bank buys goods: the units go to the buyer and the money comes out of
@@ -295,9 +295,9 @@ async def sell_tg(message: Message):
     await offer_sale_tg(message, lang, db.canonical_user("telegram", message.from_user.id),
                         good, qty, parts[2], parts[4] if len(parts) > 4 else None)
 
-@router.message(Command("autocraft"))
+@router.message(Command("good_autocraft", "good-autocraft", "autocraft"))
 async def autocraft_tg(message: Message):
-    """/autocraft <good_code> <on|off> [enterprise] — 24/7 autoproduction."""
+    """/good_autocraft <good_code> <on|off> [enterprise] — 24/7 autoproduction."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -326,7 +326,7 @@ async def autocraft_tg(message: Message):
                                   name=good_display_name(good, lang),
                                   lines=others + 1 if on else others))
 
-@router.message(Command("autosend"))
+@router.message(Command("good_autosend", "good-autosend", "autosend"))
 async def autosend_tg(message: Message):
     """Send a share of a good's stock to a user, party or enterprise every
     day. `0` stops it."""
@@ -368,7 +368,7 @@ async def autosend_tg(message: Message):
     await message.reply(localized("autosend_on", lang, name=good["name"], percent=percent,
                                   target=tname))
 
-@router.message(Command("set_profession", "set-profession"))
+@router.message(Command("bank_profession", "bank-profession", "set_profession", "set-profession"))
 async def set_profession_tg(message: Message):
     """Override a member's profession in your bank (bank leaders).
 
@@ -398,10 +398,10 @@ async def set_profession_tg(message: Message):
     await message.reply(localized("set_profession_done", lang, user=escape_html(disp),
                                   name=good["name"]))
 
-@router.message(Command("give_good", "give-good"))
+@router.message(Command("good_give", "good-give", "give_good", "give-good"))
 async def give_good_tg(message: Message):
-    """/give-good <user> <good_code> [qty] — or a reply with
-    /give-good <good_code> [qty]."""
+    """/good_give <user> <good_code> [qty] — or a reply with
+    /good_give <good_code> [qty]."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -448,7 +448,7 @@ async def give_good_tg(message: Message):
                                   name=good_display_name(good, lang),
                                   user=escape_html(disp)))
 
-@router.message(Command("goods"))
+@router.message(Command("good_info", "good-info", "goods"))
 async def goods_tg(message: Message):
     """List the goods this group can produce, base goods included."""
     lang = get_chat_lang(_chat_key(message))
@@ -476,9 +476,9 @@ async def goods_tg(message: Message):
                     energy=economy.format_energy(good["energy_cost"]))))
     await message.reply("\n".join(lines)[:4000], parse_mode="HTML")
 
-@router.message(Command("top"))
+@router.message(Command("good_top", "good-top", "top"))
 async def top_tg(message: Message):
-    """Show one of the three leaderboards: /top [week|good|wealth] [code]."""
+    """Show one of the three leaderboards: /good_top [week|good|wealth] [code]."""
     lang = get_chat_lang(_chat_key(message))
     if message.chat.type not in GROUP_CHAT_TYPES:
         await message.reply(localized("top_no_server", lang))

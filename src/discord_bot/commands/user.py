@@ -1,17 +1,17 @@
-"""What an ordinary member runs about themselves: `/help`, `/verify`,
-`/add-telegram` and `/privacy`.
+"""What an ordinary member runs about themselves: `/help`, `/account verify`,
+`/account telegram` and `/account privacy`.
 
 HELP_SECTIONS is a hand-written list of localization keys, not something
 derived from the command tree, and that is the trap: a command moved between
 modules keeps working while quietly disappearing from the help. Adding a
 command means adding its key here and its six i18n entries. The Olympiad page
 is the exception — it is built from olympiad_help_keys(), which lists only
-`/setolympiad` while no Olympiad is running, because the rest of its commands
+`/olympiad set` while no Olympiad is running, because the rest of its commands
 are not registered then.
 
-`/verify` is a single Fandom lookup at one moment, not a subscription;
-`/add-telegram` is one half of a thirty-minute handshake whose other half is
-`/add-discord` on Telegram. `/privacy` is where a person deletes what the bot
+`/account verify` is a single Fandom lookup at one moment, not a subscription;
+`/account telegram` is one half of a thirty-minute handshake whose other half is
+`/account_discord` on Telegram. `/account privacy` is where a person deletes what the bot
 keeps about them.
 
 Not this module's zone: the Fandom request itself (fandom.py), the identity
@@ -32,6 +32,7 @@ from utils import (
 
 from discord_bot.client import _chat_key, bot
 from discord_bot.dialogs import DIALOG_TIMEOUT, _numbered_choice, _wait_message
+from discord_bot.groups import account_group
 from discord_bot.olympiad import olympiad_help_keys
 
 HELP_SECTIONS = [
@@ -39,29 +40,33 @@ HELP_SECTIONS = [
         "cmd_verify", "cmd_add_telegram", "cmd_party", "cmd_govt", "cmd_add_party",
         "cmd_edit_party", "cmd_edit_rules", "cmd_party_join", "cmd_party_leave",
         "cmd_party_kick", "cmd_quizzes", "cmd_quizzes_stop", "cmd_quizzes_clear",
-        "cmd_quizzes_compare", "cmd_quizzes_previous", "cmd_privacy", "cmd_locale",
-        "cmd_loc_compare", "cmd_loc_suggest", "cmd_help",
+        "cmd_quizzes_compare", "cmd_quizzes_previous", "cmd_union", "cmd_server", "cmd_birthday",
+        "cmd_calendar",
+        "cmd_privacy", "cmd_locale", "cmd_loc_compare", "cmd_loc_suggest", "cmd_help",
     ]),
     ("section_admins", [
         "cmd_lang", "cmd_locallang", "cmd_find_with", "cmd_find_without",
-        "cmd_wiki_founday", "cmd_wiki_foundays", "cmd_wiki_founday_remove",
-        "cmd_setlogs", "cmd_settasks",
+        "cmd_setlogs", "cmd_settasks", "cmd_edit_server", "cmd_birthday_channel",
+        "cmd_birthday_role",
     ]),
     ("section_sponsors", [
-        "cmd_sponsor", "cmd_setup", "cmd_add_unia", "cmd_allow_parties",
-        "cmd_add_govt",
+        "cmd_sponsor", "cmd_limit", "cmd_setup", "cmd_add_unia", "cmd_edit_union",
+        "cmd_allow_parties", "cmd_add_govt",
     ]),
     ("section_bot_admins", [
         "cmd_setup", "cmd_setadmin", "cmd_remadmin",
         "cmd_localizer_add", "cmd_localizer_rem",
-        "cmd_add_unia", "cmd_allow_parties", "cmd_add_govt",
-        "cmd_edit_party_admin", "cmd_loc_reply", "cmd_list_chats", "cmd_force_leave",
+        "cmd_add_unia", "cmd_edit_union", "cmd_allow_parties", "cmd_add_govt",
+        "cmd_add_wiki", "cmd_remove_wiki", "cmd_wiki_founded", "cmd_wiki_channel",
+        "cmd_wiki_greeting", "cmd_wiki_rep_role", "cmd_edit_party_admin", "cmd_loc_reply", "cmd_list_chats", "cmd_force_leave",
         "cmd_backup",
     ]),
     ("section_economy", [
         "cmd_create_bank", "cmd_bank", "cmd_edit_bank", "cmd_bank_add_leader",
         "cmd_bank_transfer",
-        "cmd_open_account", "cmd_balance", "cmd_pay", "cmd_set_earn",
+        "cmd_open_account", "cmd_balance", "cmd_transactions", "cmd_pay", "cmd_set_earn",
+        "cmd_earn_info",
+        "cmd_emit",
         "cmd_create_good", "cmd_goods", "cmd_craft", "cmd_inventory", "cmd_top",
         "cmd_sell",
         "cmd_give_good", "cmd_autocraft", "cmd_autosend", "cmd_set_profession",
@@ -98,7 +103,7 @@ def _chunk_lines(lines, limit=EMBED_FIELD_LIMIT):
 def _help_pages(lang):
     """One page per section. A section too long for a single embed field is
     spread over several fields on the same page. The Olympiad page lists only
-    /setolympiad while no Olympiad is running — the rest of its commands are not
+    /olympiad set while no Olympiad is running — the rest of its commands are not
     registered then, so listing them would point at nothing."""
     pages = []
     for title_key, keys in HELP_SECTIONS:
@@ -172,7 +177,7 @@ async def help_command(interaction: discord.Interaction):
     await interaction.response.send_message(
         embed=_help_embed(lang, pages, 0), view=view, ephemeral=True)
 
-@bot.tree.command(name="verify", description="verify your Fandom account (checks your Discord handle on your Fandom profile)")
+@account_group.command(name="verify", description="verify your Fandom account (checks your Discord handle on your Fandom profile)")
 @app_commands.describe(fandom_name="Your username on fandom.com")
 async def verify_cmd(interaction: discord.Interaction, fandom_name: str):
     """Verify your Fandom account.
@@ -210,15 +215,20 @@ async def verify_cmd(interaction: discord.Interaction, fandom_name: str):
     db.add_fandom_verification(interaction.user.id, cname, uid, handle)
     await interaction.followup.send(localized("verify_success", lang, name=cname), ephemeral=True)
 
-@bot.tree.command(name="add-telegram", description="link your Telegram account (run /add-discord on Telegram within 30 min)")
+@account_group.command(name="telegram", description="link your Telegram account (run /account_discord on Telegram within 30 min)")
 @app_commands.describe(nickname="Your Telegram @username")
 async def add_telegram_cmd(interaction: discord.Interaction, nickname: str):
     """Start linking your Telegram account: name your Telegram @username here
-    and run `/add_discord` there within thirty minutes.
+    and run `/account_discord` there within thirty minutes.
 
     Each side must name the other. The link is what makes the Telegram account
-    count as verified, and it merges the quiz history — but not money already
-    earned separately."""
+    count as verified, merges the quiz history, and folds the Telegram
+    account's money, goods and mastery into this one.
+
+    An account already linked to the named Telegram account is told so
+    instead of starting the handshake again. The instruction for the other
+    side carries *this* account's Discord name, which is what has to be typed
+    there; it used to repeat the Telegram name, and people followed it."""
     lang = get_chat_lang(_chat_key(interaction))
     telegram_nick = nickname.strip().lstrip("@")
     if not telegram_nick:
@@ -227,13 +237,34 @@ async def add_telegram_cmd(interaction: discord.Interaction, nickname: str):
     if not is_verified("discord", interaction.user.id):
         await interaction.response.send_message(localized("link_need_verify", lang), ephemeral=True)
         return
-    result, _dc, _tg = db.register_link_attempt("discord", interaction.user.id,
-                                                interaction.user.name, telegram_nick)
+    link = db.get_link_by_discord(interaction.user.id)
+    if link and link["telegram_id"]:
+        linked_name = await _telegram_username(link["telegram_id"])
+        if linked_name is None or linked_name.lower() == telegram_nick.lower():
+            await interaction.response.send_message(
+                localized("link_already", lang), ephemeral=True)
+            return
+    result, waiting, _tg = db.register_link_attempt("discord", interaction.user.id,
+                                                    interaction.user.name, telegram_nick)
     if result == "linked":
         await interaction.response.send_message(localized("link_success", lang), ephemeral=True)
+    elif result == "waiting":
+        await interaction.response.send_message(
+            localized("link_waiting_telegram", lang, nick=waiting), ephemeral=True)
     else:
         await interaction.response.send_message(
-            localized("link_pending_discord", lang, nick=telegram_nick), ephemeral=True)
+            localized("link_pending_discord", lang, nick=interaction.user.name), ephemeral=True)
+
+async def _telegram_username(telegram_id):
+    """The current @username of a Telegram account, or None when Telegram
+    does not say. The Telegram half is imported at the call site, as
+    everywhere the halves meet."""
+    try:
+        from telegram_bot import bot as tg_bot
+        chat = await tg_bot.get_chat(int(telegram_id))
+        return getattr(chat, "username", None)
+    except Exception:
+        return None
 
 async def _run_privacy_action(interaction: discord.Interaction, lang, action):
     """Run one privacy action: show what is stored, delete quiz results,
@@ -243,6 +274,12 @@ async def _run_privacy_action(interaction: discord.Interaction, lang, action):
     the person and not about one messenger."""
     user_id = interaction.user.id
     channel = interaction.channel
+
+    if action == "hide_top":
+        hidden = not db.is_leaderboard_hidden("discord", user_id)
+        db.set_leaderboard_hidden("discord", user_id, hidden)
+        await channel.send(localized("privacy_top_hidden" if hidden else "privacy_top_shown", lang))
+        return
 
     if action == "clear_all":
         db.delete_user_quiz_results("discord", user_id)
@@ -288,9 +325,7 @@ async def _run_privacy_action(interaction: discord.Interaction, lang, action):
             "privacy_block_quiz_on" if blocked else "privacy_block_quiz_off", lang,
             name=quizzes.quiz_name(quiz_id, lang)))
 
-@bot.tree.command(name="privacy", description="manage the data the bot keeps about you")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@account_group.command(name="privacy", description="manage the data the bot keeps about you")
 async def privacy_cmd(interaction: discord.Interaction):
     """Manage the data the bot keeps about you (ephemeral).
 

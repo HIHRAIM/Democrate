@@ -1,4 +1,4 @@
-"""Finding the people behind messages: `/find-with` and `/find-without`.
+"""Finding the people behind messages: `/find with` and `/find without`.
 
 Both commands read a channel's history over a period and reply-mention the
 authors whose messages do or do not contain the keywords. They are the only
@@ -28,6 +28,7 @@ from utils import (
 )
 
 from discord_bot.client import _chat_key, _require_verified, bot, is_server_admin
+from discord_bot.groups import find_group
 
 def _message_corpus(msg):
     """All text of a message, embeds included, lowercased."""
@@ -132,7 +133,7 @@ async def _find_impl(interaction: discord.Interaction, channel_id: str, period: 
         except Exception:
             pass
 
-@bot.tree.command(name="find-with", description="reply-mention authors of messages containing the keywords (server admins)")
+@find_group.command(name="with", description="reply-mention authors of messages containing the keywords (server admins)")
 @app_commands.describe(
     channel_id="Channel ID to scan",
     period="MM-DD-YYYY, or MM-DD-YYYY + 7D for a range of days",
@@ -143,7 +144,7 @@ async def find_with_cmd(interaction: discord.Interaction, channel_id: str, perio
     the keywords (Server Admins)."""
     await _find_impl(interaction, channel_id, period, keywords, want_match=True)
 
-@bot.tree.command(name="find-without", description="reply-mention authors of messages NOT containing the keywords (server admins)")
+@find_group.command(name="without", description="reply-mention authors of messages NOT containing the keywords (server admins)")
 @app_commands.describe(
     channel_id="Channel ID to scan",
     period="MM-DD-YYYY, or MM-DD-YYYY + 7D for a range of days",
@@ -153,6 +154,6 @@ async def find_without_cmd(interaction: discord.Interaction, channel_id: str, pe
     """Reply-mention the authors of messages in a channel that contain none of
     the keywords (Server Admins).
 
-    The inverse of `/find-with`, and the one people actually run: it answers "who
+    The inverse of `/find with`, and the one people actually run: it answers "who
     wrote here without saying the thing they were asked to say"."""
     await _find_impl(interaction, channel_id, period, keywords, want_match=False)

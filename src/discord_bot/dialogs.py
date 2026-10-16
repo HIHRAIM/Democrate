@@ -175,8 +175,9 @@ class _ChoiceSelect(ui.View):
     option they picked.
 
     Exists because a numbered choice typed into the chat is not always
-    available: a command marked `allowed_installs(users=True)` can be run where
-    the bot is installed on the account rather than in the server, and there it
+    available: a command of a group installable on a user account
+    (discord_bot/groups.py) can be run where the bot is installed on the
+    account rather than in the server, and there it
     receives the interaction but no messages at all — so `_wait_message` waits
     out its half hour in silence and the dialog looks dead. A component answer
     comes back as an interaction and therefore works everywhere the command
@@ -442,3 +443,42 @@ class _EntConsentView(ui.View):
                 pass
             await (self._on_accept if accepted else self._on_decline)(interaction2)
         return callback
+
+class _LinesPager(ui.View):
+    """Back/next over a list of lines, for an ephemeral message only its
+    reader sees: a union's full lists and economy, a person's transactions.
+    `pages` tells the caller whether the arrows are worth attaching."""
+
+    def __init__(self, title, lines, lang, empty=""):
+        """Build the two arrows on the first page."""
+        import stats
+        super().__init__(timeout=DIALOG_TIMEOUT)
+        self.title, self.lines, self.lang, self.empty, self.page = title, lines, lang, empty, 0
+        self.pages = stats.list_page(lines, 0)[2]
+        self.prev = ui.Button(label=localized("help_prev", lang), style=ButtonStyle.secondary,
+                              disabled=True)
+        self.next = ui.Button(label=localized("help_next", lang), style=ButtonStyle.secondary)
+        self.prev.callback = self._make_cb(-1)
+        self.next.callback = self._make_cb(1)
+        self.add_item(self.prev)
+        self.add_item(self.next)
+
+    def embed(self):
+        """The current page as an embed, with the arrows set for it."""
+        import stats
+        shown, self.page, total = stats.list_page(self.lines, self.page)
+        self.prev.disabled = self.page == 0
+        self.next.disabled = self.page >= total - 1
+        embed = _econ_embed(("\n".join(shown) or self.empty)[:4000], title=self.title)
+        if total > 1:
+            embed.set_footer(text=localized("help_page", self.lang, page=self.page + 1,
+                                            total=total))
+        return embed
+
+    def _make_cb(self, step):
+        """One arrow's callback, closing over the direction it turns."""
+        async def cb(interaction2: discord.Interaction):
+            """Turn the page and redraw the message in place."""
+            self.page += step
+            await interaction2.response.edit_message(embed=self.embed(), view=self)
+        return cb

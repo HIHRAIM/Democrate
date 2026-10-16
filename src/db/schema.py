@@ -221,6 +221,10 @@ def init():
         PRIMARY KEY (platform, user_id, quiz_id)
     );
 
+    -- Retired: the per-server anniversaries of the former /wiki-founday,
+    -- replaced by the union wikis below. Nothing writes it any more; it stays
+    -- because migrations here are additive, and db/unions.py: remove_chat
+    -- still clears a departing server's old rows.
     CREATE TABLE IF NOT EXISTS wiki_foundays (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         guild_id TEXT,
@@ -239,6 +243,127 @@ def init():
     CREATE UNIQUE INDEX IF NOT EXISTS idx_wiki_foundays_guild_url
         ON wiki_foundays (guild_id, url);
 
+    -- A wiki the bot knows: one row per wiki, however many unions it is
+    -- attached to (union_wikis). base_url is the canonical script root
+    -- ("https://confederation.fandom.com/ru") that every typed link is
+    -- resolved to, api_url is where the wiki is read, main_url is the link a
+    -- greeting carries. founded_at is detected once, on attachment, the way
+    -- Wiki-Bot's /overview does it; founded_manual is a Bot Admin's
+    -- correction (/wiki founded) and wins whenever it is set. city_id is the
+    -- Fandom wiki id and is NULL off the Fandom farm. Read by db/wikis.py and
+    -- by the wiki refresh in main.py.
+    CREATE TABLE IF NOT EXISTS wikis (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        base_url TEXT NOT NULL UNIQUE,
+        api_url TEXT NOT NULL,
+        main_url TEXT,
+        name TEXT,
+        lang TEXT,
+        city_id INTEGER,
+        is_fandom INTEGER NOT NULL DEFAULT 0,
+        founded_at INTEGER,
+        founded_manual INTEGER,
+        refreshed_at INTEGER,
+        refresh_error TEXT,
+        created_at INTEGER
+    );
+
+    -- Which union a wiki belongs to. Written by /wiki add, removed by
+    -- /wiki remove; a wiki left in no union is deleted together with its
+    -- administration cache.
+    CREATE TABLE IF NOT EXISTS union_wikis (
+        union_code TEXT NOT NULL,
+        wiki_id INTEGER NOT NULL,
+        added_by TEXT,
+        added_at INTEGER,
+        PRIMARY KEY (union_code, wiki_id)
+    );
+
+    -- The administration of a wiki as last read from its public API:
+    -- bureaucrats, administrators and content moderators, without bots and
+    -- system accounts. account_key is 'fandom:<id>' on the Fandom farm, where
+    -- user ids are global, and '<wiki id>:<id>' elsewhere; the union profile
+    -- counts it distinct. since is when the current uninterrupted status began
+    -- by the rights log (the wiki's founding when the log is silent), and the
+    -- representative role waits thirty days from it. discord_handle is what
+    -- the person's Fandom profile publishes. Rebuilt by main.py:
+    -- wiki_refresh_loop; read by the role pass and the union profile.
+    CREATE TABLE IF NOT EXISTS wiki_staff (
+        wiki_id INTEGER NOT NULL,
+        user_id TEXT NOT NULL,
+        account_key TEXT NOT NULL,
+        name TEXT,
+        groups TEXT,
+        since INTEGER,
+        discord_handle TEXT,
+        seen_at INTEGER,
+        PRIMARY KEY (wiki_id, user_id)
+    );
+
+    -- One row per community for the celebrations: the single UTC offset the
+    -- greetings and the birthday role are timed by (every command that takes
+    -- one overwrites it), the wiki birthday channel (Discord), the personal
+    -- birthday channel (a Discord channel id or a Telegram 'chat:topic'), the
+    -- birthday and wiki representative roles (Discord role ids), and the local
+    -- date each greeting last went out on, which is what makes it fire once a
+    -- day. Owned by db/community.py.
+    CREATE TABLE IF NOT EXISTS community_settings (
+        platform TEXT NOT NULL,
+        server_id TEXT NOT NULL,
+        tz_offset INTEGER NOT NULL DEFAULT 0,
+        wiki_channel TEXT,
+        birthday_channel TEXT,
+        birthday_role TEXT,
+        rep_role TEXT,
+        wiki_marker TEXT,
+        birthday_marker TEXT,
+        PRIMARY KEY (platform, server_id)
+    );
+
+    -- Wikis one community chose not to greet (/wiki greeting).
+    CREATE TABLE IF NOT EXISTS wiki_greeting_off (
+        platform TEXT NOT NULL,
+        server_id TEXT NOT NULL,
+        wiki_id INTEGER NOT NULL,
+        PRIMARY KEY (platform, server_id, wiki_id)
+    );
+
+    -- A person's birthday, day and month only, under the account that set it
+    -- with /birthday set (a linked pair keeps one row, on its Discord side).
+    -- Cleared by /birthday set off and by nothing else.
+    CREATE TABLE IF NOT EXISTS birthdays (
+        platform TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        day INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        set_at INTEGER,
+        PRIMARY KEY (platform, user_id)
+    );
+
+    -- The numbers of the birthday greetings used last, per channel (scope
+    -- 'chat') and per person (scope 'user'), trimmed to the last five of each
+    -- key on every insert: that is the whole memory the no-repeat rule needs.
+    CREATE TABLE IF NOT EXISTS birthday_greeting_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        scope TEXT NOT NULL,
+        key TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        used_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_birthday_greeting_history
+        ON birthday_greeting_history (scope, key);
+
+    -- Discord roles the bot gave itself ('birthday' or 'rep'), so that it
+    -- takes back only those: a role somebody granted by hand is never removed.
+    CREATE TABLE IF NOT EXISTS role_grants (
+        server_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        role_id TEXT NOT NULL,
+        granted_at INTEGER,
+        PRIMARY KEY (server_id, kind, user_id)
+    );
+
     -- The seven-day setup deadline (setup_deadline.py). One row per server or
     -- group the bot was added to AFTER the rule came into force — everything
     -- it was already sitting in has no row and is never examined. joined_at
@@ -246,7 +371,7 @@ def init():
     -- Guild.me.joined_at is authoritative there and survives a restart, while
     -- Telegram offers nothing of the kind and the my_chat_member update that
     -- adds the bot is the only moment the time can be learnt. settled_at is
-    -- set the first time the chat is found bound to a union with /setup, and
+    -- set the first time the chat is found bound to a union with /server setup, and
     -- is what makes the check one-shot: a chat set up once is never left.
     CREATE TABLE IF NOT EXISTS setup_deadlines (
         platform TEXT NOT NULL,
@@ -293,8 +418,17 @@ def _migrate_core():
     bot, so the one-year retention of DM languages can find its rows without
     guessing at id shapes. `chats` learns the community's own name, which is
     what lets a bank card say where its central server is instead of printing
-    the bare id at somebody."""
+    the bare id at somebody. `unions` learns its own language (NULL reads as
+    English), logo and logo type, all set from /union edit. A community's
+    settings learn the tax it charges on payments, sales and message
+    earnings (/server edit). A birthday learns the name its owner had when
+    they set it, which is what /calendar shows outside their community."""
     with _db_lock:
+        _ensure_column("unions", "lang", "TEXT")
+        _ensure_column("unions", "logo", "BLOB")
+        _ensure_column("unions", "logo_mime", "TEXT")
+        _ensure_column("community_settings", "tax_percent", "REAL NOT NULL DEFAULT 0")
+        _ensure_column("birthdays", "display_name", "TEXT")
         _ensure_column("chat_settings", "updated_at", "INTEGER")
         _ensure_column("chat_settings", "is_dm", "INTEGER DEFAULT 0")
         _ensure_column("chats", "title", "TEXT")
@@ -319,7 +453,7 @@ def init_olympiad():
 
     Called from `init()` on every start, even though an Olympiad exists only
     now and then: the tables are cheap and their absence would turn the first
-    `/setolympiad` of a deployment into an error. Almost everything they hold
+    `/olympiad set` of a deployment into an error. Almost everything they hold
     is deleted the moment a voting period ends (db/olympiad.py:
     clear_olympiad_data) — only the remembered wiki accounts outlive it, and
     those expire after a year of their own."""

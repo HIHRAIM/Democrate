@@ -13,7 +13,7 @@ eight days. The daily meal reads those counts and writes the consumed virtual
 base units into `server_consumption`; neutral output never enters production,
 inventory, GDP or currency backing.
 
-`chat_channels` holds the /setlogs and /settasks bindings together with the
+`chat_channels` holds the /server logs and /server tasks bindings together with the
 weekday, time and UTC offset each server chose; `last_marker` on the row is
 what makes a scheduled post fire once — main.py: _due_channel_posts compares
 it instead of trusting the minute it woke up in.
@@ -208,7 +208,7 @@ def get_chat_channel(platform, server_id, kind):
         (platform, str(server_id), kind)).fetchone()
 
 def remove_chat_channel(platform, server_id, kind):
-    """Unbind a scheduled-post channel (`/setlogs off`). Returns whether there
+    """Unbind a scheduled-post channel (`/server logs off`). Returns whether there
     was one, so the command can tell "unbound" from "there was nothing"."""
     c = cur.execute(
         "DELETE FROM chat_channels WHERE platform=? AND server_id=? AND kind=?",

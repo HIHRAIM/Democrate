@@ -23,6 +23,8 @@ Not this module's zone: goods and what they are worth (db/goods.py),
 treaties, rates, wages and dues (db/trade.py), and every formula
 (economy/).
 """
+import json
+
 from db import conn, cur, _db_lock, _now
 
 def party_owner(code):
@@ -68,8 +70,8 @@ def create_bank(code, union_code, central_chat, currency_name, emoji,
 def get_bank(code):
     """A bank's row by its currency code, or None when it was deleted.
 
-    The code is the primary key and the thing users type into `/pay` and
-    `/convert`, which is why renaming goes through `rename_bank_code` rather than
+    The code is the primary key and the thing users type into `/bank pay` and
+    `/bank convert`, which is why renaming goes through `rename_bank_code` rather than
     an UPDATE of a field. Callers must handle None: a deleted bank still appears
     in old transaction rows."""
     return cur.execute(
@@ -96,7 +98,7 @@ def get_banks_in_union(union_code):
 
 def get_banks_in_chat(chat_id):
     """The banks anchored to one server as their central chat — what
-    `/create-bank` checks against and what the server's card lists."""
+    `/bank add` checks against and what the server's card lists."""
     return cur.execute(
         "SELECT b.* FROM banks b LEFT JOIN sponsor_unions su"
         " ON su.code=b.union_code WHERE b.central_chat=?"
@@ -152,6 +154,7 @@ _BANK_CODE_COLUMNS = (
     ("productions", "energy_bank"),
     ("auto_exports", "bank_code"),
     ("shipments", "bank_code"),
+    ("currency_forms", "bank_code"),
     ("treaties", "bank_a"),
     ("treaties", "bank_b"),
     ("bank_convert_fees", "bank_code"),
@@ -188,6 +191,39 @@ def rename_bank_code(old_code, new_code):
             cur.execute(f"UPDATE {table} SET {column}=? WHERE {column}=?",
                         (new_code, old_code))
         conn.commit()
+    _forms_cache.clear()
+
+_forms_cache = {}
+
+def get_currency_forms(bank_code, lang):
+    """The forms of a currency's name in one language as {form: word} —
+    empty when its leaders filled in none. Read for every amount a text
+    shows, so the answers are kept in memory until the forms change."""
+    key = (bank_code, lang)
+    if key not in _forms_cache:
+        row = cur.execute("SELECT forms FROM currency_forms WHERE bank_code=? AND lang=?",
+                          key).fetchone()
+        _forms_cache[key] = json.loads(row["forms"]) if row else {}
+    return _forms_cache[key]
+
+def currency_form_langs(bank_code):
+    """The languages a currency's name has forms in, sorted."""
+    return [r["lang"] for r in cur.execute(
+        "SELECT lang FROM currency_forms WHERE bank_code=? ORDER BY lang", (bank_code,))]
+
+def set_currency_forms(bank_code, lang, forms):
+    """Store a currency's name forms in one language, or forget them with an
+    empty `forms`."""
+    with _db_lock:
+        if forms:
+            cur.execute("INSERT INTO currency_forms (bank_code, lang, forms) VALUES (?,?,?)"
+                        " ON CONFLICT(bank_code, lang) DO UPDATE SET forms=excluded.forms",
+                        (bank_code, lang, json.dumps(forms, ensure_ascii=False)))
+        else:
+            cur.execute("DELETE FROM currency_forms WHERE bank_code=? AND lang=?",
+                        (bank_code, lang))
+        conn.commit()
+    _forms_cache.clear()
 
 def delete_bank(code):
     """Remove a bank and everything denominated in its currency: accounts and
@@ -210,7 +246,8 @@ def delete_bank(code):
                 cur.execute(f"DELETE FROM {table} WHERE good_code=?", (good,))
         cur.execute("DELETE FROM goods WHERE bank_code=?", (code,))
         for table in ("bank_leaders", "accounts", "transactions", "professions",
-                      "earn_channels", "wages", "party_dues", "auto_exports"):
+                      "earn_channels", "wages", "party_dues", "auto_exports",
+                      "currency_forms"):
             cur.execute(f"DELETE FROM {table} WHERE bank_code=?", (code,))
         cur.execute("DELETE FROM treaties WHERE bank_a=? OR bank_b=?", (code, code))
         cur.execute("DELETE FROM bank_convert_fees WHERE bank_code=? OR target_code=?",
@@ -219,6 +256,7 @@ def delete_bank(code):
         cur.execute("UPDATE productions SET energy_bank=NULL WHERE energy_bank=?", (code,))
         cur.execute("DELETE FROM banks WHERE code=?", (code,))
         conn.commit()
+    _forms_cache.clear()
 
 def get_bank_leaders(code):
     """Everyone who leads a bank. A bank normally has one leader and may have
@@ -310,13 +348,21 @@ def _starter_energy(owner_type, owner_platform, owner_id):
 
 def ensure_account(bank_code, owner_type, owner_platform, owner_id, display_name=None):
     """Return the account id, opening the account on first use — with the
-    starter energy when it is the owner's first account anywhere."""
+    starter energy when it is the owner's first account anywhere.
+
+    A name that differs from the stored one (a new Telegram @username, a new
+    Discord display name) is written to every account of the owner, not only
+    this one: the leaderboards read the name from whichever account they
+    reach first, and a name refreshed in one currency only would leave the
+    old one on the other boards. Neither platform tells a bot about a
+    rename, so the name catches up the next time the person is seen here."""
     with _db_lock:
         row = get_account(bank_code, owner_type, owner_platform, owner_id)
         if row:
             if display_name and row["display_name"] != display_name:
-                cur.execute("UPDATE accounts SET display_name=? WHERE id=?",
-                            (display_name, row["id"]))
+                cur.execute("UPDATE accounts SET display_name=? WHERE owner_type=?"
+                            " AND owner_platform=? AND owner_id=?",
+                            (display_name, owner_type, owner_platform, str(owner_id)))
                 conn.commit()
             return row["id"]
         energy = _starter_energy(owner_type, owner_platform, owner_id)
@@ -349,7 +395,7 @@ def top_balances(bank_code, limit=10):
         " ORDER BY balance DESC LIMIT ?", (bank_code, int(limit))).fetchall()
 
 def account_exists(bank_code, owner_type, owner_platform, owner_id):
-    """Whether the owner already holds an account here. `/open-account` uses it
+    """Whether the owner already holds an account here. `/bank open` uses it
     to tell "opened" from "you already had one"; everything else opens on demand
     through `ensure_account`."""
     return get_account(bank_code, owner_type, owner_platform, owner_id) is not None
@@ -546,3 +592,96 @@ def set_bank_prev_value(code, value):
     cur.execute("UPDATE banks SET prev_value=? WHERE code=?",
                 (float(value) if value is not None else None, code))
     conn.commit()
+
+def merge_owner_accounts(old_owner, new_owner):
+    """Move every account of `old_owner` onto `new_owner`: the linking of a
+    Telegram account to a Discord one, after which only the Discord side is
+    addressed (db/users.py: canonical_user).
+
+    Where the new owner already holds an account in that currency, the
+    balance (debt included) and the energy are added to it and the old row
+    goes; otherwise the old row is simply handed over. Every balance that
+    moves leaves a `link_merge` row in the journal, so the money is seen
+    changing hands rather than appearing. Returns how many accounts moved."""
+    ot, op, oi = old_owner
+    nt, np_, ni = new_owner
+    with _db_lock:
+        rows = cur.execute(
+            "SELECT * FROM accounts WHERE owner_type=? AND owner_platform=? AND owner_id=?",
+            (ot, op, str(oi))).fetchall()
+        for row in rows:
+            target = get_account(row["bank_code"], nt, np_, ni)
+            if target is None:
+                cur.execute("UPDATE accounts SET owner_type=?, owner_platform=?, owner_id=?"
+                            " WHERE id=?", (nt, np_, str(ni), row["id"]))
+            else:
+                _adjust(target["id"], row["balance"])
+                cur.execute("UPDATE accounts SET energy=energy+? WHERE id=?",
+                            (row["energy"] or 0, target["id"]))
+                cur.execute("DELETE FROM accounts WHERE id=?", (row["id"],))
+            if row["balance"] > 0:
+                _record_tx(row["bank_code"], old_owner, new_owner, row["balance"], "link_merge")
+            elif row["balance"] < 0:
+                _record_tx(row["bank_code"], new_owner, old_owner, -row["balance"], "link_merge")
+        conn.commit()
+        return len(rows)
+
+def set_bank_tax(code, percent):
+    """Set the tax a bank's leaders take on payments and sales in its
+    currency, as the percentage typed (5 meaning five percent)."""
+    cur.execute("UPDATE banks SET tax_percent=? WHERE code=?", (float(percent), code))
+    conn.commit()
+
+def set_bank_audit(code, platform, channel_key):
+    """Choose where a bank's administrative events are posted — a Discord
+    channel id or a Telegram 'chat:topic' — or clear it with (None, None)."""
+    cur.execute("UPDATE banks SET audit_platform=?, audit_channel=? WHERE code=?",
+                (platform, str(channel_key) if channel_key is not None else None, code))
+    conn.commit()
+
+def emitted_since(code, since):
+    """How much a bank has issued by /bank emit since `since`, in minor units."""
+    row = cur.execute(
+        "SELECT COALESCE(SUM(amount),0) AS s FROM transactions WHERE bank_code=?"
+        " AND from_type='bank' AND (reason='emit' OR reason LIKE 'emit:%') AND created_at>=?",
+        (code, int(since))).fetchone()
+    return row["s"] or 0
+
+def balance_rank(code, owner):
+    """(place, holders) of a person among the people with money in one
+    currency — the place on `/good top wealth` — or None when they have none."""
+    ot, op, oi = owner
+    acc = get_account(code, ot, op, oi)
+    if ot != "user" or acc is None or acc["balance"] <= 0:
+        return None
+    above = cur.execute("SELECT COUNT(*) AS c FROM accounts WHERE bank_code=?"
+                        " AND owner_type='user' AND balance>?", (code, acc["balance"])).fetchone()
+    total = cur.execute("SELECT COUNT(*) AS c FROM accounts WHERE bank_code=?"
+                        " AND owner_type='user' AND balance>0", (code,)).fetchone()
+    return (above["c"] or 0) + 1, total["c"] or 0
+
+def bank_flow_since(code, since):
+    """What happened to a currency since `since`: {'issued': money the bank
+    created, 'burned': money it took out, 'turnover': money that changed
+    hands between holders}. Merging a linked account is bookkeeping, not
+    trade, and is left out of the turnover."""
+    def total(cond):
+        row = cur.execute(f"SELECT COALESCE(SUM(amount),0) AS s FROM transactions"
+                          f" WHERE bank_code=? AND created_at>=? AND {cond}",
+                          (code, int(since))).fetchone()
+        return row["s"] or 0
+    return {"issued": total("from_type='bank'"),
+            "burned": total("to_type='bank'"),
+            "turnover": total("from_type<>'bank' AND to_type<>'bank' AND reason<>'link_merge'")}
+
+def wealth_top_share(code, share=0.1):
+    """The part of all people's money in one currency held by its richest
+    tenth (at least one person), from 0 to 1 — or None when nobody holds
+    any."""
+    rows = cur.execute("SELECT balance FROM accounts WHERE bank_code=? AND owner_type='user'"
+                       " AND balance>0 ORDER BY balance DESC", (code,)).fetchall()
+    if not rows:
+        return None
+    total = sum(r["balance"] for r in rows)
+    top = max(1, -(-len(rows) * share // 1))
+    return sum(r["balance"] for r in rows[:int(top)]) / total if total else None

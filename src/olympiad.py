@@ -7,7 +7,7 @@ localizations, in what order contests are offered to a particular person, how a
 reply listing candidate numbers is read, and what a vote looks like once it is
 ready to be posted for review.
 
-An Olympiad is a bounded event. `/setolympiad MM-DD-YYYY MM-DD-YYYY` opens it;
+An Olympiad is a bounded event. `/olympiad set MM-DD-YYYY MM-DD-YYYY` opens it;
 from that moment until the end of the closing day (UTC) Bot Admins may run the
 setup commands, while everyone else may vote only inside the same window. When
 it is over the contests, the candidates and every vote are deleted — see
@@ -16,7 +16,7 @@ it is over the contests, the candidates and every vote are deleted — see
 Like the quizzes, this feature keeps its own localization: one flat JSON file
 per language in `i18n/olympiad/`, read through `text()`. That keeps a few dozen
 Olympiad strings out of the main locale files, which are shared with the
-translation commands and measured by `/locale`.
+translation commands and measured by `/locale info`.
 
 `LANG_FLAG` is shown before a contest's name so the language category is
 readable at a glance, and `MAX_CHOICES` is how many wikis one person may
@@ -47,8 +47,8 @@ import time
 from datetime import datetime, timedelta, timezone
 
 import db
-from utils import (DEFAULT_LANG, LANG_ORDER, SUPPORTED_LANGS, language_name,
-                   normalize_wiki_url)
+from utils import (DEFAULT_LANG, LANG_ORDER, SUPPORTED_LANGS, command_spelling,
+                   language_name, normalize_wiki_url)
 
 logger = logging.getLogger("dem.olympiad")
 
@@ -96,6 +96,7 @@ def text(_key, _lang, **kwargs):
         template = langs.get(DEFAULT_LANG, {}).get(_key, _key)
     if not isinstance(template, str):
         return template
+    template = command_spelling(template)
     try:
         return template.format(**kwargs)
     except Exception:
@@ -149,7 +150,7 @@ def period(now=None):
 
 def is_open(now=None):
     """Whether the Olympiad commands exist at all: true from the moment
-    /setolympiad ran until the end of the closing day."""
+    /olympiad set ran until the end of the closing day."""
     return period(now) is not None
 
 def is_voting_open(now=None):

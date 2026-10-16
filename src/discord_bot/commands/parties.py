@@ -1,7 +1,7 @@
 """The party commands: founding, editing, the card, and the whole membership
 path from a join request to a kick.
 
-`/add-party` is a dialog rather than an argument list — name, code, logo — and
+`/party add` is a dialog rather than an argument list — name, code, logo — and
 the founder may be someone else when a Bot Admin runs it. Joining is a request:
 `JoinRequestView` is the one **persistent** view in this bot, restored on every
 start by client.py: setup_hook, so a request survives a restart and its buttons
@@ -26,19 +26,20 @@ from discord_bot.dialogs import (
     USER_REF_RE, _dialog_logo, _dialog_text, _numbered_choice, _parse_user_ref,
     _say, _wait_message,
 )
+from discord_bot.groups import party_group
 from discord_bot.parties import (
     _edit_admin_menu_text, _edit_party_option, _party_code_validator,
     _party_line, _resolve_led_party, _resolve_party_union, _search_party,
     _send_edit_menu, _send_party_info,
 )
 
-@bot.tree.command(name="add-party", description="found a new party in this union (interactive dialog)")
+@party_group.command(name="add", description="found a new party in this union (interactive dialog)")
 @app_commands.describe(founder="Founder's user ID or mention (bot admins only)")
 async def add_party_cmd(interaction: discord.Interaction, founder: str = None):
     """Found a party through a dialog: name, code, logo.
 
     The union must have parties on and the caller must hold one of the roles
-    `/allow-parties` named. `founder` lets a Bot Admin found a party on somebody
+    `/union parties` named. `founder` lets a Bot Admin found a party on somebody
     else's behalf; for everyone else the caller is the founder."""
     lang = get_chat_lang(_chat_key(interaction))
     if not await _require_verified(interaction, lang):
@@ -100,7 +101,7 @@ async def add_party_cmd(interaction: discord.Interaction, founder: str = None):
     await send_service_event("party_created", name=name, party=code, union=union,
                              user=str(interaction.user))
 
-@bot.tree.command(name="edit-party", description="manage your party (founders and party leaders)")
+@party_group.command(name="edit", description="manage your party (founders and party leaders)")
 @app_commands.describe(option="Option number 1-10; omit to see the menu")
 async def edit_party_cmd(interaction: discord.Interaction, option: int = None):
     """Manage your party through a numbered menu (founders and party leaders).
@@ -119,7 +120,7 @@ async def edit_party_cmd(interaction: discord.Interaction, option: int = None):
         return
     await _edit_party_option(interaction, party, lang, option)
 
-@bot.tree.command(name="edit-party-admin", description="edit any party of any union (bot admins)")
+@party_group.command(name="edit-admin", description="edit any party of any union (bot admins)")
 @app_commands.describe(party="Party code, or its full name exactly as written")
 async def edit_party_admin_cmd(interaction: discord.Interaction, party: str):
     """Edit any party of any union by code or exact name (Bot Admins).
@@ -151,7 +152,7 @@ async def edit_party_admin_cmd(interaction: discord.Interaction, party: str):
         return
     await _edit_party_option(interaction, row, lang, int(value), admin=True)
 
-@bot.tree.command(name="edit-rules", description="manage your party's rules (founders and party leaders)")
+@party_group.command(name="rules", description="manage your party's rules (founders and party leaders)")
 @app_commands.describe(option="Option number; omit to see the menu")
 async def edit_rules_cmd(interaction: discord.Interaction, option: int = None):
     """Manage your party's rules (founders and party leaders) — today the one
@@ -175,13 +176,13 @@ async def edit_rules_cmd(interaction: discord.Interaction, option: int = None):
     else:
         await _say(interaction, localized("edit_invalid_option", lang), ephemeral=True)
 
-@bot.tree.command(name="party", description="information about a party of this union")
+@party_group.command(name="info", description="information about a party of this union")
 @app_commands.describe(query="Party code or name")
 async def party_cmd(interaction: discord.Interaction, query: str):
     """Show a party of this union: card, leaders, allies, seats, balances.
 
-    Falls back to a numbered choice of near matches, and then to a few random
-    parties of the union, so an unrecognised query still shows what exists."""
+    Falls back to a numbered choice of near matches; a query that resembles
+    no party of the union is answered with "not found"."""
     lang = get_chat_lang(_chat_key(interaction))
     union = await _resolve_party_union(interaction, lang)
     if union is None:
@@ -200,7 +201,7 @@ async def party_cmd(interaction: discord.Interaction, query: str):
     await _send_party_info(interaction, party, lang)
 
 def _find_party_exact(union_code, query):
-    """Exact match by code or name (case-insensitive), as /party-join requires."""
+    """Exact match by code or name (case-insensitive), as /party join requires."""
     q = (query or "").strip()
     for p in db.get_union_parties(union_code):
         if p["code"].lower() == q.lower() or p["name"].lower() == q.lower():
@@ -319,7 +320,7 @@ async def _resolve_join_request(interaction: discord.Interaction, request_id, ac
         pass
     await _notify_join_result(req, party, accepted)
 
-@bot.tree.command(name="party-join", description="request to join a party of this union")
+@party_group.command(name="join", description="request to join a party of this union")
 @app_commands.describe(query="Party code or its exact name")
 async def party_join_cmd(interaction: discord.Interaction, query: str):
     """Ask to join a party of this union.
@@ -363,7 +364,7 @@ async def party_join_cmd(interaction: discord.Interaction, query: str):
         return
     await interaction.response.send_message(localized("party_join_sent", lang, name=party["name"]), ephemeral=True)
 
-@bot.tree.command(name="party-leave", description="leave your party in this union")
+@party_group.command(name="leave", description="leave your party in this union")
 async def party_leave_cmd(interaction: discord.Interaction):
     """Leave your party in this union.
 
@@ -399,7 +400,7 @@ def _find_kick_target(code, platform, target):
             return mem
     return None
 
-@bot.tree.command(name="party-kick", description="remove a member from your party (party leaders)")
+@party_group.command(name="kick", description="remove a member from your party (party leaders)")
 @app_commands.describe(target="Member's ID, mention or username")
 async def party_kick_cmd(interaction: discord.Interaction, target: str):
     """Remove a member from your party (party leaders).

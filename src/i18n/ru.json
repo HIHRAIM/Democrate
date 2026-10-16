@@ -3,10 +3,7 @@
     "status": "unverified",
     "text": "У вас уже есть счёт в {code}."
   },
-  "account_opened": {
-    "status": "unverified",
-    "text": "✅ Счёт открыт в {name} [{code}]."
-  },
+  "account_opened": {"status": "unverified", "text": "✅ Счёт открыт в {name_loc} [{code}]."},
   "action_cancelled": {
     "status": "verified",
     "text": "Действие отменено."
@@ -45,7 +42,7 @@
   },
   "add_govt_usage": {
     "status": "verified",
-    "text": "Использование: /add_govt <СОЮЗ> <название> | <член в ед. числе> | <члены во мн. числе>"
+    "text": "Использование: /govt add <СОЮЗ> <название> | <член в ед. числе> | <члены во мн. числе>"
   },
   "add_party_ask_code": {
     "status": "verified",
@@ -81,7 +78,7 @@
   },
   "add_party_no_role": {
     "status": "verified",
-    "text": "Для основания партии нужна одна из ролей, заданных командой /allow-parties."
+    "text": "Для основания партии нужна одна из ролей, заданных командой /union parties."
   },
   "add_unia_created": {
     "status": "verified",
@@ -101,7 +98,7 @@
   },
   "add_unia_usage": {
     "status": "verified",
-    "text": "Использование: /add_unia <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
+    "text": "Использование: /union add <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
   },
   "allow_parties_disabled": {
     "status": "verified",
@@ -109,20 +106,11 @@
   },
   "allow_parties_enabled": {
     "status": "verified",
-    "text": "✅ Партии включены в союзе {code}. Роли с доступом к /add-party: {roles}."
+    "text": "✅ Партии включены в союзе {code}. Роли с доступом к /party add: {roles}."
   },
-  "allow_parties_invalid_roles": {
-    "status": "verified",
-    "text": "Некорректный список ID ролей."
-  },
-  "allow_parties_need_roles": {
-    "status": "verified",
-    "text": "Укажите хотя бы один ID роли, чтобы включить партии."
-  },
-  "allow_parties_usage": {
-    "status": "verified",
-    "text": "Использование: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
-  },
+  "allow_parties_invalid_roles": {"status": "unverified", "text": "Роли указываются упоминаниями или ID через запятую."},
+  "allow_parties_need_roles": {"status": "unverified", "text": "Укажите хотя бы одну роль — упоминанием или ID."},
+  "allow_parties_usage": {"status": "unverified", "text": "Использование: /union parties <СОЮЗ> <enable|disable|add|remove> [роли]"},
   "auto_export_offer": {
     "status": "unverified",
     "text": "📦 {source} предлагает {target} еженедельную поставку: {qty} × {emoji}{name} за {price}. Лидер предприятия-получателя должен подтвердить ниже."
@@ -137,7 +125,7 @@
   },
   "auto_export_usage": {
     "status": "unverified",
-    "text": "Использование: /auto_export <код товара> <кол-во|off> <предприятие-получатель> [цена] [валюта] [ваше предприятие]"
+    "text": "Использование: /enterprise autoexport <код товара> <кол-во|off> <предприятие-получатель> [цена] [валюта] [ваше предприятие]"
   },
   "autocraft_off": {
     "status": "unverified",
@@ -153,7 +141,7 @@
   },
   "autocraft_usage": {
     "status": "unverified",
-    "text": "Использование: /autocraft <код товара> <on|off> [предприятие]"
+    "text": "Использование: /good autocraft <код товара> <on|off> [предприятие]"
   },
   "autosend_bad_percent": {
     "status": "unverified",
@@ -173,7 +161,7 @@
   },
   "autosend_usage": {
     "status": "unverified",
-    "text": "Использование: /autosend <код товара> <процент> <пользователь|партия|предприятие>"
+    "text": "Использование: /good autosend <код товара> <процент> <пользователь|партия|предприятие>"
   },
   "backup_failed": {
     "status": "verified",
@@ -197,7 +185,7 @@
   },
   "balance_none": {
     "status": "unverified",
-    "text": "У вас пока нет счетов. Зарабатывайте в зарабатывающем канале или используйте /open-account."
+    "text": "У вас пока нет счетов. Зарабатывайте в зарабатывающем канале или используйте /bank open."
   },
   "balance_title": {
     "status": "unverified",
@@ -257,7 +245,7 @@
   },
   "bank_leader_usage": {
     "status": "unverified",
-    "text": "Использование: /bank-add-leader <код> <пользователь>"
+    "text": "Использование: /bank leader <код> <пользователь>"
   },
   "bank_none_led": {
     "status": "unverified",
@@ -285,7 +273,7 @@
   },
   "bank_usage": {
     "status": "unverified",
-    "text": "Использование: /bank <код валюты>"
+    "text": "Использование: /bank info <код валюты>"
   },
   "category_food": {
     "status": "unverified",
@@ -309,7 +297,7 @@
   },
   "chat_not_setup": {
     "status": "verified",
-    "text": "Этот чат ещё не настроен. Сначала админ бота должен привязать его к союзу командой /setup."
+    "text": "Этот чат ещё не настроен. Сначала админ бота должен привязать его к союзу командой /server setup."
   },
   "choice_invalid": {
     "status": "verified",
@@ -369,7 +357,7 @@
   },
   "convert_usage": {
     "status": "unverified",
-    "text": "Использование: /convert <сумма> <из кода> <в код>"
+    "text": "Использование: /bank convert <сумма> <из кода> <в код>"
   },
   "could_not_resolve_user": {
     "status": "unverified",
@@ -385,11 +373,11 @@
   },
   "craft_usage": {
     "status": "unverified",
-    "text": "Использование: /craft <код товара> [предприятие]"
+    "text": "Использование: /good craft <код товара> [предприятие]"
   },
   "create_bank_ask_chat": {
     "status": "unverified",
-    "text": "🏦 Основываем банк! Пришлите ID центрального сервера (он должен быть настроен через /setup)."
+    "text": "🏦 Основываем банк! Пришлите ID центрального сервера (он должен быть настроен через /server setup)."
   },
   "create_bank_ask_code": {
     "status": "unverified",
@@ -413,7 +401,7 @@
   },
   "create_bank_chat_not_setup": {
     "status": "unverified",
-    "text": "Этот сервер не настроен. Сначала выполните там /setup."
+    "text": "Этот сервер не настроен. Сначала выполните там /server setup."
   },
   "create_bank_created": {
     "status": "unverified",
@@ -441,7 +429,7 @@
   },
   "create_good_usage": {
     "status": "unverified",
-    "text": "Использование: /create_good <название> | <базовая стоимость> | <затраты энергии> | [эмодзи] | [категория] | [валюта] | [предприятие]"
+    "text": "Использование: /good add <название> | <базовая стоимость> | <затраты энергии> | [эмодзи] | [категория] | [валюта] | [предприятие]"
   },
   "create_good_wrong_union": {
     "status": "unverified",
@@ -497,7 +485,7 @@
   },
   "edit_admin_usage": {
     "status": "unverified",
-    "text": "Использование: /edit_party_admin <код партии или её полное название>"
+    "text": "Использование: /party edit-admin <код партии или её полное название>"
   },
   "edit_ask_article": {
     "status": "verified",
@@ -541,7 +529,7 @@
   },
   "edit_bank_ask_central": {
     "status": "unverified",
-    "text": "Отправьте ID нового центрального сервера (он должен быть привязан командой /setup)."
+    "text": "Отправьте ID нового центрального сервера (он должен быть привязан командой /server setup)."
   },
   "edit_bank_ask_code": {
     "status": "unverified",
@@ -565,7 +553,7 @@
   },
   "edit_bank_bad_central": {
     "status": "unverified",
-    "text": "Этот чат не настроен. Сначала привяжите его командой /setup."
+    "text": "Этот чат не настроен. Сначала привяжите его командой /server setup."
   },
   "edit_bank_bad_code": {
     "status": "unverified",
@@ -641,7 +629,7 @@
   },
   "edit_bank_specify": {
     "status": "unverified",
-    "text": "Укажите банк: /edit-bank <пункт> <код валюты>."
+    "text": "Укажите банк: /bank edit <пункт> <код валюты>."
   },
   "edit_ent_ask_desc": {
     "status": "unverified",
@@ -805,7 +793,7 @@
   },
   "ent_assign_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_assign <пользователь> | <должность> [| <предприятие>] — или ответьте на сообщение работника; «-» снимает должность."
+    "text": "Использование: /enterprise assign <пользователь> | <должность> [| <предприятие>] — или ответьте на сообщение работника; «-» снимает должность."
   },
   "ent_choose": {
     "status": "unverified",
@@ -867,7 +855,7 @@
   },
   "ent_join_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_join <код>"
+    "text": "Использование: /enterprise join <код>"
   },
   "ent_kick_done": {
     "status": "unverified",
@@ -879,7 +867,7 @@
   },
   "ent_kick_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_kick <пользователь> [код] — или ответьте на сообщение работника."
+    "text": "Использование: /enterprise kick <пользователь> [код] — или ответьте на сообщение работника."
   },
   "ent_leader_added": {
     "status": "unverified",
@@ -931,7 +919,7 @@
   },
   "ent_position_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_position <название> | <зарплата> [| <предприятие>] — зарплата: 12.34, 5% или 0."
+    "text": "Использование: /enterprise position <название> | <зарплата> [| <предприятие>] — зарплата: 12.34, 5% или 0."
   },
   "ent_salary_cleared": {
     "status": "unverified",
@@ -943,11 +931,11 @@
   },
   "ent_salary_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_salary <пользователь> <зарплата> [предприятие] — зарплата: 12.34, 5% или 0; работает и ответ на сообщение."
+    "text": "Использование: /enterprise salary <пользователь> <зарплата> [предприятие] — зарплата: 12.34, 5% или 0; работает и ответ на сообщение."
   },
   "ent_sell_usage": {
     "status": "unverified",
-    "text": "Использование: /ent_sell <код товара> <покупатель> [количество] [цена] [предприятие]"
+    "text": "Использование: /enterprise sell <код товара> <покупатель> [количество] [цена] [предприятие]"
   },
   "ent_transfer_declined": {
     "status": "unverified",
@@ -1019,7 +1007,7 @@
   },
   "export_usage": {
     "status": "unverified",
-    "text": "Использование: /export <код товара> <кол-во> <предприятие-получатель> [цена] [валюта] [ваше предприятие]"
+    "text": "Использование: /enterprise export <код товара> <кол-во> <предприятие-получатель> [цена] [валюта] [ваше предприятие]"
   },
   "find_channel_not_found": {
     "status": "verified",
@@ -1063,7 +1051,7 @@
   },
   "fine_usage": {
     "status": "unverified",
-    "text": "Использование: /fine <пользователь> <сумма> [причина] (или ответом: /fine <сумма> [причина])"
+    "text": "Использование: /bank fine <пользователь> <сумма> [причина] (или ответом: /bank fine <сумма> [причина])"
   },
   "force_leave_failed": {
     "status": "verified",
@@ -1091,91 +1079,7 @@
   },
   "force_leave_usage": {
     "status": "verified",
-    "text": "Использование: /force_leave <discord|telegram> <id>"
-  },
-  "founday_added": {
-    "status": "unverified",
-    "text": "✅ Буду ежегодно поздравлять {name} в {channel} в {time} UTC. Дата основания: {date} UTC. Язык вики: {lang_name}."
-  },
-  "founday_future_date": {
-    "status": "unverified",
-    "text": "Дата основания ещё не наступила."
-  },
-  "founday_future_few": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнится {n} года!"
-  },
-  "founday_future_many": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнится {n} лет!"
-  },
-  "founday_future_one": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнится {n} год!"
-  },
-  "founday_future_other": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнится {n} лет!"
-  },
-  "founday_invalid_channel": {
-    "status": "unverified",
-    "text": "Канал не найден или не принадлежит этому серверу."
-  },
-  "founday_invalid_date": {
-    "status": "unverified",
-    "text": "Некорректная дата основания. Используйте MM-DD-YYYY или MM-DD-YYYY HH:MM по UTC."
-  },
-  "founday_invalid_time": {
-    "status": "unverified",
-    "text": "Некорректное время отправки. Используйте HH:MM или HH по UTC."
-  },
-  "founday_invalid_url": {
-    "status": "unverified",
-    "text": "Некорректная ссылка на вики. Например: amongus.fandom.com/ru или https://amongus.fandom.com/ru"
-  },
-  "founday_list_empty": {
-    "status": "unverified",
-    "text": "На этом сервере не задано ни одного дня рождения вики."
-  },
-  "founday_list_header": {
-    "status": "unverified",
-    "text": "Дни рождения вики этого сервера:"
-  },
-  "founday_list_title": {
-    "status": "unverified",
-    "text": "Дни рождения вики"
-  },
-  "founday_no_webhook_perm": {
-    "status": "unverified",
-    "text": "⚠️ У бота нет права «Управлять вебхуками» в {channel} — поздравление будет отправлено обычным сообщением."
-  },
-  "founday_not_found": {
-    "status": "unverified",
-    "text": "На этом сервере нет дня рождения вики с такой ссылкой."
-  },
-  "founday_past_few": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнилось {n} года!"
-  },
-  "founday_past_many": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнилось {n} лет!"
-  },
-  "founday_past_one": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнился {n} год!"
-  },
-  "founday_past_other": {
-    "status": "unverified",
-    "text": "Сегодня {name} исполнилось {n} лет!"
-  },
-  "founday_removed": {
-    "status": "unverified",
-    "text": "🗑️ Больше не буду поздравлять вики {url}."
-  },
-  "founday_webhook_name": {
-    "status": "unverified",
-    "text": "Дни рождения"
+    "text": "Использование: /bot leave <discord|telegram> <id>"
   },
   "fx_log_line": {
     "status": "unverified",
@@ -1191,7 +1095,7 @@
   },
   "give_good_usage": {
     "status": "unverified",
-    "text": "Использование: /give_good <пользователь> <код товара> [кол-во] — или ответьте на сообщение пользователя: /give_good <код товара> [кол-во]."
+    "text": "Использование: /good give <пользователь> <код товара> [кол-во] — или ответьте на сообщение пользователя: /good give <код товара> [кол-во]."
   },
   "give_no_goods": {
     "status": "unverified",
@@ -1239,7 +1143,7 @@
   },
   "govt_usage": {
     "status": "verified",
-    "text": "Использование: /govt <название>"
+    "text": "Использование: /govt info <название>"
   },
   "group_only": {
     "status": "verified",
@@ -1251,195 +1155,180 @@
   },
   "help.cmd_add_discord": {
     "status": "verified",
-    "text": "/add_discord <ник_discord> — связать ваш аккаунт Discord (завершите через /add-telegram в Discord)"
+    "text": "/account_discord <ник_discord> — связать ваш аккаунт Discord (завершите через /account telegram в Discord)"
   },
   "help.cmd_add_enterprise": {
     "status": "unverified",
-    "text": "/add-enterprise — основать предприятие на этом сервере (интерактивный диалог; для верифицированных)"
+    "text": "/enterprise add — основать предприятие на этом сервере (интерактивный диалог; для верифицированных)"
   },
   "help.cmd_add_govt": {
     "status": "verified",
-    "text": "/add-govt <союз> <название> <член> <члены> — создать орган управления (админы бота)"
+    "text": "/govt add <союз> <название> <член> <члены> — создать орган управления (админы бота)"
   },
   "help.cmd_add_govt_tg": {
     "status": "verified",
-    "text": "/add_govt <союз> <название> <член> <члены> — создать орган управления (админы бота)"
+    "text": "/govt add <союз> <название> <член> <члены> — создать орган управления (админы бота)"
   },
   "help.cmd_add_party": {
     "status": "verified",
-    "text": "/add-party [id_основателя] — основать партию (диалог; нужна роль, заданная /allow-parties)"
+    "text": "/party add [id_основателя] — основать партию (диалог; нужна роль, заданная /union parties)"
   },
   "help.cmd_add_party_tg": {
     "status": "unverified",
-    "text": "/add_party [основатель] — основать партию (диалог; нужен аккаунт Fandom, известный боту)"
+    "text": "/party add [основатель] — основать партию (диалог; нужен аккаунт Fandom, известный боту)"
   },
   "help.cmd_add_telegram": {
     "status": "verified",
-    "text": "/add-telegram <@username> — связать ваш аккаунт Telegram (завершите через /add-discord в Telegram)"
+    "text": "/account telegram <@username> — связать ваш аккаунт Telegram (завершите через /account_discord в Telegram)"
   },
   "help.cmd_add_unia": {
     "status": "verified",
-    "text": "/add-unia <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /setup (админы бота)"
+    "text": "/union add <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /server setup (админы бота)"
   },
   "help.cmd_add_unia_tg": {
     "status": "verified",
-    "text": "/add_unia <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /setup (админы бота)"
+    "text": "/union add <код> <названия…> — создать новый союз, к которому можно привязывать чаты через /server setup (админы бота)"
   },
-  "help.cmd_allow_parties": {
-    "status": "verified",
-    "text": "/allow-parties <союз> <enable|disable> [id_ролей] — включить или выключить партии в союзе (админы бота)"
-  },
-  "help.cmd_allow_parties_tg": {
-    "status": "verified",
-    "text": "/allow_parties <союз> <enable|disable> [id_ролей] — включить или выключить партии в союзе (админы бота)"
-  },
+  "help.cmd_allow_parties": {"status": "unverified", "text": "/union parties <союз> <enable|disable|add|remove> [роли] — включить или выключить партии в союзе и выбрать роли, которым можно их основывать (админы бота; спонсоры — для своих союзов)"},
+  "help.cmd_allow_parties_tg": {"status": "unverified", "text": "/union parties <союз> <enable|disable|add|remove> [роли] — включить или выключить партии в союзе и выбрать роли, которым можно их основывать (админы бота; спонсоры — для своих союзов)"},
   "help.cmd_auto_export": {
     "status": "unverified",
-    "text": "/auto-export <товар> <кол-во|off> <предприятие> [цена] [валюта] — регулярная еженедельная доставка (лидер получателя подтверждает один раз)"
+    "text": "/enterprise autoexport <товар> <кол-во|off> <предприятие> [цена] [валюта] — регулярная еженедельная доставка (лидер получателя подтверждает один раз)"
   },
   "help.cmd_autocraft": {
     "status": "unverified",
-    "text": "/autocraft <товар> <on|off> [предприятие] — непрерывное производство 24/7, медленнее ручного"
+    "text": "/good autocraft <товар> <on|off> [предприятие] — непрерывное производство 24/7, медленнее ручного"
   },
   "help.cmd_autosend": {
     "status": "unverified",
-    "text": "/autosend <товар> <процент> <пользователь|партия|предприятие> — ежедневно отправлять долю запаса товара"
+    "text": "/good autosend <товар> <процент> <пользователь|партия|предприятие> — ежедневно отправлять долю запаса товара"
   },
   "help.cmd_backup": {
     "status": "verified",
-    "text": "/backup — получить резервную копию базы данных (админы бота)"
+    "text": "/bot backup — получить резервную копию базы данных (админы бота)"
   },
-  "help.cmd_balance": {
-    "status": "unverified",
-    "text": "/balance [код] — ваш баланс, энергия и профессия"
-  },
+  "help.cmd_balance": {"status": "unverified", "text": "/bank balance [код] — ваш баланс, энергия, профессия и место в рейтинге"},
   "help.cmd_bank": {
     "status": "unverified",
-    "text": "/bank <код> — карточка банка: валюта, руководители, денежная масса, счета"
+    "text": "/bank info <код> — карточка банка: валюта, руководители, денежная масса, счета"
   },
   "help.cmd_bank_add_leader": {
     "status": "unverified",
-    "text": "/bank-add-leader <код> <пользователь> — добавить со-руководителя банка"
+    "text": "/bank leader <код> <пользователь> — добавить со-руководителя банка"
   },
   "help.cmd_bank_transfer": {
     "status": "unverified",
-    "text": "/bank-transfer <код> <пользователь> — передать руководство банком другому"
+    "text": "/bank transfer <код> <пользователь> — передать руководство банком другому"
   },
   "help.cmd_convert": {
     "status": "unverified",
-    "text": "/convert <сумма> <из> <в> — конвертация между своими счетами"
+    "text": "/bank convert <сумма> <из> <в> — конвертация между своими счетами"
   },
   "help.cmd_craft": {
     "status": "unverified",
-    "text": "/craft <товар> [предприятие] — запустить производство партии; готовность через несколько минут"
+    "text": "/good craft <товар> [предприятие] — запустить производство партии; готовность через несколько минут"
   },
   "help.cmd_create_bank": {
     "status": "unverified",
-    "text": "/create-bank — основать банк и его валюту (админы бота/сервера; диалог)"
+    "text": "/bank add — основать банк и его валюту (админы бота/сервера; диалог)"
   },
   "help.cmd_create_good": {
     "status": "unverified",
-    "text": "/create-good <название> <стоимость> <энергия> [эмодзи] [категория] [валюта] [предприятие] — создать свой товар или товар предприятия"
+    "text": "/good add <название> <стоимость> <энергия> [эмодзи] [категория] [валюта] [предприятие] — создать свой товар или товар предприятия"
   },
-  "help.cmd_edit_bank": {
-    "status": "unverified",
-    "text": "/edit-bank [пункт] [код] — управление банком: название валюты, эмодзи, код, центральный сервер, лидеры, удаление"
-  },
-  "help.cmd_edit_bank_tg": {
-    "status": "unverified",
-    "text": "/edit_bank [пункт] [код] — управление банком: название валюты, эмодзи, код, центральный сервер, лидеры, удаление"
-  },
+  "help.cmd_edit_bank": {"status": "unverified", "text": "/bank edit [пункт] [код] — управление банком: название и эмодзи валюты, код, центральный сервер, комиссии, руководители, удаление, налог банка, канал аудита, склонения названия валюты"},
+  "help.cmd_edit_bank_tg": {"status": "unverified", "text": "/bank edit [пункт] [код] — управление банком: название и эмодзи валюты, код, центральный сервер, комиссии, руководители, удаление, налог банка, канал аудита, склонения названия валюты"},
   "help.cmd_edit_enterprise": {
     "status": "unverified",
-    "text": "/edit-enterprise [пункт] [код] — управление предприятием: тексты, логотип, лидеры, зарплаты, удаление"
+    "text": "/enterprise edit [пункт] [код] — управление предприятием: тексты, логотип, лидеры, зарплаты, удаление"
   },
   "help.cmd_edit_party": {
     "status": "verified",
-    "text": "/edit-party [пункт] — управление партией (основатели и лидеры)"
+    "text": "/party edit [пункт] — управление партией (основатели и лидеры)"
   },
   "help.cmd_edit_party_admin": {
     "status": "unverified",
-    "text": "/edit-party-admin <код|название> — изменить любые параметры любой партии (админы бота)"
+    "text": "/party edit-admin <код|название> — изменить любые параметры любой партии (админы бота)"
   },
   "help.cmd_edit_party_admin_tg": {
     "status": "unverified",
-    "text": "/edit_party_admin <код|название> — изменить любые параметры любой партии (админы бота)"
+    "text": "/party edit-admin <код|название> — изменить любые параметры любой партии (админы бота)"
   },
   "help.cmd_edit_party_tg": {
     "status": "verified",
-    "text": "/edit_party [пункт] — управление партией (основатели и лидеры)"
+    "text": "/party edit [пункт] — управление партией (основатели и лидеры)"
   },
   "help.cmd_edit_rules": {
     "status": "verified",
-    "text": "/edit-rules [пункт] — правила партии (основатели и лидеры)"
+    "text": "/party rules [пункт] — правила партии (основатели и лидеры)"
   },
   "help.cmd_edit_rules_tg": {
     "status": "verified",
-    "text": "/edit_rules [пункт] — правила партии (основатели и лидеры)"
+    "text": "/party rules [пункт] — правила партии (основатели и лидеры)"
   },
   "help.cmd_ent_assign": {
     "status": "unverified",
-    "text": "/ent-assign <пользователь> <должность> — назначить работника на должность (лидеры)"
+    "text": "/enterprise assign <пользователь> <должность> — назначить работника на должность (лидеры)"
   },
   "help.cmd_ent_join": {
     "status": "unverified",
-    "text": "/ent-join <код> — попроситься на предприятие (одобряют его лидеры)"
+    "text": "/enterprise join <код> — попроситься на предприятие (одобряют его лидеры)"
   },
   "help.cmd_ent_kick": {
     "status": "unverified",
-    "text": "/ent-kick <пользователь> [код] — уволить работника (лидеры предприятия)"
+    "text": "/enterprise kick <пользователь> [код] — уволить работника (лидеры предприятия)"
   },
   "help.cmd_ent_leave": {
     "status": "unverified",
-    "text": "/ent-leave [код] — уйти с предприятия"
+    "text": "/enterprise leave [код] — уйти с предприятия"
   },
   "help.cmd_ent_position": {
     "status": "unverified",
-    "text": "/ent-position <название> <зарплата> — должность и её зарплата: сумма или процент от продаж (лидеры)"
+    "text": "/enterprise position <название> <зарплата> — должность и её зарплата: сумма или процент от продаж (лидеры)"
   },
   "help.cmd_ent_salary": {
     "status": "unverified",
-    "text": "/ent-salary <пользователь> <зарплата> — личная зарплата работника (лидеры)"
+    "text": "/enterprise salary <пользователь> <зарплата> — личная зарплата работника (лидеры)"
   },
   "help.cmd_ent_sell": {
     "status": "unverified",
-    "text": "/ent-sell <товар> <покупатель> [кол-во] [цена] — продать товары предприятия (руководители)"
+    "text": "/enterprise sell <товар> <покупатель> [кол-во] [цена] — продать товары предприятия (руководители)"
   },
   "help.cmd_enterprise": {
     "status": "unverified",
-    "text": "/enterprise [код] — карточка предприятия или список предприятий сервера"
+    "text": "/enterprise info [код] — карточка предприятия или список предприятий сервера"
   },
   "help.cmd_export": {
     "status": "unverified",
-    "text": "/export <товар> <кол-во> <предприятие> [цена] [валюта] — отправить товары другому предприятию (лидер получателя подтверждает; доставка занимает время)"
+    "text": "/enterprise export <товар> <кол-во> <предприятие> [цена] [валюта] — отправить товары другому предприятию (лидер получателя подтверждает; доставка занимает время)"
   },
   "help.cmd_find_with": {
     "status": "verified",
-    "text": "/find-with <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, содержащие ключевые слова (админы сервера)"
+    "text": "/find with <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, содержащие ключевые слова (админы сервера)"
   },
   "help.cmd_find_without": {
     "status": "verified",
-    "text": "/find-without <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, не содержащие ключевые слова (админы сервера)"
+    "text": "/find without <id_канала> <MM-DD-YYYY[ + 7D]> <слова;…> — ответить упоминанием на сообщения, не содержащие ключевые слова (админы сервера)"
   },
   "help.cmd_fine": {
     "status": "unverified",
-    "text": "/fine <пользователь> <сумма> [причина] — оштрафовать пользователя в валюте банка (руководители)"
+    "text": "/bank fine <пользователь> <сумма> [причина] — оштрафовать пользователя в валюте банка (руководители)"
   },
   "help.cmd_force_leave": {
     "status": "verified",
-    "text": "/force_leave <платформа> <id> — вывести бота из чата (админы бота)"
+    "text": "/bot leave <платформа> <id> — вывести бота из чата (админы бота)"
   },
   "help.cmd_give_good": {
     "status": "unverified",
-    "text": "/give-good <пользователь> <товар> [кол-во] — передать товары другому пользователю"
+    "text": "/good give <пользователь> <товар> [кол-во] — передать товары другому пользователю"
   },
   "help.cmd_goods": {
     "status": "unverified",
-    "text": "/goods — товары, доступные здесь для производства"
+    "text": "/good info — товары, доступные здесь для производства"
   },
   "help.cmd_govt": {
     "status": "verified",
-    "text": "/govt <название> — информация об органе управления союза"
+    "text": "/govt info <название> — информация об органе управления союза"
   },
   "help.cmd_help": {
     "status": "verified",
@@ -1447,223 +1336,208 @@
   },
   "help.cmd_inventory": {
     "status": "unverified",
-    "text": "/inventory — ваши изготовленные товары"
+    "text": "/good inventory — ваши изготовленные товары"
   },
   "help.cmd_lang": {
     "status": "verified",
-    "text": "/lang <код> — установить язык бота по умолчанию для всего сервера/группы (админы сервера)"
+    "text": "/server lang <код> — установить язык бота по умолчанию для всего сервера/группы (админы сервера)"
   },
   "help.cmd_list_chats": {
     "status": "verified",
-    "text": "/list_chats — список всех чатов бота (админы бота)"
+    "text": "/bot chats — список всех чатов бота (админы бота)"
   },
   "help.cmd_loc_compare": {
     "status": "verified",
-    "text": "/loc-compare <код> — сравнение реплики по языкам"
+    "text": "/locale compare <код> — сравнение реплики по языкам"
   },
   "help.cmd_loc_compare_tg": {
     "status": "verified",
-    "text": "/loc_compare <код> — сравнение реплики по языкам"
+    "text": "/locale compare <код> — сравнение реплики по языкам"
   },
   "help.cmd_loc_reply": {
     "status": "verified",
-    "text": "/loc-reply <код> <текст> — ответить на предложение локализации (админы бота)"
+    "text": "/locale reply <код> <текст> — ответить на предложение локализации (админы бота)"
   },
   "help.cmd_loc_reply_tg": {
     "status": "verified",
-    "text": "/loc_reply <код> <текст> — ответить на предложение локализации (админы бота)"
+    "text": "/locale reply <код> <текст> — ответить на предложение локализации (админы бота)"
   },
   "help.cmd_loc_suggest": {
     "status": "verified",
-    "text": "/loc-suggest <язык> <код> <текст> — предложить вариант локализации"
+    "text": "/locale suggest <язык> <код> <текст> — предложить вариант локализации"
   },
   "help.cmd_loc_suggest_tg": {
     "status": "verified",
-    "text": "/loc_suggest <язык> <код> <текст> — предложить вариант локализации"
+    "text": "/locale suggest <язык> <код> <текст> — предложить вариант локализации"
   },
   "help.cmd_locale": {
     "status": "verified",
-    "text": "/locale [код] — статус локализации или файл выбранного языка"
+    "text": "/locale info [код] — статус локализации или файл выбранного языка"
   },
   "help.cmd_localizer_add": {
     "status": "unverified",
-    "text": "/localizer-add <пользователь> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
+    "text": "/localizer add <пользователь> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
   },
   "help.cmd_localizer_add_tg": {
     "status": "unverified",
-    "text": "/localizer-add <ID | @username | ответ> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
+    "text": "/localizer add <ID | @username | ответ> — выдать статус локализатора: правка локализации через панель управления (админы бота)"
   },
   "help.cmd_localizer_rem": {
     "status": "unverified",
-    "text": "/localizer-rem <пользователь> — отозвать делегированный статус локализатора (админы бота)"
+    "text": "/localizer remove <пользователь> — отозвать делегированный статус локализатора (админы бота)"
   },
   "help.cmd_localizer_rem_tg": {
     "status": "unverified",
-    "text": "/localizer-rem <ID | @username | ответ> — отозвать делегированный статус локализатора (админы бота)"
+    "text": "/localizer remove <ID | @username | ответ> — отозвать делегированный статус локализатора (админы бота)"
   },
   "help.cmd_locallang": {
     "status": "verified",
-    "text": "/locallang <код> — установить язык бота для этого канала/темы (ru, uk, pl, en, es, pt)"
+    "text": "/server lang-channel <код> — установить язык бота для этого канала/темы (ru, uk, pl, en, es, pt)"
   },
   "help.cmd_open_account": {
     "status": "unverified",
-    "text": "/open-account <код> — открыть счёт в банке"
+    "text": "/bank open <код> — открыть счёт в банке"
   },
   "help.cmd_party": {
     "status": "verified",
-    "text": "/party <код|название> — информация о партии союза"
+    "text": "/party info <код|название> — информация о партии союза"
   },
   "help.cmd_party_dues": {
     "status": "unverified",
-    "text": "/party-dues <код> <сумма> — задать ежемесячный взнос членов партии (лидеры партии)"
+    "text": "/party dues <код> <сумма> — задать ежемесячный взнос членов партии (лидеры партии)"
   },
   "help.cmd_party_join": {
     "status": "verified",
-    "text": "/party-join <код|название> — подать заявку на вступление в партию союза"
+    "text": "/party join <код|название> — подать заявку на вступление в партию союза"
   },
   "help.cmd_party_join_tg": {
     "status": "verified",
-    "text": "/party_join <код|название> — подать заявку на вступление в партию союза"
+    "text": "/party join <код|название> — подать заявку на вступление в партию союза"
   },
   "help.cmd_party_kick": {
     "status": "verified",
-    "text": "/party-kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
+    "text": "/party kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
   },
   "help.cmd_party_kick_tg": {
     "status": "verified",
-    "text": "/party_kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
+    "text": "/party kick <id|юзернейм> — исключить участника из своей партии (лидеры партий)"
   },
   "help.cmd_party_leave": {
     "status": "verified",
-    "text": "/party-leave — выйти из своей партии в этом союзе"
+    "text": "/party leave — выйти из своей партии в этом союзе"
   },
   "help.cmd_party_leave_tg": {
     "status": "verified",
-    "text": "/party_leave — выйти из своей партии в этом союзе"
+    "text": "/party leave — выйти из своей партии в этом союзе"
   },
   "help.cmd_pay": {
     "status": "unverified",
-    "text": "/pay <пользователь> <сумма> <код> — перевести деньги другому"
+    "text": "/bank pay <пользователь> <сумма> <код> — перевести деньги другому"
   },
   "help.cmd_privacy": {
     "status": "unverified",
-    "text": "/privacy — настроить конфиденциальность своих данных"
+    "text": "/account privacy — настроить конфиденциальность своих данных"
   },
   "help.cmd_quizzes": {
     "status": "verified",
-    "text": "/quizzes — пройти викторину (работает и в личных сообщениях)"
+    "text": "/quiz take — пройти викторину (работает и в личных сообщениях)"
   },
   "help.cmd_quizzes_clear": {
     "status": "verified",
-    "text": "/quizzes-clear — удалить свои сохранённые результаты викторин"
+    "text": "/quiz clear — удалить свои сохранённые результаты викторин"
   },
   "help.cmd_quizzes_clear_tg": {
     "status": "verified",
-    "text": "/quizzes_clear — удалить свои сохранённые результаты викторин"
+    "text": "/quiz clear — удалить свои сохранённые результаты викторин"
   },
   "help.cmd_quizzes_compare": {
     "status": "verified",
-    "text": "/quizzes-compare <пользователь> — сравнить результаты викторин"
+    "text": "/quiz compare <пользователь> — сравнить результаты викторин"
   },
   "help.cmd_quizzes_compare_tg": {
     "status": "verified",
-    "text": "/quizzes_compare <пользователь> — сравнить результаты викторин"
+    "text": "/quiz compare <пользователь> — сравнить результаты викторин"
   },
   "help.cmd_quizzes_previous": {
     "status": "unverified",
-    "text": "/quizzes-previous [номер] — сравнить текущий результат викторины с прошлым"
+    "text": "/quiz previous [номер] — сравнить текущий результат викторины с прошлым"
   },
   "help.cmd_quizzes_previous_tg": {
     "status": "unverified",
-    "text": "/quizzes_previous [номер] — сравнить текущий результат викторины с прошлым"
+    "text": "/quiz previous [номер] — сравнить текущий результат викторины с прошлым"
   },
   "help.cmd_quizzes_stop": {
     "status": "unverified",
-    "text": "/quizzes-stop — остановить викторину, сохранив прогресс на 7 дней"
+    "text": "/quiz stop — остановить викторину, сохранив прогресс на 7 дней"
   },
   "help.cmd_quizzes_stop_tg": {
     "status": "unverified",
-    "text": "/quizzes_stop — остановить викторину, сохранив прогресс на 7 дней"
+    "text": "/quiz stop — остановить викторину, сохранив прогресс на 7 дней"
   },
   "help.cmd_rates": {
     "status": "unverified",
-    "text": "/rates [код] — ценности валют и курсы конвертации"
+    "text": "/bank rates [код] — ценности валют и курсы конвертации"
   },
   "help.cmd_remadmin": {
     "status": "unverified",
-    "text": "/remadmin <пользователь> — отозвать делегированные права админа сервера (админы бота)"
+    "text": "/admin remove <пользователь> — отозвать делегированные права админа сервера (админы бота)"
   },
   "help.cmd_remadmin_tg": {
     "status": "unverified",
-    "text": "/remadmin <ID | @username | ответ> — отозвать делегированные права админа группы (админы бота)"
+    "text": "/admin remove <ID | @username | ответ> — отозвать делегированные права админа группы (админы бота)"
   },
   "help.cmd_sell": {
     "status": "unverified",
-    "text": "/sell <товар> <покупатель> [кол-во] [цена] — продать товар участнику или предприятию"
+    "text": "/good sell <товар> <покупатель> [кол-во] [цена] — продать товар участнику или предприятию"
   },
-  "help.cmd_set_earn": {
-    "status": "unverified",
-    "text": "/set-earn <код> <on|off> [ставка] — сделать канал зарабатывающим валюту (руководители/админы)"
-  },
+  "help.cmd_set_earn": {"status": "unverified", "text": "/bank earn <код> <on|off> [множитель] — канал начисляет валюту; множитель выше 1 — только руководители валюты и админы её центрального сервера (руководители/админы)"},
   "help.cmd_set_profession": {
     "status": "unverified",
-    "text": "/set-profession <пользователь> <код товара> — задать профессию участника (руководители банка)"
+    "text": "/bank profession <пользователь> <код товара> — задать профессию участника (руководители банка)"
   },
   "help.cmd_set_rate": {
     "status": "unverified",
-    "text": "/set-rate <код> <курс> — зафиксировать пег с единственным партнёром по договору"
+    "text": "/bank rate <код> <курс> — зафиксировать пег с единственным партнёром по договору"
   },
   "help.cmd_set_wage": {
     "status": "unverified",
-    "text": "/set-wage <профессия> <сумма> — задать ежемесячную зарплату для профессии (руководители банка)"
+    "text": "/bank wage <профессия> <сумма> — задать ежемесячную зарплату для профессии (руководители банка)"
   },
   "help.cmd_setadmin": {
     "status": "unverified",
-    "text": "/setadmin <пользователь> — делегировать пользователю права админа этого сервера (админы бота)"
+    "text": "/admin add <пользователь> — делегировать пользователю права админа этого сервера (админы бота)"
   },
   "help.cmd_setadmin_tg": {
     "status": "unverified",
-    "text": "/setadmin <ID | @username | ответ> — делегировать права админа этой группы (админы бота)"
+    "text": "/admin add <ID | @username | ответ> — делегировать права админа этой группы (админы бота)"
   },
   "help.cmd_setlogs": {
     "status": "unverified",
-    "text": "/setlogs [канал] [день] [ЧЧ:ММ] [пояс] — канал экономических логов: обновления курсов и еженедельная статистика (администраторы сервера)"
+    "text": "/server logs [канал] [день] [ЧЧ:ММ] [пояс] — канал экономических логов: обновления курсов и еженедельная статистика (администраторы сервера)"
   },
   "help.cmd_settasks": {
     "status": "unverified",
-    "text": "/settasks [канал] [ЧЧ:ММ] [пояс] — канал ежемесячного производственного задания (администраторы сервера)"
+    "text": "/server tasks [канал] [ЧЧ:ММ] [пояс] — канал ежемесячного производственного задания (администраторы сервера)"
   },
   "help.cmd_setup": {
     "status": "verified",
-    "text": "/setup <союз> <язык> — привязать сервер/группу к союзу и задать язык (админы бота)"
+    "text": "/server setup <союз> <язык> — привязать сервер/группу к союзу и задать язык (админы бота)"
   },
   "help.cmd_top": {
     "status": "unverified",
-    "text": "/top [week|good|wealth] [код] — рейтинги: кто больше произвёл за неделю, мастера по товару, крупнейшие счета в валюте"
+    "text": "/good top [week|good|wealth] [код] — рейтинги: кто больше произвёл за неделю, мастера по товару, крупнейшие счета в валюте"
   },
   "help.cmd_transit": {
     "status": "unverified",
-    "text": "/transit [код] — грузы предприятия, которые ещё в пути"
+    "text": "/enterprise transit [код] — грузы предприятия, которые ещё в пути"
   },
   "help.cmd_treaty": {
     "status": "unverified",
-    "text": "/treaty <код> — предложить договор о конвертации валют (руководители банка)"
+    "text": "/bank treaty <код> — предложить договор о конвертации валют (руководители банка)"
   },
   "help.cmd_verify": {
     "status": "verified",
-    "text": "/verify <ник_на_fandom> — подтвердить аккаунт на Fandom (открывает команды, связанные с викийной деятельностью)"
-  },
-  "help.cmd_wiki_founday": {
-    "status": "unverified",
-    "text": "/wiki-founday <ссылка> <название> <дата> [id_канала] [время] [язык] — ежегодно поздравлять вики с днём рождения (админы сервера)"
-  },
-  "help.cmd_wiki_founday_remove": {
-    "status": "unverified",
-    "text": "/wiki-founday-remove <ссылка> — перестать поздравлять вики (админы сервера)"
-  },
-  "help.cmd_wiki_foundays": {
-    "status": "unverified",
-    "text": "/wiki-foundays — список дней рождения вики этого сервера (админы сервера)"
+    "text": "/account verify <ник_на_fandom> — подтвердить аккаунт на Fandom (открывает команды, связанные с викийной деятельностью)"
   },
   "help.section_admins": {
     "status": "verified",
@@ -1735,7 +1609,7 @@
   },
   "lang_usage": {
     "status": "verified",
-    "text": "Использование: /lang <ru|uk|pl|en|es|pt>"
+    "text": "Использование: /server lang <ru|uk|pl|en|es|pt>"
   },
   "leader_added": {
     "status": "verified",
@@ -1751,15 +1625,15 @@
   },
   "link_need_verify": {
     "status": "verified",
-    "text": "Сначала подтвердите аккаунт на Fandom командой /verify, затем связывайте Telegram."
+    "text": "Сначала подтвердите аккаунт на Fandom командой /account verify, затем связывайте Telegram."
   },
   "link_pending_discord": {
     "status": "verified",
-    "text": "Принято. Теперь в течение 30 минут используйте /add-discord {nick} в Telegram, чтобы завершить связывание."
+    "text": "Принято. Теперь в течение 30 минут используйте /account_discord {nick} в Telegram, чтобы завершить связывание."
   },
   "link_pending_telegram": {
     "status": "verified",
-    "text": "Принято. Теперь в течение 30 минут используйте /add-telegram {nick} в Discord, чтобы завершить связывание."
+    "text": "Принято. Теперь в течение 30 минут используйте /account telegram {nick} в Discord, чтобы завершить связывание."
   },
   "link_success": {
     "status": "verified",
@@ -1767,15 +1641,15 @@
   },
   "link_success_unverified": {
     "status": "verified",
-    "text": "✅ Аккаунты связаны. Но Discord-аккаунт ещё не связан с вашим аккаунтом на Fandom — верификация в Telegram заработает, как только вы используете /verify в Discord."
+    "text": "✅ Аккаунты связаны. Но Discord-аккаунт ещё не связан с вашим аккаунтом на Fandom — верификация в Telegram заработает, как только вы используете /account verify в Discord."
   },
   "link_usage_discord": {
     "status": "verified",
-    "text": "Использование: /add-telegram <ваш @username в Telegram>"
+    "text": "Использование: /account telegram <ваш @username в Telegram>"
   },
   "link_usage_telegram": {
     "status": "verified",
-    "text": "Использование: /add-discord <ваш ник в Discord>"
+    "text": "Использование: /account_discord <ваш ник в Discord>"
   },
   "list_chats_discord_header": {
     "status": "verified",
@@ -1807,7 +1681,7 @@
   },
   "loc_compare_usage": {
     "status": "verified",
-    "text": "Использование: /loc_compare <код реплики>"
+    "text": "Использование: /locale compare <код реплики>"
   },
   "loc_cooldown": {
     "status": "verified",
@@ -1819,7 +1693,7 @@
   },
   "loc_list_footer": {
     "status": "verified",
-    "text": "Отправьте /locale <код>, чтобы получить файл локализации."
+    "text": "Отправьте /locale info <код>, чтобы получить файл локализации."
   },
   "loc_list_header": {
     "status": "verified",
@@ -1851,7 +1725,7 @@
   },
   "loc_reply_usage": {
     "status": "verified",
-    "text": "Использование: /loc_reply <код> <текст>"
+    "text": "Использование: /locale reply <код> <текст>"
   },
   "loc_suggest_confirm": {
     "status": "verified",
@@ -1867,7 +1741,7 @@
   },
   "loc_suggest_usage": {
     "status": "verified",
-    "text": "Использование: /loc-suggest <язык> <код реплики> <текст>"
+    "text": "Использование: /locale suggest <язык> <код реплики> <текст>"
   },
   "loc_unknown_lang": {
     "status": "verified",
@@ -1887,7 +1761,7 @@
   },
   "localizer_add_usage": {
     "status": "unverified",
-    "text": "Использование: /localizer-add <ID или @username>, либо ответьте командой на сообщение пользователя."
+    "text": "Использование: /localizer add <ID или @username>, либо ответьте командой на сообщение пользователя."
   },
   "localizer_rem_done": {
     "status": "unverified",
@@ -1899,11 +1773,11 @@
   },
   "localizer_rem_usage": {
     "status": "unverified",
-    "text": "Использование: /localizer-rem <ID или @username>, либо ответьте командой на сообщение пользователя."
+    "text": "Использование: /localizer remove <ID или @username>, либо ответьте командой на сообщение пользователя."
   },
   "locallang_usage": {
     "status": "verified",
-    "text": "Использование: /locallang <ru|uk|pl|en|es|pt>"
+    "text": "Использование: /server lang-channel <ru|uk|pl|en|es|pt>"
   },
   "no_permission": {
     "status": "verified",
@@ -1911,7 +1785,7 @@
   },
   "open_account_usage": {
     "status": "unverified",
-    "text": "Использование: /open-account <код валюты>"
+    "text": "Использование: /bank open <код валюты>"
   },
   "party_choose": {
     "status": "verified",
@@ -1919,7 +1793,7 @@
   },
   "party_dues_usage": {
     "status": "unverified",
-    "text": "Использование: /party-dues <код валюты> <сумма>"
+    "text": "Использование: /party dues <код валюты> <сумма>"
   },
   "party_feature_disabled": {
     "status": "verified",
@@ -1979,7 +1853,7 @@
   },
   "party_join_in_other": {
     "status": "verified",
-    "text": "Вы уже состоите в партии {name}. Сначала выйдите из неё командой /party-leave."
+    "text": "Вы уже состоите в партии {name}. Сначала выйдите из неё командой /party leave."
   },
   "party_join_leader_dm": {
     "status": "verified",
@@ -2019,7 +1893,7 @@
   },
   "party_join_usage": {
     "status": "verified",
-    "text": "Использование: /party-join <код партии или точное название>"
+    "text": "Использование: /party join <код партии или точное название>"
   },
   "party_kick_done": {
     "status": "verified",
@@ -2031,7 +1905,7 @@
   },
   "party_kick_leader": {
     "status": "verified",
-    "text": "Нельзя исключить другого лидера. Он должен выйти сам через /party-leave."
+    "text": "Нельзя исключить другого лидера. Он должен выйти сам через /party leave."
   },
   "party_kick_not_member": {
     "status": "verified",
@@ -2039,7 +1913,7 @@
   },
   "party_kick_usage": {
     "status": "verified",
-    "text": "Использование: /party-kick <ID или юзернейм участника>"
+    "text": "Использование: /party kick <ID или юзернейм участника>"
   },
   "party_leave_done": {
     "status": "verified",
@@ -2047,7 +1921,7 @@
   },
   "party_leave_founder": {
     "status": "verified",
-    "text": "Вы являетесь основателем этой партии и не можете просто покинуть её. Передайте её или приостановите через /edit-party."
+    "text": "Вы являетесь основателем этой партии и не можете просто покинуть её. Передайте её или приостановите через /party edit."
   },
   "party_leave_none": {
     "status": "verified",
@@ -2075,7 +1949,7 @@
   },
   "party_usage": {
     "status": "verified",
-    "text": "Использование: /party <код или название>"
+    "text": "Использование: /party info <код или название>"
   },
   "pay_done": {
     "status": "unverified",
@@ -2091,7 +1965,7 @@
   },
   "pay_usage": {
     "status": "unverified",
-    "text": "Использование: /pay <пользователь> <сумма> <код> (или ответом: /pay <сумма> <код>)"
+    "text": "Использование: /bank pay <пользователь> <сумма> <код> (или ответом: /bank pay <сумма> <код>)"
   },
   "privacy_block_all_off": {
     "status": "unverified",
@@ -2235,7 +2109,7 @@
   },
   "quiz_consent_prompt": {
     "status": "verified",
-    "text": "Перед выдачей результатов: могу ли я их сохранить? Так вы сможете позже сравнить их со своими прошлыми результатами или с результатами других участников. Удалить их можно в любой момент командой /quizzes-clear."
+    "text": "Перед выдачей результатов: могу ли я их сохранить? Так вы сможете позже сравнить их со своими прошлыми результатами или с результатами других участников. Удалить их можно в любой момент командой /quiz clear."
   },
   "quiz_consent_yes": {
     "status": "verified",
@@ -2267,7 +2141,7 @@
   },
   "quiz_saved": {
     "status": "verified",
-    "text": "Сохранил. Удалить можно в любой момент командой /quizzes-clear."
+    "text": "Сохранил. Удалить можно в любой момент командой /quiz clear."
   },
   "quiz_start_prompt": {
     "status": "verified",
@@ -2323,7 +2197,7 @@
   },
   "quizzes_compare_usage": {
     "status": "verified",
-    "text": "Использование: /quizzes_compare <ID пользователя или @username>"
+    "text": "Использование: /quiz compare <ID пользователя или @username>"
   },
   "quizzes_compare_user_invalid": {
     "status": "verified",
@@ -2347,11 +2221,11 @@
   },
   "quizzes_previous_invalid": {
     "status": "unverified",
-    "text": "Нет викторины с таким номером. Список викторин — /quizzes."
+    "text": "Нет викторины с таким номером. Список викторин — /quiz take."
   },
   "quizzes_previous_no_recent": {
     "status": "unverified",
-    "text": "С прохождения викторины прошло больше 30 минут. Укажите номер викторины: /quizzes-previous <номер> (список — /quizzes)."
+    "text": "С прохождения викторины прошло больше 30 минут. Укажите номер викторины: /quiz previous <номер> (список — /quiz take)."
   },
   "quizzes_previous_no_results": {
     "status": "unverified",
@@ -2367,7 +2241,7 @@
   },
   "quizzes_previous_usage": {
     "status": "unverified",
-    "text": "Использование: /quizzes_previous [номер викторины]"
+    "text": "Использование: /quiz previous [номер викторины]"
   },
   "quizzes_title": {
     "status": "verified",
@@ -2415,7 +2289,7 @@
   },
   "remadmin_usage": {
     "status": "unverified",
-    "text": "Использование: /remadmin <ID или @username>, либо ответьте командой /remadmin на сообщение пользователя."
+    "text": "Использование: /admin remove <ID или @username>, либо ответьте командой /admin remove на сообщение пользователя."
   },
   "resume_confirm": {
     "status": "verified",
@@ -2479,7 +2353,7 @@
   },
   "sell_not_sellable": {
     "status": "unverified",
-    "text": "«{name}» — базовый товар: у него нет рыночной стоимости, его передают командой /give-good, а не продают."
+    "text": "«{name}» — базовый товар: у него нет рыночной стоимости, его передают командой /good give, а не продают."
   },
   "sell_nothing": {
     "status": "unverified",
@@ -2495,7 +2369,7 @@
   },
   "sell_usage": {
     "status": "unverified",
-    "text": "Использование: /sell <код товара> <покупатель> [количество] [цена]"
+    "text": "Использование: /good sell <код товара> <покупатель> [количество] [цена]"
   },
   "service_event.bank_created": {
     "status": "unverified",
@@ -2527,7 +2401,7 @@
   },
   "service_event.left_unconfigured": {
     "status": "unverified",
-    "text": "👋 {platform}: бот покинул «{chat}» ({chat_id}) — со дня добавления прошло {days} дн., а чат так и не был привязан к унии командой /setup."
+    "text": "👋 {platform}: бот покинул «{chat}» ({chat_id}) — со дня добавления прошло {days} дн., а чат так и не был привязан к унии командой /server setup."
   },
   "service_event.parties_disabled": {
     "status": "verified",
@@ -2571,7 +2445,7 @@
   },
   "set_earn_usage": {
     "status": "unverified",
-    "text": "Использование: /set-earn <код> <on|off> [ставка]"
+    "text": "Использование: /bank earn <код> <on|off> [ставка]"
   },
   "set_earn_wrong_union": {
     "status": "unverified",
@@ -2583,7 +2457,7 @@
   },
   "set_profession_usage": {
     "status": "unverified",
-    "text": "Использование: /set-profession <пользователь> <код товара>"
+    "text": "Использование: /bank profession <пользователь> <код товара>"
   },
   "set_rate_bad": {
     "status": "unverified",
@@ -2611,7 +2485,7 @@
   },
   "set_rate_usage": {
     "status": "unverified",
-    "text": "Использование: /set-rate <код партнёра> <курс>"
+    "text": "Использование: /bank rate <код партнёра> <курс>"
   },
   "set_wage_cleared": {
     "status": "unverified",
@@ -2627,7 +2501,7 @@
   },
   "set_wage_usage": {
     "status": "unverified",
-    "text": "Использование: /set-wage <профессия> <сумма>"
+    "text": "Использование: /bank wage <профессия> <сумма>"
   },
   "setadmin_already": {
     "status": "unverified",
@@ -2647,7 +2521,7 @@
   },
   "setadmin_usage": {
     "status": "unverified",
-    "text": "Использование: /setadmin <ID или @username>, либо ответьте командой /setadmin на сообщение пользователя."
+    "text": "Использование: /admin add <ID или @username>, либо ответьте командой /admin add на сообщение пользователя."
   },
   "setchannel_bad_channel": {
     "status": "unverified",
@@ -2699,7 +2573,7 @@
   },
   "setup_usage": {
     "status": "verified",
-    "text": "Использование: /setup <UNION> <ru|uk|pl|en|es|pt>"
+    "text": "Использование: /server setup <UNION> <ru|uk|pl|en|es|pt>"
   },
   "state_no": {
     "status": "verified",
@@ -2755,7 +2629,7 @@
   },
   "suspend_confirm": {
     "status": "verified",
-    "text": "Приостановить партию {name}? Информация о ней сохранится, в /party она будет помечена как приостановленная, лидер сможет возобновить её позже."
+    "text": "Приостановить партию {name}? Информация о ней сохранится, в /party info она будет помечена как приостановленная, лидер сможет возобновить её позже."
   },
   "suspend_done": {
     "status": "verified",
@@ -2873,17 +2747,14 @@
     "status": "unverified",
     "text": "У этих банков уже есть договор."
   },
-  "treaty_offer": {
-    "status": "unverified",
-    "text": "Банк {proposer} предлагает договор о конвертации валют с {name} [{code}]. Принять может руководитель {code}."
-  },
+  "treaty_offer": {"status": "unverified", "text": "Банк {proposer} предлагает договор о конвертации валют с {name_ins} [{code}]. Принять может руководитель {code}."},
   "treaty_self": {
     "status": "unverified",
     "text": "Банк не может заключить договор с самим собой."
   },
   "treaty_usage": {
     "status": "unverified",
-    "text": "Использование: /treaty <код валюты>"
+    "text": "Использование: /bank treaty <код валюты>"
   },
   "verify_cooldown": {
     "status": "verified",
@@ -2899,7 +2770,7 @@
   },
   "verify_no_handle": {
     "status": "verified",
-    "text": "В профиле пользователя {name} на Fandom не указан аккаунт в Discord. Укажите его в профиле на любой вики и повторите /verify."
+    "text": "В профиле пользователя {name} на Fandom не указан аккаунт в Discord. Укажите его в профиле на любой вики и повторите /account verify."
   },
   "verify_not_found": {
     "status": "verified",
@@ -2907,11 +2778,11 @@
   },
   "verify_required": {
     "status": "verified",
-    "text": "Сначала подтвердите свой аккаунт на Fandom командой /verify <ваш ник на Fandom>."
+    "text": "Сначала подтвердите свой аккаунт на Fandom командой /account verify <ваш ник на Fandom>."
   },
   "verify_required_tg": {
     "status": "verified",
-    "text": "Сначала пройдите верификацию: используйте /add-discord здесь и /add-telegram в Discord, чтобы связать аккаунты (ваш Discord-аккаунт должен быть верифицирован через /verify)."
+    "text": "Сначала пройдите верификацию: используйте /account_discord здесь и /account telegram в Discord, чтобы связать аккаунты (ваш Discord-аккаунт должен быть верифицирован через /account verify)."
   },
   "verify_success": {
     "status": "verified",
@@ -2919,7 +2790,7 @@
   },
   "verify_usage": {
     "status": "verified",
-    "text": "Использование: /verify <ваш ник на fandom.com>"
+    "text": "Использование: /account verify <ваш ник на fandom.com>"
   },
   "weekday_0": {
     "status": "unverified",
@@ -2949,8 +2820,8 @@
   "sponsor_not_active": {"status": "unverified", "text": "К вашему Discord-аккаунту не привязана активная роль Patreon."},
   "sponsor_union_limit": {"status": "unverified", "text": "Достигнут лимит союзов для этой подписки."},
   "sponsor_setup_forbidden": {"status": "unverified", "text": "Нужны активная подписка, право управления этим сервером, свой союз и свободный слот сервера."},
-  "section_sponsors": {"status": "unverified", "text": "Спонсоры и администраторы бота"},
-  "cmd_sponsor": {"status": "unverified", "text": "/sponsor — показать подписку, союзы и слоты серверов"},
+  "help.section_sponsors": {"status": "unverified", "text": "Спонсоры и администраторы бота"},
+  "help.cmd_sponsor": {"status": "unverified", "text": "/sponsor info — показать подписку, союзы и слоты серверов"},
   "weekday_6": {
     "status": "unverified",
     "text": "воскресенье"
@@ -2959,5 +2830,359 @@
   "sponsor_tier_community": {"status": "unverified", "text": "Роль сообщества"},
   "sponsor_community_pending": {"status": "unverified", "text": "Преимущества роли сообщества начнут действовать примерно через {days} дн. после первого обнаружения роли."},
   "sponsor_community_grace": {"status": "unverified", "text": "Роль сообщества снята; преимущества действуют ещё {days} дн."},
-  "sponsor_retention_warning": {"status": "unverified", "text": "Льготный период работы истёк. Другой действующий спонсор или администратор бота может взять сообщество под управление; иначе через 30 дней после окончания льготного периода бот выйдет и удалит данные сообщества."}
+  "sponsor_retention_warning": {"status": "unverified", "text": "Льготный период работы истёк. Другой действующий спонсор или администратор бота может взять сообщество под управление; иначе через 30 дней после окончания льготного периода бот выйдет и удалит данные сообщества."},
+  "slash_limit": {"status": "unverified", "text": "Текущее использование лимитов подписки"},
+  "help.cmd_limit": {"status": "unverified", "text": "/sponsor limit — текущее использование лимитов подписки (только спонсоры)."},
+  "limit_sponsors_only": {"status": "unverified", "text": "Команда доступна только действующим спонсорам, включая период продления работы. Для Telegram сначала свяжите аккаунт с Discord-аккаунтом подписчика."},
+  "limit_status": {"status": "unverified", "text": "Союзы: {unions}/{union_limit}; сообщества: {communities}/{community_limit}.\nСообщения с начислением валюты за сегодня UTC: {day}/{day_limit}; текущая минута UTC: {minute}/{minute_limit}. Суточный лимит обновляется в 00:00 UTC и общий для связанных аккаунтов."},
+  "slash_add_wiki": {"status": "unverified", "text": "присоединить вики к союзу (админы бота)"},
+  "slash_remove_wiki": {"status": "unverified", "text": "отсоединить вики от союза (админы бота)"},
+  "slash_wiki_founded": {"status": "unverified", "text": "исправить дату основания вики (админы бота)"},
+  "slash_wiki_founded_date": {"status": "unverified", "text": "Дата основания ДД.ММ.ГГГГ или auto — определённая ботом"},
+  "slash_wiki_channel": {"status": "unverified", "text": "канал поздравлений с днём рождения вики на этом сервере (админы бота)"},
+  "slash_wiki_greeting": {"status": "unverified", "text": "поздравлять ли одну вики на этом сервере (админы бота)"},
+  "slash_wiki_greeting_enabled": {"status": "unverified", "text": "True — поздравлять, False — не поздравлять"},
+  "slash_wiki_rep_role": {"status": "unverified", "text": "роль представителей вики союза на этом сервере (админы бота)"},
+  "slash_birthday": {"status": "unverified", "text": "указать, показать или удалить свой день рождения (день и месяц)"},
+  "slash_birthday_day": {"status": "unverified", "text": "День месяца (1–31)"},
+  "slash_birthday_month": {"status": "unverified", "text": "Месяц (1–12)"},
+  "slash_birthday_clear": {"status": "unverified", "text": "True — удалить день рождения"},
+  "slash_birthday_channel": {"status": "unverified", "text": "канал поздравлений участников с днём рождения (админы сервера)"},
+  "slash_birthday_role": {"status": "unverified", "text": "роль, которую участник носит в свой день рождения (админы сервера)"},
+  "slash_union": {"status": "unverified", "text": "показать публичный профиль союза"},
+  "slash_edit_union": {"status": "unverified", "text": "изменить союз: названия, логотип, владелец, язык, дата создания (админы бота, спонсоры)"},
+  "slash_param_union": {"status": "unverified", "text": "Код союза"},
+  "slash_param_union_optional": {"status": "unverified", "text": "Код союза (по умолчанию — союз этого сервера)"},
+  "slash_param_wiki_url": {"status": "unverified", "text": "Ссылка на вики, например confederation.fandom.com/ru"},
+  "slash_param_channel": {"status": "unverified", "text": "Канал: упоминание или ID (по умолчанию — этот; off — выключить)"},
+  "slash_param_tz": {"status": "unverified", "text": "Часовой пояс сервера как смещение от UTC, например UTC+3"},
+  "slash_param_role": {"status": "unverified", "text": "Роль: упоминание или ID, либо off"},
+  "slash_param_menu_option": {"status": "unverified", "text": "Номер пункта меню"},
+  "add_wiki_usage_tg": {"status": "unverified", "text": "Использование: /wiki add <код союза> <ссылка на вики>"},
+  "remove_wiki_usage_tg": {"status": "unverified", "text": "Использование: /wiki remove <ссылка на вики> [код союза]"},
+  "wiki_founded_usage_tg": {"status": "unverified", "text": "Использование: /wiki founded <ссылка на вики> <ДД.ММ.ГГГГ|auto>"},
+  "wiki_attached": {"status": "unverified", "text": "✅ Вики присоединена к союзу {union}."},
+  "wiki_summary": {"status": "unverified", "text": "{name} — {url}\nОснована: {date} · Язык: {language} · Администрация: {staff}"},
+  "wiki_already_attached": {"status": "unverified", "text": "{name} уже присоединена к союзу {union}."},
+  "wiki_not_found": {"status": "unverified", "text": "По этой ссылке вики не найдена. Пример: confederation.fandom.com/ru"},
+  "wiki_unknown": {"status": "unverified", "text": "Ни одна присоединённая вики не подходит под эту ссылку."},
+  "wiki_specify_union": {"status": "unverified", "text": "Эта вики состоит в нескольких союзах ({codes}) — укажите и союз."},
+  "wiki_not_in_union": {"status": "unverified", "text": "{name} не состоит в союзе {union}."},
+  "wiki_detached": {"status": "unverified", "text": "🗑️ {name} отсоединена от союза {union}."},
+  "wiki_bad_date": {"status": "unverified", "text": "Неверная дата. Используйте ДД.ММ.ГГГГ, ГГГГ-ММ-ДД или auto."},
+  "wiki_founded_set": {"status": "unverified", "text": "📅 {name}: дни рождения теперь отсчитываются от {date}."},
+  "wiki_channel_set": {"status": "unverified", "text": "🎂 Дни рождения вики союза будут объявляться в {channel} в {time} ({tz})."},
+  "wiki_channel_off": {"status": "unverified", "text": "Поздравления вики выключены на этом сервере."},
+  "wiki_greeting_on": {"status": "unverified", "text": "🎂 {name} снова будет получать поздравления на этом сервере."},
+  "wiki_greeting_off": {"status": "unverified", "text": "{name} больше не будет получать поздравления на этом сервере."},
+  "rep_role_set": {"status": "unverified", "text": "✅ {role} получат участники, которые больше {days} дней состоят бюрократами, администраторами или модераторами контента на одной из вики союза, если я могу связать их Discord с этим аккаунтом."},
+  "rep_role_off": {"status": "unverified", "text": "Роль представителей вики выключена; я заберу её у тех, кому выдал."},
+  "role_bad": {"status": "unverified", "text": "Роль не найдена. Упомяните роль этого сервера или укажите её ID."},
+  "role_set_cannot_manage": {"status": "unverified", "text": "⚠️ {role} сохранена, но выдать её я не могу: нужно право «Управлять ролями», и моя роль должна быть выше."},
+  "wiki_bday_line": {"status": "unverified", "text": "Сегодня {items}!"},
+  "wiki_bday_and": {"status": "unverified", "text": " и "},
+  "wiki_bday_contrast": {"status": "unverified", "text": "{past}, а {future}"},
+  "wiki_bday_past_one": {"status": "unverified", "text": "{name} исполнился {n} год"},
+  "wiki_bday_past_few": {"status": "unverified", "text": "{name} исполнилось {n} года"},
+  "wiki_bday_past_many": {"status": "unverified", "text": "{name} исполнилось {n} лет"},
+  "wiki_bday_past_other": {"status": "unverified", "text": "{name} исполнилось {n} лет"},
+  "wiki_bday_future_one": {"status": "unverified", "text": "{name} исполнится {n} год"},
+  "wiki_bday_future_few": {"status": "unverified", "text": "{name} исполнится {n} года"},
+  "wiki_bday_future_many": {"status": "unverified", "text": "{name} исполнится {n} лет"},
+  "wiki_bday_future_other": {"status": "unverified", "text": "{name} исполнится {n} лет"},
+  "birthday_date": {"status": "unverified", "text": "{date}"},
+  "birthday_none": {"status": "unverified", "text": "Ваш день рождения не сохранён."},
+  "birthday_current": {"status": "unverified", "text": "🎂 Ваш день рождения: {date}."},
+  "birthday_saved": {"status": "unverified", "text": "🎂 Сохранено: ваш день рождения — {date}. Связанные аккаунты Discord и Telegram пользуются одной датой."},
+  "birthday_cleared": {"status": "unverified", "text": "Ваш день рождения удалён."},
+  "birthday_bad_date": {"status": "unverified", "text": "Такой даты не бывает. Укажите день (1–31) и месяц (1–12)."},
+  "birthday_bad_date_tg": {"status": "unverified", "text": "Использование: /birthday set ДД.ММ, например /birthday set 25.12; /birthday set off — удалить."},
+  "birthday_channel_set": {"status": "unverified", "text": "🎂 Участников будут поздравлять с днём рождения в {channel} в {time} ({tz})."},
+  "birthday_channel_set_tg": {"status": "unverified", "text": "🎂 Участников будут поздравлять с днём рождения здесь в {time} ({tz})."},
+  "birthday_channel_off": {"status": "unverified", "text": "Поздравления с днём рождения выключены."},
+  "birthday_role_set": {"status": "unverified", "text": "🎂 В день рождения участник получит {role} — от самого раннего начала этого дня по UTC или {tz} до самого позднего конца."},
+  "birthday_role_off": {"status": "unverified", "text": "Роль именинника выключена; я заберу её у тех, кому выдал."},
+  "birthday_greeting_1": {"status": "unverified", "text": "🎂 С днём рождения, {user}! Пусть этот год принесёт вам много радости, добрых друзей и ярких идей."},
+  "birthday_greeting_2": {"status": "unverified", "text": "🎉 {user}, сегодня ваш день! Желаем тепла, вдохновения и множества поводов для улыбки."},
+  "birthday_greeting_3": {"status": "unverified", "text": "🥳 С днём рождения, {user}! Пусть каждая новая страница этого года будет ещё лучше прежней."},
+  "birthday_greeting_4": {"status": "unverified", "text": "🎈 Поздравляем с днём рождения, {user}! Желаем крепкого здоровья, добрых людей рядом и исполнения мечтаний."},
+  "birthday_greeting_5": {"status": "unverified", "text": "🌟 С днём рождения, {user}! Пусть ваши идеи находят поддержку, а старания приносят прекрасные плоды."},
+  "birthday_greeting_6": {"status": "unverified", "text": "🎁 С днём рождения, {user}! Пусть сегодняшний день будет полон приятных сюрпризов, а весь год — хороших новостей."},
+  "birthday_greeting_7": {"status": "unverified", "text": "🍰 Сегодня мы поздравляем {user}! Желаем сил на новые планы и побольше времени для любимых дел."},
+  "birthday_greeting_8": {"status": "unverified", "text": "✨ С днём рождения, {user}! Мы рады, что вы с нами, и желаем щедрого и счастливого года."},
+  "birthday_greeting_9": {"status": "unverified", "text": "🎊 С праздником, {user}! Пусть удача идёт рядом, а каждая дорога ведёт к чему-то чудесному."},
+  "birthday_greeting_10": {"status": "unverified", "text": "🌈 С днём рождения, {user}! Пусть дни будут яркими, настроение — солнечным, а на душе — легко."},
+  "birthday_greeting_11": {"status": "unverified", "text": "🎂 Поздравляем, {user}! Пусть новый год жизни принесёт открытия, дружбу и моменты, которые захочется помнить."},
+  "birthday_greeting_12": {"status": "unverified", "text": "🥂 С днём рождения, {user}! Желаем года, полного успехов, спокойного счастья и людей, рядом с которыми хочется улыбаться."},
+  "edit_union_specify": {"status": "unverified", "text": "Укажите и код союза."},
+  "edit_union_menu_header": {"status": "unverified", "text": "Изменение союза {name} [{code}]. Ответьте номером:"},
+  "edit_union_opt_name": {"status": "unverified", "text": "Названия"},
+  "edit_union_opt_logo": {"status": "unverified", "text": "Логотип"},
+  "edit_union_opt_owner": {"status": "unverified", "text": "Владелец"},
+  "edit_union_opt_lang": {"status": "unverified", "text": "Язык"},
+  "edit_union_ask_name": {"status": "unverified", "text": "Текущие названия:\n{current}\n\nОтправьте новые в виде en=Name | ru=Название; xx=- удаляет название на этом языке."},
+  "edit_union_bad_name": {"status": "unverified", "text": "Не удалось разобрать. Используйте пары код=Название через |, коды: en, ru, uk, pl, es, pt."},
+  "edit_union_names_done": {"status": "unverified", "text": "✅ Названия обновлены:\n{names}"},
+  "edit_union_ask_logo": {"status": "unverified", "text": "Отправьте новый логотип изображением."},
+  "edit_union_done": {"status": "unverified", "text": "✅ Готово."},
+  "edit_union_ask_owner": {"status": "unverified", "text": "Упомяните нового владельца или отправьте его Discord ID. Спонсор может передать союз только активному спонсору, у которого хватает места для союза и его сообществ; админ бота может передать его кому угодно или отправить none, чтобы союзом управляли админы бота."},
+  "edit_union_ask_owner_tg": {"status": "unverified", "text": "Отправьте Discord ID нового владельца. Спонсор может передать союз только активному спонсору, у которого хватает места для союза и его сообществ; админ бота может передать его кому угодно или отправить none, чтобы союзом управляли админы бота."},
+  "edit_union_owner_admin_only": {"status": "unverified", "text": "Передать союз под управление админов бота может только админ бота."},
+  "edit_union_owner_operator": {"status": "unverified", "text": "✅ Союзом {union} теперь управляют админы бота."},
+  "edit_union_owner_need_id": {"status": "unverified", "text": "Отправьте ID аккаунта Discord (только цифры)."},
+  "edit_union_owner_needs_link": {"status": "unverified", "text": "У Discord-аккаунта нового владельца нет связанного Telegram, чтобы принять предложение здесь. Предложите союз командой /union edit в Discord."},
+  "edit_union_owner_not_sponsor": {"status": "unverified", "text": "Новый владелец должен быть активным спонсором."},
+  "edit_union_owner_same": {"status": "unverified", "text": "Этот аккаунт уже владеет союзом."},
+  "edit_union_owner_no_union_slot": {"status": "unverified", "text": "В подписке нового владельца нет свободного места для союза."},
+  "edit_union_owner_no_server_slot": {"status": "unverified", "text": "В подписке нового владельца не хватает места для сообществ этого союза."},
+  "edit_union_owner_offer": {"status": "unverified", "text": "{mention}, вам предлагают стать владельцем союза {union} [{code}]. Он будет учитываться в лимитах вашей подписки. Принимаете?"},
+  "edit_union_owner_done": {"status": "unverified", "text": "✅ Союз {union} теперь принадлежит {user}."},
+  "edit_union_owner_declined": {"status": "unverified", "text": "Предложение владения отклонено."},
+  "edit_union_owner_stale": {"status": "unverified", "text": "Предложение больше не действует: за это время владелец союза сменился."},
+  "edit_union_ask_lang": {"status": "unverified", "text": "Отправьте код языка союза ({supported}). На нём в первую очередь пишутся поздравления вики."},
+  "edit_union_bad_lang": {"status": "unverified", "text": "Неизвестный код языка. Используйте один из: ru, uk, pl, en, es, pt."},
+  "edit_union_lang_done": {"status": "unverified", "text": "✅ Язык союза: {language}."},
+  "union_profile_specify": {"status": "unverified", "text": "Укажите код союза: этот чат не привязан к союзу."},
+  "union_profile_slow_down": {"status": "unverified", "text": "Слишком много запросов — попробуйте через минуту."},
+  "union_profile_lang": {"status": "unverified", "text": "Язык"},
+  "union_profile_created": {"status": "unverified", "text": "Создан"},
+  "union_profile_communities": {"status": "unverified", "text": "Сообщества"},
+  "union_profile_section_wikis": {"status": "unverified", "text": "Википроекты"},
+  "union_profile_wikis": {"status": "unverified", "text": "Вики"},
+  "union_profile_wiki_langs": {"status": "unverified", "text": "Языки вики"},
+  "union_profile_staff": {"status": "unverified", "text": "Члены администраций"},
+  "union_profile_section_politics": {"status": "unverified", "text": "Политика"},
+  "union_profile_parties": {"status": "unverified", "text": "Партии"},
+  "union_profile_govt": {"status": "unverified", "text": "Органы власти"},
+  "union_profile_section_economy": {"status": "unverified", "text": "Экономика"},
+  "union_profile_banks": {"status": "unverified", "text": "Банки и валюты"},
+  "union_profile_accounts": {"status": "unverified", "text": "Открытые счета"},
+  "union_profile_enterprises": {"status": "unverified", "text": "Предприятия"},
+  "union_profile_goods": {"status": "unverified", "text": "Товары"},
+  "service_event.union_owner_changed": {"status": "unverified", "text": "👑 Владелец союза {code} сменён на {owner}; изменил {user}."},
+  "help.cmd_union": {"status": "unverified", "text": "/union info [код или название] — публичный профиль союза"},
+  "help.cmd_birthday": {"status": "unverified", "text": "/birthday set [день] [месяц] [clear] — указать, показать или удалить свой день рождения"},
+  "help.cmd_birthday_tg": {"status": "unverified", "text": "/birthday set [ДД.ММ|off] — указать, показать или удалить свой день рождения"},
+  "help.cmd_birthday_channel": {"status": "unverified", "text": "/birthday channel [канал|off] [пояс] — где поздравлять участников в 10:00 по времени сервера (администраторы сервера)"},
+  "help.cmd_birthday_channel_tg": {"status": "unverified", "text": "/birthday channel [off] [пояс] — поздравлять участников здесь в 10:00 по времени группы (администраторы сервера)"},
+  "help.cmd_birthday_role": {"status": "unverified", "text": "/birthday role <роль|off> [пояс] — роль, которую участник носит весь свой день рождения (администраторы сервера)"},
+  "help.cmd_add_wiki": {"status": "unverified", "text": "/wiki add <союз> <ссылка> — присоединить вики к союзу; её название, язык, дата основания и администрация считываются сразу (админы бота)"},
+  "help.cmd_add_wiki_tg": {"status": "unverified", "text": "/wiki add <союз> <ссылка> — присоединить вики к союзу; её название, язык, дата основания и администрация считываются сразу (админы бота)"},
+  "help.cmd_remove_wiki": {"status": "unverified", "text": "/wiki remove <ссылка> [союз] — отсоединить вики от союза (админы бота)"},
+  "help.cmd_remove_wiki_tg": {"status": "unverified", "text": "/wiki remove <ссылка> [союз] — отсоединить вики от союза (админы бота)"},
+  "help.cmd_wiki_founded": {"status": "unverified", "text": "/wiki founded <ссылка> <ДД.ММ.ГГГГ|auto> — исправить дату основания вики (админы бота)"},
+  "help.cmd_wiki_founded_tg": {"status": "unverified", "text": "/wiki founded <ссылка> <ДД.ММ.ГГГГ|auto> — исправить дату основания вики (админы бота)"},
+  "help.cmd_wiki_channel": {"status": "unverified", "text": "/wiki channel [канал|off] [пояс] — где объявлять дни рождения вики союза в 10:00 по времени сервера (админы бота)"},
+  "help.cmd_wiki_greeting": {"status": "unverified", "text": "/wiki greeting <ссылка> <true/false> — поздравлять ли одну вики на этом сервере (админы бота)"},
+  "help.cmd_wiki_rep_role": {"status": "unverified", "text": "/wiki rep-role <роль|off> — роль для участников, которые больше 30 дней состоят бюрократами, администраторами или модераторами контента вики союза (админы бота)"},
+  "help.cmd_edit_union": {"status": "unverified", "text": "/union edit [союз] [пункт] — названия, логотип, владелец, язык и дата создания союза (админы бота; спонсоры — для своих союзов)"},
+  "help.cmd_edit_union_tg": {"status": "unverified", "text": "/union edit [код] [пункт] — названия, логотип, владелец, язык и дата создания союза (админы бота; спонсоры — для своих союзов)"},
+  "union_profile_lists_hint": {"status": "unverified", "text": "Полные списки — кнопками ниже."},
+  "union_list_kind_wikis": {"status": "unverified", "text": "Википроекты"},
+  "union_list_kind_parties": {"status": "unverified", "text": "Партии"},
+  "union_list_kind_govt": {"status": "unverified", "text": "Органы власти"},
+  "union_list_kind_banks": {"status": "unverified", "text": "Банки и валюты"},
+  "union_list_kind_enterprises": {"status": "unverified", "text": "Предприятия"},
+  "union_list_title": {"status": "unverified", "text": "{union}: {kind}"},
+  "union_list_empty": {"status": "unverified", "text": "Здесь пока ничего нет."},
+  "union_list_wiki_line": {"status": "unverified", "text": "{name} — {url}"},
+  "union_list_party_line": {"status": "unverified", "text": "{name} [{code}] · участников: {members}"},
+  "union_list_govt_line": {"status": "unverified", "text": "{name} · членов: {members}"},
+  "union_list_bank_line": {"status": "unverified", "text": "{emoji}{name} [{code}] · счетов: {accounts}"},
+  "union_list_enterprise_line": {"status": "unverified", "text": "{name} [{code}] · {community}"},
+  "edit_union_owner_warn_limits": {"status": "unverified", "text": "⚠️ Теперь {user} превышает лимиты своей подписки: ничего не отнимется, но создавать союзы и добавлять сообщества не получится, пока не освободится место."},
+  "edit_union_owner_warn_not_sponsor": {"status": "unverified", "text": "⚠️ У {user} нет активной подписки. Пока её нет, сообщения в каналах союза с начислением не приносят валюту, а сам владелец не сможет менять союз; админы бота — смогут."},
+  "edit_union_owner_warn_lapsed": {"status": "unverified", "text": "⚠️ Подписка {user} закончилась. Сообщения в каналах союза с начислением не будут приносить валюту, а если подписку не продлят, бот выйдет из сообществ союза и сотрёт их данные {when}."},
+  "edit_union_owner_when_soon": {"status": "unverified", "text": "при ближайшей ежечасной проверке"},
+  "edit_union_owner_when_date": {"status": "unverified", "text": "{date}"},
+  "edit_union_owner_confirm": {"status": "unverified", "text": "Отправьте {code}, чтобы всё равно передать союз; любой другой ответ отменит передачу."},
+  "wiki_blocked": {"status": "unverified", "text": "Защита вики (Cloudflare) заблокировала запрос бота — это блокировка адреса сервера бота, а не ошибка в ссылке. Попробуйте позже."},
+  "link_already": {"status": "unverified", "text": "✅ Эти аккаунты уже связаны."},
+  "link_waiting_discord": {"status": "unverified", "text": "Discord-аккаунт {nick} ждёт связывания с этим Telegram-аккаунтом. Если это вы, выполните здесь /account_discord {nick}."},
+  "link_waiting_telegram": {"status": "unverified", "text": "Telegram-аккаунт @{nick} ждёт связывания с этим Discord-аккаунтом. Если это вы, выполните здесь /account telegram {nick}."},
+  "ent_salary_no_currency": {"status": "unverified", "text": "валюта не выбрана"},
+  "tax_bad_percent": {"status": "unverified", "text": "Отправьте процент от 0 до 50, например 5 или 2.5."},
+  "tax_part_community": {"status": "unverified", "text": "налог сообщества {amount}"},
+  "tax_part_bank": {"status": "unverified", "text": "налог банка {amount}"},
+  "tax_withheld": {"status": "unverified", "text": "С получателя удержаны налоги: {taxes}; получено {net}."},
+  "audit_title": {"status": "unverified", "text": "Аудит банка"},
+  "audit_fine": {"status": "unverified", "text": "{bank}: {by} оштрафовал(а) {user} на {amount}. Причина: {reason}"},
+  "audit_emit": {"status": "unverified", "text": "{bank}: {by} выпустил(а) {amount} для {target}. Причина: {reason}"},
+  "audit_wages": {"status": "unverified", "text": "{bank}: выплачены ежемесячные зарплаты — {total} на {count} счет(ов)."},
+  "audit_dues": {"status": "unverified", "text": "{bank}: собраны ежемесячные партийные взносы — {total}, платежей: {count}."},
+  "audit_fee": {"status": "unverified", "text": "{bank}: {by} изменил(а) комиссии конвертации: {current}"},
+  "audit_tax": {"status": "unverified", "text": "{bank}: {by} установил(а) налог банка {percent}."},
+  "audit_leader_added": {"status": "unverified", "text": "{bank}: {user} стал(а) соруководителем."},
+  "audit_leader_transfer": {"status": "unverified", "text": "{bank}: руководство передано {user}."},
+  "bank_field_tax": {"status": "unverified", "text": "Налог банка"},
+  "edit_bank_opt_tax": {"status": "unverified", "text": "Налог банка на платежи и продажи"},
+  "edit_bank_opt_audit": {"status": "unverified", "text": "Канал аудита"},
+  "edit_bank_ask_tax": {"status": "unverified", "text": "Налог банка сейчас {current}. Отправьте новую ставку от 0 до {max}: она берётся с каждого платежа и продажи в этой валюте и делится между руководителями банка."},
+  "edit_bank_tax_set": {"status": "unverified", "text": "✅ Налог банка: {percent}."},
+  "edit_bank_ask_audit": {"status": "unverified", "text": "Отправьте любое сообщение здесь, чтобы этот канал стал каналом аудита банка (штрафы, выпуски, зарплаты, взносы, изменения комиссий и налога, смена руководства), или off, чтобы отключить."},
+  "edit_bank_audit_set": {"status": "unverified", "text": "✅ Этот канал теперь канал аудита банка."},
+  "edit_bank_audit_off": {"status": "unverified", "text": "Канал аудита банка отключён."},
+  "balance_rank": {"status": "unverified", "text": "Место в рейтинге: {place} из {total}"},
+  "set_earn_rate_leaders_only": {"status": "unverified", "text": "Множитель выше 1 могут ставить только руководители валюты, админы бота и админы центрального сервера банка. Выполните команду без множителя или с множителем не больше 1."},
+  "emit_wrong_union": {"status": "unverified", "text": "Эта партия или предприятие относится к другому союзу, чем валюта."},
+  "emit_bad_target": {"status": "unverified", "text": "Укажите человека (упоминание или ID) либо код партии или предприятия."},
+  "emit_over_cap": {"status": "unverified", "text": "Это больше месячного лимита выпуска; в этом месяце ещё можно выпустить {left}."},
+  "emit_done": {"status": "unverified", "text": "🏦 Выпущено {amount} для {target}. Причина: {reason}"},
+  "emit_usage_tg": {"status": "unverified", "text": "Использование: /bank emit <@ник|ID|код партии|код предприятия> <сумма> <код валюты> [причина] или ответом на сообщение: /bank emit <сумма> <код валюты> [причина]"},
+  "slash_emit": {"status": "unverified", "text": "выпустить валюту человеку, партии или предприятию (руководители банка)"},
+  "slash_emit_target": {"status": "unverified", "text": "Человек (упоминание или ID) или код партии или предприятия"},
+  "slash_emit_amount": {"status": "unverified", "text": "Сумма, например 100.00"},
+  "slash_emit_code": {"status": "unverified", "text": "Код валюты"},
+  "slash_emit_reason": {"status": "unverified", "text": "Причина (приз конкурса, грант…)"},
+  "slash_transactions": {"status": "unverified", "text": "ваша история операций"},
+  "slash_transactions_code": {"status": "unverified", "text": "Код валюты (по умолчанию — все)"},
+  "transactions_title": {"status": "unverified", "text": "Ваши операции"},
+  "transactions_none": {"status": "unverified", "text": "Операций пока нет."},
+  "transactions_pages_tg": {"status": "unverified", "text": "Страница {page} из {total}; следующая: /bank transactions [код] {page_next}"},
+  "transactions_sent_private": {"status": "unverified", "text": "Я отправил вашу историю операций в личный чат."},
+  "transactions_start_private": {"status": "unverified", "text": "Сначала откройте личный чат со мной и нажмите «Старт» — тогда я смогу прислать историю операций."},
+  "tx_bank": {"status": "unverified", "text": "банк {code}"},
+  "tx_line": {"status": "unverified", "text": "{date} · {amount} · {other} · {what}"},
+  "tx_reason_message": {"status": "unverified", "text": "заработок за сообщения"},
+  "tx_reason_pay": {"status": "unverified", "text": "платёж"},
+  "tx_reason_sell": {"status": "unverified", "text": "продажа"},
+  "tx_reason_fine": {"status": "unverified", "text": "штраф"},
+  "tx_reason_wage": {"status": "unverified", "text": "зарплата по профессии"},
+  "tx_reason_salary": {"status": "unverified", "text": "зарплата предприятия"},
+  "tx_reason_party_dues": {"status": "unverified", "text": "партийный взнос"},
+  "tx_reason_emit": {"status": "unverified", "text": "выпуск"},
+  "tx_reason_convert_in": {"status": "unverified", "text": "конвертация (поступление)"},
+  "tx_reason_convert_out": {"status": "unverified", "text": "конвертация (списание)"},
+  "tx_reason_convert_fee": {"status": "unverified", "text": "комиссия конвертации"},
+  "tx_reason_consumption": {"status": "unverified", "text": "покупка товаров ежедневным потреблением"},
+  "tx_reason_export": {"status": "unverified", "text": "оплата экспорта"},
+  "tx_reason_export_escrow": {"status": "unverified", "text": "оплата экспорта на удержании"},
+  "tx_reason_shipment_refund": {"status": "unverified", "text": "возврат за недоставленную поставку"},
+  "tx_reason_link_merge": {"status": "unverified", "text": "перенос со связанного аккаунта"},
+  "tx_reason_tax_community": {"status": "unverified", "text": "налог сообщества"},
+  "tx_reason_tax_bank": {"status": "unverified", "text": "налог банка"},
+  "union_list_kind_economy": {"status": "unverified", "text": "Экономика"},
+  "econ_supply": {"status": "unverified", "text": "Денежная масса: {amount} (за 7 дней: {change})"},
+  "econ_debt": {"status": "unverified", "text": "Долги: {amount}"},
+  "econ_top_share": {"status": "unverified", "text": "У 10% самых богатых: {share}"},
+  "econ_turnover": {"status": "unverified", "text": "Оборот за 7 дней: {amount}"},
+  "server_profile_section_community": {"status": "unverified", "text": "Сообщество"},
+  "server_profile_union": {"status": "unverified", "text": "Союз"},
+  "server_profile_lang": {"status": "unverified", "text": "Язык"},
+  "server_profile_tz": {"status": "unverified", "text": "Часовой пояс"},
+  "server_profile_section_economy": {"status": "unverified", "text": "Экономика"},
+  "server_profile_banks": {"status": "unverified", "text": "Банки сервера"},
+  "server_profile_currencies": {"status": "unverified", "text": "Валюты в обращении"},
+  "server_profile_accounts": {"status": "unverified", "text": "Счета в банках сервера"},
+  "server_profile_enterprises": {"status": "unverified", "text": "Предприятия"},
+  "server_profile_section_taxes": {"status": "unverified", "text": "Налоги"},
+  "server_profile_tax": {"status": "unverified", "text": "Налог сообщества (платежи, продажи, заработок)"},
+  "server_profile_untitled": {"status": "unverified", "text": "Это сообщество"},
+  "server_profile_bank_tax": {"status": "unverified", "text": "Налог банка {code}"},
+  "slash_server": {"status": "unverified", "text": "профиль этого сервера: экономика и налоги"},
+  "slash_edit_server": {"status": "unverified", "text": "изменить сервер: налог сообщества, часовой пояс (админы сервера)"},
+  "edit_server_menu_header": {"status": "unverified", "text": "Изменение {name}. Ответьте номером:"},
+  "edit_server_opt_tax": {"status": "unverified", "text": "Налог сообщества"},
+  "edit_server_opt_tz": {"status": "unverified", "text": "Часовой пояс"},
+  "edit_server_ask_tax": {"status": "unverified", "text": "Налог сообщества сейчас {current}. Отправьте новую ставку от 0 до {max}: она берётся с платежей и продаж, сделанных здесь, и с заработка за сообщения здесь, а удержанное выходит из обращения."},
+  "edit_server_tax_set": {"status": "unverified", "text": "✅ Налог сообщества: {percent}."},
+  "edit_server_ask_tz": {"status": "unverified", "text": "Часовой пояс сейчас {current}. Отправьте смещение от UTC, например UTC+3 или -05:00. По нему работают поздравления и роль именинника."},
+  "edit_server_tz_set": {"status": "unverified", "text": "✅ Часовой пояс: {tz}."},
+  "privacy_opt_hide_top": {"status": "unverified", "text": "скрыть меня из рейтингов /good top (сейчас скрыт(а): {state})"},
+  "privacy_top_hidden": {"status": "unverified", "text": "Теперь вас нет в рейтингах /good top."},
+  "privacy_top_shown": {"status": "unverified", "text": "Вы снова видны в рейтингах /good top."},
+  "help.cmd_emit": {"status": "unverified", "text": "/bank emit <кому> <сумма> <код> [причина] — выпустить валюту человеку, партии или предприятию; руководителям — в пределах месячного лимита (руководители банка)"},
+  "help.cmd_emit_tg": {"status": "unverified", "text": "/bank emit <@ник|код> <сумма> <валюта> [причина] — выпустить валюту (можно ответом); руководителям — в пределах месячного лимита (руководители банка)"},
+  "help.cmd_transactions": {"status": "unverified", "text": "/bank transactions [код] — ваша история операций (видна только вам)"},
+  "help.cmd_transactions_tg": {"status": "unverified", "text": "/bank transactions [код] [страница] — ваша история операций, приходит в личный чат"},
+  "help.cmd_server": {"status": "unverified", "text": "/server info — профиль сервера: банки, валюты, счета, предприятия, налоги"},
+  "help.cmd_edit_server": {"status": "unverified", "text": "/server edit [пункт] — налог сообщества и часовой пояс (администраторы сервера)"},
+  "help.cmd_edit_server_tg": {"status": "unverified", "text": "/server edit [пункт] — налог сообщества и часовой пояс (администраторы сервера)"},
+  "month_gen_1": {"status": "unverified", "text": "января"},
+  "month_gen_2": {"status": "unverified", "text": "февраля"},
+  "month_gen_3": {"status": "unverified", "text": "марта"},
+  "month_gen_4": {"status": "unverified", "text": "апреля"},
+  "month_gen_5": {"status": "unverified", "text": "мая"},
+  "month_gen_6": {"status": "unverified", "text": "июня"},
+  "month_gen_7": {"status": "unverified", "text": "июля"},
+  "month_gen_8": {"status": "unverified", "text": "августа"},
+  "month_gen_9": {"status": "unverified", "text": "сентября"},
+  "month_gen_10": {"status": "unverified", "text": "октября"},
+  "month_gen_11": {"status": "unverified", "text": "ноября"},
+  "month_gen_12": {"status": "unverified", "text": "декабря"},
+  "date_long": {"status": "unverified", "text": "{day} {month} {year}"},
+  "date_day_month": {"status": "unverified", "text": "{day} {month}"},
+  "edit_union_opt_created": {"status": "unverified", "text": "Дата создания"},
+  "edit_union_ask_created": {"status": "unverified", "text": "Отправьте дату создания союза в виде ДД.ММ.ГГГГ или ГГГГ-ММ-ДД (сейчас: {current}). Она видна в профиле союза и в календаре."},
+  "edit_union_created_done": {"status": "unverified", "text": "✅ Дата создания союза: {date}."},
+  "edit_union_bad_created": {"status": "unverified", "text": "Неверная дата. Используйте ДД.ММ.ГГГГ или ГГГГ-ММ-ДД."},
+  "calendar_title": {"status": "unverified", "text": "📅 Календарь событий: {start} – {end}"},
+  "calendar_empty": {"status": "unverified", "text": "В эти дни ничего нет."},
+  "calendar_more": {"status": "unverified", "text": "…и ещё {count}, которые не поместились. Скройте один из видов событий, чтобы их увидеть."},
+  "calendar_scope_global": {"status": "unverified", "text": "Везде: все союзы, все вики союзов и все, кто сохранил день рождения"},
+  "calendar_btn_union": {"status": "unverified", "text": "Союзы"},
+  "calendar_btn_wiki": {"status": "unverified", "text": "Вики"},
+  "calendar_btn_person": {"status": "unverified", "text": "Дни рождения"},
+  "calendar_btn_global": {"status": "unverified", "text": "🌍 Везде"},
+  "calendar_btn_local": {"status": "unverified", "text": "🏠 Это сообщество"},
+  "slash_calendar": {"status": "unverified", "text": "ближайшие дни основания союзов и вики и дни рождения участников"},
+  "help.cmd_calendar": {"status": "unverified", "text": "/calendar — ближайшие дни основания союзов и вики и дни рождения участников, по месяцу на странице; кнопки скрывают вид событий или показывают все сообщества"},
+  "slash_group_account": {"status": "unverified", "text": "ваш аккаунт: подтверждение Fandom, связь с Telegram, приватность"},
+  "slash_group_admin": {"status": "unverified", "text": "назначить или снять админов сервера (админы бота)"},
+  "slash_group_bank": {"status": "unverified", "text": "банки и деньги: счета, платежи, заработок, курсы, договоры"},
+  "slash_group_birthday": {"status": "unverified", "text": "ваш день рождения и поздравления на сервере"},
+  "slash_group_bot": {"status": "unverified", "text": "инструменты бота: чаты, выход из чата, резервные копии (админы бота)"},
+  "slash_group_enterprise": {"status": "unverified", "text": "предприятия: создание, работники, зарплаты, продажи и поставки"},
+  "slash_group_find": {"status": "unverified", "text": "найти авторов сообщений по ключевым словам в канале (админы сервера)"},
+  "slash_group_good": {"status": "unverified", "text": "товары: создание, производство, инвентарь, продажа, рейтинги"},
+  "slash_group_govt": {"status": "unverified", "text": "органы власти союза"},
+  "slash_group_locale": {"status": "unverified", "text": "локализация бота: состояние, сравнение, предложения"},
+  "slash_group_localizer": {"status": "unverified", "text": "выдать или снять статус локализатора (админы бота)"},
+  "slash_group_olympiad": {"status": "unverified", "text": "вики-Олимпиада: открытие, конкурсы и голосование"},
+  "slash_group_party": {"status": "unverified", "text": "партии: создание, членство, правила и взносы"},
+  "slash_group_quiz": {"status": "unverified", "text": "квизы: пройти, остановить, сравнить результаты"},
+  "slash_group_server": {"status": "unverified", "text": "этот сервер: подключение, профиль, язык, каналы журнала и заданий"},
+  "slash_group_sponsor": {"status": "unverified", "text": "ваша подписка Democrate и её лимиты"},
+  "slash_group_union": {"status": "unverified", "text": "союзы: профили, создание, изменение, партии"},
+  "slash_group_wiki": {"status": "unverified", "text": "вики союза: подключение, даты основания, поздравления, представители"},
+  "union_not_found": {"status": "unverified", "text": "Такой союз не найден."},
+  "union_not_found_suggest": {"status": "unverified", "text": "Союз не найден. Возможно, вы искали один из этих? Отправьте номер в течение 30 минут:"},
+  "slash_param_union_query": {"status": "unverified", "text": "Код или название союза (по умолчанию — союз этого сервера)"},
+  "allow_parties_roles_set": {"status": "unverified", "text": "✅ Союз {code}: роли с доступом к /party add — {roles}."},
+  "allow_parties_no_roles_left": {"status": "unverified", "text": "⚠️ В союзе {code} не осталось ролей с доступом к /party add: в Discord основать партию смогут только админы бота, пока вы не добавите роль."},
+  "allow_parties_still_off": {"status": "unverified", "text": "Партии в союзе {code} пока выключены; включите их командой /union parties {code} enable."},
+  "service_event.parties_roles": {"status": "unverified", "text": "🏛️ {user} изменил, кто может основывать партии в союзе {code}: роли {roles}."},
+  "service_event.party_role_deleted": {"status": "unverified", "text": "🏛️ Роль «{role}» ({role_id}) удалена на сервере {server}; она больше не даёт права основывать партии в союзе {code}."},
+  "edit_bank_opt_forms": {"status": "unverified", "text": "Склонения названия валюты"},
+  "edit_bank_ask_forms_lang": {"status": "unverified", "text": "Для какого языка формы? Отправьте его код: {supported}. Уже заполнены: {current}."},
+  "edit_bank_bad_forms_lang": {"status": "unverified", "text": "Это не один из шести кодов языков."},
+  "edit_bank_ask_forms": {"status": "unverified", "text": "Отправьте формы названия «{name}» на языке «{language}» одним сообщением через запятую в таком порядке: {order}.\nПример: {example}\nЕсли не уверены в какой-то форме, поставьте на её место «-»; чтобы забыть формы этого языка, отправьте только «-»."},
+  "edit_bank_bad_forms": {"status": "unverified", "text": "Число форм не совпадает с запрошенным порядком. Отправьте их ещё раз через запятую."},
+  "edit_bank_forms_set": {"status": "unverified", "text": "✅ Формы для языка «{language}» сохранены. Суммы на этом языке теперь выглядят так: {sample}."},
+  "edit_bank_forms_cleared": {"status": "unverified", "text": "Формы для языка «{language}» забыты; суммы на этом языке снова показываются с кодом валюты."},
+  "currency_forms_order_ru": {"status": "unverified", "text": "именительный, родительный, дательный, винительный, творительный, предложный, родительный множественного (как после 5)"},
+  "currency_forms_order_uk": {"status": "unverified", "text": "именительный, родительный, дательный, винительный, творительный, местный, именительный множественного (как после 2), родительный множественного (как после 5)"},
+  "currency_forms_order_pl": {"status": "unverified", "text": "именительный, родительный, дательный, винительный, творительный, местный, именительный множественного (как после 2), родительный множественного (как после 5)"},
+  "currency_forms_order_en": {"status": "unverified", "text": "единственное число, множественное число"},
+  "currency_forms_order_es": {"status": "unverified", "text": "единственное число, множественное число"},
+  "currency_forms_order_pt": {"status": "unverified", "text": "единственное число, множественное число"},
+  "currency_forms_example_ru": {"status": "unverified", "text": "гривна, гривны, гривне, гривну, гривной, гривне, гривен"},
+  "currency_forms_example_uk": {"status": "unverified", "text": "гривня, гривні, гривні, гривню, гривнею, гривні, гривні, гривень"},
+  "currency_forms_example_pl": {"status": "unverified", "text": "złoty, złotego, złotemu, złotego, złotym, złotym, złote, złotych"},
+  "currency_forms_example_en": {"status": "unverified", "text": "dollar, dollars"},
+  "currency_forms_example_es": {"status": "unverified", "text": "peso, pesos"},
+  "currency_forms_example_pt": {"status": "unverified", "text": "real, reais"},
+  "slash_earn_info": {"status": "unverified", "text": "где зарабатывается валюта, с подробностями (руководители банков, админы серверов)"},
+  "slash_earn_info_code": {"status": "unverified", "text": "Код валюты (по умолчанию — все доступные вам)"},
+  "help.cmd_earn_info": {"status": "unverified", "text": "/bank earn-info [код] — каналы заработка: множитель, налог сообщества, сообщения и деньги за 7 дней, кто включил (руководители банков — свои валюты; админы сервера — этот сервер)"},
+  "help.cmd_earn_info_tg": {"status": "unverified", "text": "/bank earn-info [код] [страница] — каналы заработка с подробностями, приходят в личный чат (руководители банков — свои валюты; админы сервера — эта группа)"},
+  "earn_info_title": {"status": "unverified", "text": "💰 Каналы заработка"},
+  "earn_info_line": {"status": "unverified", "text": "{place} — {currency} ×{rate}; налог сообщества {tax}"},
+  "earn_info_stats": {"status": "unverified", "text": "↳ за 7 дней: засчитано сообщений — {messages}, заработано {amount}"},
+  "earn_info_set": {"status": "unverified", "text": "↳ включил {user}, {date}"},
+  "earn_info_set_unknown": {"status": "unverified", "text": "↳ включён раньше, чем бот стал запоминать, кто это сделал"},
+  "earn_info_empty": {"status": "unverified", "text": "Здесь нет каналов заработка."},
+  "earn_info_topic": {"status": "unverified", "text": "{group}, тема {topic}"},
+  "earn_info_unknown_channel": {"status": "unverified", "text": "канал {id} (бот его не видит)"},
+  "earn_info_pages_tg": {"status": "unverified", "text": "Страница {page} из {total}; следующая: /bank earn-info [код] {page_next}"}
 }

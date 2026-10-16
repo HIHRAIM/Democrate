@@ -1,6 +1,6 @@
 """Turning energy into goods: what a manual run costs and yields, the run
-itself, the 24/7 line behind /autocraft, and the daily redistribution behind
-/autosend.
+itself, the 24/7 line behind /good autocraft, and the daily redistribution behind
+/good autosend.
 
 A manual run is a database row with a finish time, not a task: `start_production`
 charges the energy up front and writes the row, and main.py: production_loop
@@ -210,7 +210,7 @@ def _dedup_owners(pairs):
 
 def autocraft_slots(owner, good_code):
     """(running_lines_excluding_this_good, limit) for an owner about to switch
-    a 24/7 line on — what `/autocraft` refuses on and what it reports."""
+    a 24/7 line on — what `/good autocraft` refuses on and what it reports."""
     return db.count_autocraft(owner, exclude_good=good_code), parallel_limit()
 
 def run_autoproduce(hours=1.0):

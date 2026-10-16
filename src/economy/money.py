@@ -52,11 +52,6 @@ def format_amount(minor):
     units = _minor()
     return f"{sign}{minor // units}.{minor % units:0{len(str(units)) - 1}d}"
 
-def format_money(minor, bank):
-    """'12.34 🪙 CODE' for an amount in a bank's currency."""
-    emoji = (bank["emoji"] + " ") if bank["emoji"] else ""
-    return f"{format_amount(minor)} {emoji}{bank['code']}"
-
 def format_energy(n):
     """Energy with its emoji ('42 ⚡'). Energy is a plain integer count, never
     minor units, so there is nothing to scale here."""

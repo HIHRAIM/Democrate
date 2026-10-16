@@ -47,9 +47,13 @@ def run_daily_tick():
     return {"sent": sent, "fx": fx, "consumption": eaten}
 
 def run_wages():
-    """Pay every account holder the wage set for their profession."""
+    """Pay every account holder the wage set for their profession, and tell
+    each bank's audit channel what the run cost."""
+    from economy.audit import record
+    from economy.names import format_money
     paid = 0
     for bank_code in db.banks_with_wages():
+        total = count = 0
         for acc in db.get_bank_accounts(bank_code, users_only=True):
             owner = (acc["owner_type"], acc["owner_platform"], acc["owner_id"])
             prof = db.get_profession(owner, bank_code)
@@ -59,12 +63,21 @@ def run_wages():
             if wage > 0:
                 db.mint(bank_code, owner, wage, "wage")
                 paid += 1
+                total += wage
+                count += 1
+        bank = db.get_bank(bank_code)
+        if count and bank:
+            record(bank_code, "wages", total=format_money(total, bank), count=count)
     return paid
 
 def run_party_dues():
     """Collect each party's monthly dues from its members' accounts; a shortfall
-    is allowed to push the member into debt."""
+    is allowed to push the member into debt. Each currency's audit channel
+    hears the total."""
+    from economy.audit import record
+    from economy.names import format_money
     collected = 0
+    totals = {}
     for row in db.all_party_dues():
         party_code, bank_code, amount = row["party_code"], row["bank_code"], row["amount"]
         if amount <= 0:
@@ -74,6 +87,12 @@ def run_party_dues():
             db.transfer(bank_code, owner, target, amount, "party_dues",
                         allow_negative=True)
             collected += 1
+            total, count = totals.get(bank_code, (0, 0))
+            totals[bank_code] = (total + amount, count + 1)
+    for bank_code, (total, count) in totals.items():
+        bank = db.get_bank(bank_code)
+        if bank:
+            record(bank_code, "dues", total=format_money(total, bank), count=count)
     return collected
 
 def run_monthly_tick():

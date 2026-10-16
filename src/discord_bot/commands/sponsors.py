@@ -5,9 +5,10 @@ import db
 import sponsors
 from config import SPONSOR_URL
 from discord_bot.client import bot
+from discord_bot.groups import sponsor_group
 from utils import get_chat_lang, localized
 
-@bot.tree.command(name="sponsor", description="show your Democrate subscription and limits")
+@sponsor_group.command(name="info", description="show your Democrate subscription and limits")
 async def sponsor_cmd(interaction: discord.Interaction):
     """Show only this account's unions and account-wide server usage."""
     lang = get_chat_lang(str(interaction.guild_id or ""))
@@ -28,3 +29,14 @@ async def sponsor_cmd(interaction: discord.Interaction):
     if addendum:
         message += "\n" + addendum
     await interaction.response.send_message(message, ephemeral=True)
+
+@sponsor_group.command(name="limit", description=localized("slash_limit", "en"))
+async def limit_cmd(interaction: discord.Interaction):
+    """Show only the caller's active subscription usage; admins get no bypass."""
+    lang = get_chat_lang(str(interaction.guild_id or ""))
+    owner = str(interaction.user.id)
+    await interaction.response.defer(ephemeral=True)
+    await sponsors.refresh_tier(owner)
+    text = (sponsors.limit_text(owner, lang) if db.sponsor_tier(owner) != 0
+            else localized("limit_sponsors_only", lang))
+    await interaction.followup.send(text, ephemeral=True)

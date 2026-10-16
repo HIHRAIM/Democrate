@@ -9,9 +9,9 @@ because they all need `bot` to hang themselves on.
 runtime commands to the tree (so that a restart during an open Olympiad puts
 them back), syncs the tree once, and re-arms the persistent Accept/Decline
 views of every join request still open, which is what lets a request survive a
-restart. The three loops it starts are a fixed presence re-applied hourly, the
-12-hour encrypted backup sent to BOTH platforms' backup chats, and the
-per-minute wiki-anniversary check.
+restart. The two loops it starts are a fixed presence re-applied hourly and
+the 12-hour encrypted backup sent to BOTH platforms' backup chats; the
+celebrations run from main.py: celebration_loop.
 
 The gates and resolvers at the bottom — is_server_admin, _require_verified,
 _refuse_not_setup, parties_enabled, _chat_key, _earn_keys, chat_display_name —
@@ -36,14 +36,14 @@ from utils import STATUS_TEXT, get_chat_lang, is_verified, localized
 logger = logging.getLogger("dem.discord")
 
 def is_server_admin(interaction: discord.Interaction):
-    """Only an explicit /setadmin appointment grants community-admin rights."""
+    """Only an explicit /admin add appointment grants community-admin rights."""
     if interaction.guild is None:
         return False
     return db.is_server_admin("discord", interaction.guild.id, interaction.user.id)
 
 async def _require_verified(interaction: discord.Interaction, lang):
     """Gate the Fandom-activity commands. Returns True when the caller may
-    proceed; otherwise replies with a prompt to /verify and returns False."""
+    proceed; otherwise replies with a prompt to /account verify and returns False."""
     if is_verified("discord", interaction.user.id):
         return True
     await interaction.response.send_message(localized("verify_required", lang), ephemeral=True)
@@ -69,7 +69,7 @@ class DemBot(discord.Client):
 
         The Olympiad's runtime commands are added to the tree *before* it is synced, so
         a restart during an open Olympiad puts them back rather than dropping them for
-        an hour. Then the three loops start, and finally every still-open join request
+        an hour. Then the two loops start, and finally every still-open join request
         gets its persistent view re-armed — that is what makes an Accept/Decline button
         posted last week still work after a restart. Both imports are at the call site:
         the modules they come from import this one."""
@@ -80,7 +80,6 @@ class DemBot(discord.Client):
         await self.tree.sync()
         self.loop.create_task(self.status_loop())
         self.loop.create_task(self.backup_loop())
-        self.loop.create_task(self.founday_loop())
         try:
             for req in db.get_open_join_requests():
                 self.add_view(JoinRequestView(req["id"], req["lang"]))
@@ -116,18 +115,6 @@ class DemBot(discord.Client):
             await _send_db_backup_discord(self)
             await _send_db_backup_telegram()
 
-    async def founday_loop(self):
-        """Wiki anniversaries are due at a whole minute, so poll once a minute."""
-        from discord_bot.commands.foundays import _post_due_foundays
-
-        await self.wait_until_ready()
-        while not self.is_closed():
-            try:
-                await _post_due_foundays()
-            except Exception as e:
-                logger.warning("Wiki founday loop error: %s", e)
-            await asyncio.sleep(60)
-
 bot = DemBot()
 
 @bot.tree.error
@@ -139,7 +126,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     have answered. Every send here is wrapped: failing to report a failure must not
     raise a second one."""
     tb = traceback.format_exc()
-    logger.error("Command '%s': %s\n%s", interaction.command.name if interaction.command else "?", error, tb)
+    logger.error("Command '%s': %s\n%s", interaction.command.qualified_name if interaction.command else "?", error, tb)
     lang = get_chat_lang(f"{interaction.guild_id}:{interaction.channel_id}")
     msg = localized("internal_error", lang, error=error)
     try:
@@ -221,14 +208,14 @@ def _earn_keys(channel):
 
     A thread and a forum post are channels of their own with ids of their own,
     so a message in one matches nothing that was set on the channel around it —
-    which is why `/set-earn` in a text channel used to leave every thread under
+    which is why `/bank earn` in a text channel used to leave every thread under
     it earning nothing. Walking outwards to the parent and then to the category
     fixes that without taking anything away: a thread that names its own
     currency still wins, because it comes first.
 
     Here rather than beside either caller because both halves of the question
     ask it — events.py to pay for a message, commands/banks.py to explain what
-    `/set-earn off` did — and neither owns it."""
+    `/bank earn off` did — and neither owns it."""
     keys = [channel.id]
     parent = getattr(channel, "parent", None)
     holder = parent if parent is not None else channel
@@ -247,7 +234,7 @@ def chat_display_name(chat_id):
     name can come from two places. A Discord server the bot is in is asked
     directly, and the answer is written back to `chats.title` so the name
     survives the bot losing sight of the place; anything else — a Telegram
-    group, a server the bot has left — falls back to the name `/setup`
+    group, a server the bot has left — falls back to the name `/server setup`
     remembered. Only the id is left when neither has anything."""
     chat_id = str(chat_id)
     guild = None
@@ -266,6 +253,6 @@ def _chat_key(interaction: discord.Interaction):
     'guild:channel'.
 
     Always the specific key, never the bare server id: db/settings.py resolves
-    outwards from it, so a channel with its own /locallang wins and everything
+    outwards from it, so a channel with its own /server lang-channel wins and everything
     else falls back to the server."""
     return f"{interaction.guild_id}:{interaction.channel_id}"

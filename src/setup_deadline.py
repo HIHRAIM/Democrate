@@ -1,11 +1,11 @@
 """The seven-day setup deadline: a server or group nobody bound to a union
-with /setup is left again.
+with /server setup is left again.
 
 The bot is invited far more often than it is put to use, and a bot sitting in
 a community that never joined a union is a standing permission grant paying
 for nothing. Seven days after being added, a community that has never been
-through `/setup` is left, and the service chats are told. Nothing is said in
-the community itself: `/setup` is a Bot Admin command, so the people who
+through `/server setup` is left, and the service chats are told. Nothing is said in
+the community itself: `/server setup` is a Bot Admin command, so the people who
 could act on a warning are the operators, and the service chats are exactly
 who those are.
 
@@ -120,7 +120,7 @@ def is_protected_telegram_chat(chat_id):
     return chat_id in communities or chat_id in chats
 
 async def _sweep_discord(client, now, since, events):
-    """Leave every Discord server whose week ran out without a `/setup`,
+    """Leave every Discord server whose week ran out without a `/server setup`,
     appending one report per departure."""
     for guild in list(client.guilds):
         try:

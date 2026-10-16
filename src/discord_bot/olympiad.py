@@ -1,20 +1,22 @@
 """The Discord half of the Olympiad: the commands that appear only while one
 is running, the voting dialog, and the review the votes go through.
 
-`/setolympiad` opens the event and is the only Olympiad command that always
-exists; the five below it are added to the command tree when an Olympiad is
-running and taken off it again when the voting period ends, so people never see
-a command they cannot use. They are declared with `@app_commands.command` and
-collected in OLYMPIAD_COMMANDS for exactly that reason — turning one into a
-`@bot.tree.command` would drop it out of the mechanism. Discord distributes a
-tree change to clients on its own schedule, which is why `/setolympiad` says
-the list may take a while.
+`/olympiad set` opens the event and is the only Olympiad command that always
+exists; the five below it are added to the `/olympiad` group
+(discord_bot/groups.py) when an Olympiad is running and taken out of it again
+when the voting period ends, so people never see a command they cannot use.
+They are declared with `@app_commands.command` and collected in
+OLYMPIAD_COMMANDS for exactly that reason — turning one into an
+`@olympiad_group.command` would drop it out of the mechanism. Discord
+distributes a tree change to clients on its own schedule, which is why
+`/olympiad set` says the list may take a while.
 
 The review and the accepted-vote chats always live on Discord, so the embeds
 and the two reviewer commands are here even for votes cast on Telegram; the
 Telegram bot calls post_olympiad_vote for its own voters.
 
-The dialogs themselves (`/setcontest`, `/editcontest` and the vote) live in
+The dialogs themselves (`/olympiad contest-add`, `/olympiad contest-edit` and
+the vote) live in
 olympiad.py and are shared with the Telegram half; what stays here is the
 permission gate and the Discord dialog object that drives them. Voting happens
 only in a private chat with the bot, and every question carries a Stop button.
@@ -37,6 +39,7 @@ from utils import (
 
 from discord_bot.client import _chat_key, bot, logger
 from discord_bot.dialogs import DIALOG_TIMEOUT, _QuizButtons
+from discord_bot.groups import olympiad_group
 
 def olympiad_help_keys():
     """The Olympiad help lines to show right now."""
@@ -46,18 +49,19 @@ def olympiad_help_keys():
             "help_olympiad", "help_accepted", "help_denied"]
 
 def _apply_olympiad_commands():
-    """Attach the gated commands to the tree, or take them off it, to match
-    whether an Olympiad is running. Returns True when the tree actually
-    changed — only then is a sync with Discord worth its rate limit."""
+    """Attach the gated commands to the `/olympiad` group, or take them out
+    of it, to match whether an Olympiad is running. Returns True when the
+    group actually changed — only then is a sync with Discord worth its rate
+    limit."""
     want = olympiad.is_open()
-    have = bot.tree.get_command("olympiad") is not None
+    have = olympiad_group.get_command(olympiad_cmd.name) is not None
     if want == have:
         return False
     for cmd in OLYMPIAD_COMMANDS:
         if want:
-            bot.tree.add_command(cmd, override=True)
+            olympiad_group.add_command(cmd, override=True)
         else:
-            bot.tree.remove_command(cmd.name)
+            olympiad_group.remove_command(cmd.name)
     return True
 
 async def sync_olympiad_commands():
@@ -265,8 +269,8 @@ class _OlyDialog:
 
 def _vote_footer(vote):
     """The footer line of a review embed: who voted, their messenger id, and
-    the vote's key — the key being what a reviewer types into `/accepted` and
-    `/denied`."""
+    the vote's key — the key being what a reviewer types into `/olympiad accept` and
+    `/olympiad deny`."""
     platform = "Discord" if vote["platform"] == "discord" else "Telegram"
     return f"{vote['username']} │ {platform} ID: {vote['user_id']} │ {vote['key']}"
 
@@ -346,11 +350,9 @@ async def dm_olympiad_voter(vote, title, body):
     except Exception:
         return False
 
-@bot.tree.command(name="setolympiad", description="open the Olympiad and its voting period (bot admins)")
+@olympiad_group.command(name="set", description="open the Olympiad and its voting period (bot admins)")
 @app_commands.describe(start="First day of voting, MM-DD-YYYY — or 'off' to cancel the Olympiad",
                        end="Last day of voting, MM-DD-YYYY")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
 async def setolympiad_cmd(interaction: discord.Interaction, start: str, end: str = None):
     """Open the Olympiad and fix its voting period, or cancel it with 'off'
     (Bot Admins).
@@ -405,9 +407,7 @@ async def _olympiad_admin_gate(interaction, lang):
         return None
     return await _dm_channel(interaction)
 
-@app_commands.command(name="setcontest", description="create a contest of the Olympiad (bot admins)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@app_commands.command(name="contest-add", description="create a contest of the Olympiad (bot admins)")
 async def setcontest_cmd(interaction: discord.Interaction):
     """Create a contest of the Olympiad through a dialog (Bot Admins).
 
@@ -419,9 +419,7 @@ async def setcontest_cmd(interaction: discord.Interaction):
         return
     await olympiad.run_setcontest(_OlyDialog(interaction, lang, channel), lang)
 
-@app_commands.command(name="editcontest", description="manage a contest's candidate wikis (bot admins)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@app_commands.command(name="contest-edit", description="manage a contest's candidate wikis (bot admins)")
 async def editcontest_cmd(interaction: discord.Interaction):
     """Manage a contest's candidate wikis through a dialog (Bot Admins)."""
     lang = _oly_lang(interaction)
@@ -451,9 +449,7 @@ async def _ask_dm_language(dialog, interaction):
     await dialog.send(olympiad.text("lang_chosen", code))
     return code
 
-@app_commands.command(name="olympiad", description="vote in the Olympiad (private chat with the bot only)")
-@app_commands.allowed_contexts(guilds=False, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@app_commands.command(name="vote", description="vote in the Olympiad (private chat with the bot only)")
 async def olympiad_cmd(interaction: discord.Interaction):
     """Vote in the Olympiad — private chat with the bot only.
 
@@ -508,7 +504,7 @@ async def _resolve_review(interaction, lang, key, usage_key, not_found_key):
         return None, None
     return vote, contest
 
-@app_commands.command(name="accepted", description="accept a vote under review")
+@app_commands.command(name="accept", description="accept a vote under review")
 @app_commands.describe(key="The vote's key, from the embed's footer",
                        nickname="The voter's username on the wiki host",
                        remember="Type 'remember' to link that account to this user")
@@ -560,7 +556,7 @@ async def accepted_cmd(interaction: discord.Interaction, key: str, nickname: str
     db.delete_vote(vote["key"])
     await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
-@app_commands.command(name="denied", description="reject a vote under review")
+@app_commands.command(name="deny", description="reject a vote under review")
 @app_commands.describe(key="The vote's key, from the embed's footer",
                        reason="Why the vote is rejected — the voter is told")
 async def denied_cmd(interaction: discord.Interaction, key: str, reason: str):

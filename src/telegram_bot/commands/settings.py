@@ -1,7 +1,7 @@
-"""Per-chat settings on Telegram: `/lang`, `/locallang`, `/setlogs`,
-`/settasks`.
+"""Per-chat settings on Telegram: `/server_lang`, `/server_lang_channel`, `/server_logs`,
+`/server_tasks`.
 
-`/lang` writes the bare group id and `/locallang` writes `chat:topic`, so a
+`/server_lang` writes the bare group id and `/server_lang_channel` writes `chat:topic`, so a
 forum topic can speak a different language from the group around it — the
 lookup in db/settings.py resolves the most specific key outwards.
 
@@ -30,7 +30,7 @@ from telegram_bot.client import (
     GROUP_CHAT_TYPES, _chat_key, bot, is_server_admin, router,
 )
 
-@router.message(Command("lang"))
+@router.message(Command("server_lang", "server-lang", "lang"))
 async def lang_cmd(message: Message):
     """Set the language of the whole group (Server Admins)."""
     lang = get_chat_lang(_chat_key(message))
@@ -78,7 +78,7 @@ async def lang_cmd(message: Message):
 
     await message.reply(localized("lang_set_server", code, code=code))
 
-@router.message(Command("locallang"))
+@router.message(Command("server_lang_channel", "server-lang-channel", "locallang"))
 async def locallang_cmd(message: Message):
     """Set the language of this forum topic alone (Server Admins).
 
@@ -134,7 +134,7 @@ _CHAT_KEY_ARG_RE = re.compile(r"^-?\d{5,}(:\d+)?$")
 _TIME_ARG_RE = re.compile(r"^\d{1,2}:\d{2}$")
 
 def _classify_channel_args(parts):
-    """Sort /setlogs and /settasks tokens by shape: a long number is the chat,
+    """Sort /server_logs and /server_tasks tokens by shape: a long number is the chat,
     HH:MM the time, a signed offset the timezone, the rest the weekday."""
     chat = wd = tm = tz = None
     off = False
@@ -158,7 +158,7 @@ def _classify_channel_args(parts):
 async def _set_channel_tg(message, kind):
     """Bind, re-schedule or unbind one of the two scheduled-post channels.
 
-    Serves both `/setlogs` and `/settasks`. Unlike the Discord side, the arguments
+    Serves both `/server_logs` and `/server_tasks`. Unlike the Discord side, the arguments
     arrive as bare words in any order, which is why `_classify_channel_args` has to
     work out what each one is before anything can be stored. 'off' unbinds. The
     timezone is stored as a UTC offset in minutes."""
@@ -230,13 +230,13 @@ async def _set_channel_tg(message, kind):
     await message.reply(localized(f"set{kind}_done", lang, channel=channel_key,
                                   schedule=schedule))
 
-@router.message(Command("setlogs"))
+@router.message(Command("server_logs", "server-logs", "setlogs"))
 async def setlogs_tg(message: Message):
     """Set this group's economic log channel and weekly schedule (Server
     Admins)."""
     await _set_channel_tg(message, "logs")
 
-@router.message(Command("settasks"))
+@router.message(Command("server_tasks", "server-tasks", "settasks"))
 async def settasks_tg(message: Message):
     """Set the channel where the monthly task is posted on the 1st (Server
     Admins)."""

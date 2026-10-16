@@ -1,14 +1,16 @@
 """The Discord half of Democrate, as a package.
 
 Importing it builds the client and registers everything: the import order
-below runs the @bot.event and @bot.tree.command decorators of every module.
-The order is the dependency order — `client` first (it owns `bot`, which every
-decorator hangs on), then the shared dialog toolkit, then the party helpers
-both halves render cards from, then the Olympiad, then the events, and
-`commands` last. Append new modules in a place that respects it, and remember
-the Olympiad's five runtime commands live in olympiad.py rather than under
-commands/, because they are added to and removed from the tree while the bot
-runs.
+below runs the @bot.event, @bot.tree.command and @<group>.command decorators
+of every module. The order is the dependency order — `client` first (it owns
+`bot`, which every decorator hangs on), then the command groups, then the
+shared dialog toolkit, then the party helpers both halves render cards from,
+then the Olympiad, then the celebration passes (whose resolvers the wiki and
+birthday commands import), then the events, and `commands` last; the groups
+go on the tree at the very end, once every module has filled them. Append new
+modules in a place that respects it, and remember the Olympiad's five runtime
+commands live in olympiad.py rather than under commands/, because they are
+added to and removed from the `/olympiad` group while the bot runs.
 
 The re-exports are the package's public API: everything main.py, utils.py and
 the Telegram half import from `discord_bot`. Several of them are private by
@@ -57,8 +59,7 @@ from utils import (
     DEFAULT_EMBED_COLOR, PARTY_CODE_RE, parse_find_period, parse_keywords,
     find_close_names, format_stored_user, send_service_event, is_verified,
     format_quiz_date, resolve_previous_quiz, privacy_actions, privacy_option_labels,
-    normalize_wiki_url, parse_founday_datetime, parse_founday_time,
-    utc_from_epoch, is_founday_today, founday_message,
+    normalize_wiki_url, parse_founday_time, utc_from_epoch,
     parse_tz_offset, format_tz_offset, parse_weekday, weekday_name,
     category_label, good_display_name,
 )
@@ -71,6 +72,8 @@ from discord_bot.client import (
     on_app_command_error,
     parties_enabled,
 )
+from discord_bot import groups
+from discord_bot.groups import GROUPS
 from discord_bot.dialogs import DIALOG_TIMEOUT, USER_REF_RE
 from discord_bot.parties import (
     COLOR_RE,
@@ -96,16 +99,24 @@ from discord_bot.olympiad import (
     setolympiad_cmd,
     sync_olympiad_commands,
 )
+from discord_bot import celebrations
+from discord_bot.celebrations import (
+    CHANNEL_REF_RE,
+    daily_pass,
+    rep_role_pass,
+)
 from discord_bot import events
-from discord_bot.events import on_guild_join, on_guild_remove, on_message
+from discord_bot.events import on_guild_join, on_guild_remove, on_guild_role_delete, on_message
 from discord_bot import commands
 from discord_bot.commands.unions import (
     UNION_CODE_RE,
     add_unia_cmd,
     allow_parties_cmd,
+    edit_union_cmd,
     force_leave,
     list_chats,
     setup_cmd,
+    union_cmd,
 )
 from discord_bot.commands.settings import (
     lang_command,
@@ -162,14 +173,25 @@ from discord_bot.commands.quizzes import (
     quizzes_stop_cmd,
 )
 from discord_bot.commands.moderation import find_with_cmd, find_without_cmd
-from discord_bot.commands.foundays import (
-    CHANNEL_REF_RE,
-    wiki_founday_cmd,
-    wiki_founday_remove_cmd,
-    wiki_foundays_cmd,
+from discord_bot.commands.wikis import (
+    add_wiki_cmd,
+    remove_wiki_cmd,
+    wiki_channel_cmd,
+    wiki_founded_cmd,
+    wiki_greeting_cmd,
+    wiki_rep_role_cmd,
+)
+from discord_bot.commands.servers import edit_server_cmd, server_cmd
+from discord_bot.commands.birthdays import (
+    birthday_channel_cmd,
+    birthday_cmd,
+    birthday_role_cmd,
+    calendar_cmd,
 )
 from discord_bot.commands.banks import (
     balance_cmd,
+    emit_cmd,
+    transactions_cmd,
     bank_add_leader_cmd,
     bank_cmd,
     bank_transfer_cmd,
@@ -179,6 +201,7 @@ from discord_bot.commands.banks import (
     open_account_cmd,
     pay_cmd,
     set_earn_cmd,
+    earn_info_cmd,
 )
 from discord_bot.commands.trade import (
     convert_cmd,
@@ -214,3 +237,5 @@ from discord_bot.commands.enterprises import (
     export_cmd,
     transit_cmd,
 )
+
+groups.register()

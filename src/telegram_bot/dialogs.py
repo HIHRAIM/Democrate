@@ -63,7 +63,7 @@ async def _wait_user_message(chat_id, user_id, timeout=DIALOG_TIMEOUT):
             _pending_inputs.pop(key, None)
 
 async def _wait_user_message_or_stop(chat_id, user_id, stop_event, timeout=DIALOG_TIMEOUT):
-    """Race the taker's next message against a /quizzes-stop. Returns
+    """Race the taker's next message against a /quiz_stop. Returns
     ('message', msg), ('stop', None) or ('timeout', None)."""
     key = (chat_id, user_id)
     old = _pending_inputs.pop(key, None)
@@ -197,8 +197,8 @@ async def _quiz_target_label_tg(target_id):
     """A display name for a Telegram id: '@username', a full name, or the
     bare id when the bot cannot see the account.
 
-    The name is misleading — it is used far beyond the quizzes, by `/pay`,
-    `/fine`, `/give_good` and every enterprise command that names somebody — but
+    The name is misleading — it is used far beyond the quizzes, by `/bank_pay`,
+    `/bank_fine`, `/good_give` and every enterprise command that names somebody — but
     renaming it would break the imports of a dozen call sites."""
     try:
         chat = await bot.get_chat(int(target_id))

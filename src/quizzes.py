@@ -1,4 +1,4 @@
-"""Quiz engine for the /quizzes commands (Discord + Telegram).
+"""Quiz engine for the /quiz commands (Discord + Telegram).
 
 The first quiz, **WikiCharts**, is adapted from the open-source WikiCharts test
 (https://github.com/WikiCharts/wikicharts.github.io): the user is shown a topic

@@ -3,10 +3,7 @@
     "status": "unverified",
     "text": "You already have an account in {code}."
   },
-  "account_opened": {
-    "status": "unverified",
-    "text": "✅ Account opened in {name} [{code}]."
-  },
+  "account_opened": {"status": "unverified", "text": "✅ Account opened in {name} [{code}]."},
   "action_cancelled": {
     "status": "unverified",
     "text": "Action cancelled."
@@ -45,7 +42,7 @@
   },
   "add_govt_usage": {
     "status": "unverified",
-    "text": "Usage: /add_govt <UNION> <name> | <member singular> | <members plural>"
+    "text": "Usage: /govt add <UNION> <name> | <member singular> | <members plural>"
   },
   "add_party_ask_code": {
     "status": "unverified",
@@ -81,7 +78,7 @@
   },
   "add_party_no_role": {
     "status": "unverified",
-    "text": "You need one of the roles configured with /allow-parties to found a party."
+    "text": "You need one of the roles configured with /union parties to found a party."
   },
   "add_unia_created": {
     "status": "unverified",
@@ -101,7 +98,7 @@
   },
   "add_unia_usage": {
     "status": "unverified",
-    "text": "Usage: /add_unia <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
+    "text": "Usage: /union add <CODE> en=Name | ru=Название | uk=Назва | pl=Nazwa | es=Nombre | pt=Nome"
   },
   "allow_parties_disabled": {
     "status": "unverified",
@@ -109,20 +106,11 @@
   },
   "allow_parties_enabled": {
     "status": "unverified",
-    "text": "✅ Parties are now enabled in union {code}. Roles allowed to use /add-party: {roles}."
+    "text": "✅ Parties are now enabled in union {code}. Roles allowed to use /party add: {roles}."
   },
-  "allow_parties_invalid_roles": {
-    "status": "unverified",
-    "text": "Invalid role ID list."
-  },
-  "allow_parties_need_roles": {
-    "status": "unverified",
-    "text": "List at least one role ID to enable parties."
-  },
-  "allow_parties_usage": {
-    "status": "unverified",
-    "text": "Usage: /allow_parties <UNION> <enable|disable> <role_id,role_id,…>"
-  },
+  "allow_parties_invalid_roles": {"status": "unverified", "text": "Roles are given as mentions or IDs, separated by commas."},
+  "allow_parties_need_roles": {"status": "unverified", "text": "Name at least one role — a mention or an ID."},
+  "allow_parties_usage": {"status": "unverified", "text": "Usage: /union parties <UNION> <enable|disable|add|remove> [roles]"},
   "auto_export_offer": {
     "status": "unverified",
     "text": "📦 {source} offers {target} a weekly delivery: {qty} × {emoji}{name} for {price}. A leader of the receiving enterprise must accept below."
@@ -137,7 +125,7 @@
   },
   "auto_export_usage": {
     "status": "unverified",
-    "text": "Usage: /auto_export <good code> <qty|off> <target enterprise> [price] [currency] [your enterprise]"
+    "text": "Usage: /enterprise autoexport <good code> <qty|off> <target enterprise> [price] [currency] [your enterprise]"
   },
   "autocraft_off": {
     "status": "unverified",
@@ -153,7 +141,7 @@
   },
   "autocraft_usage": {
     "status": "unverified",
-    "text": "Usage: /autocraft <good code> <on|off> [enterprise]"
+    "text": "Usage: /good autocraft <good code> <on|off> [enterprise]"
   },
   "autosend_bad_percent": {
     "status": "unverified",
@@ -173,7 +161,7 @@
   },
   "autosend_usage": {
     "status": "unverified",
-    "text": "Usage: /autosend <good code> <percent> <user|party|enterprise>"
+    "text": "Usage: /good autosend <good code> <percent> <user|party|enterprise>"
   },
   "backup_failed": {
     "status": "unverified",
@@ -197,7 +185,7 @@
   },
   "balance_none": {
     "status": "unverified",
-    "text": "You have no accounts yet. Earn in an earning channel or use /open-account."
+    "text": "You have no accounts yet. Earn in an earning channel or use /bank open."
   },
   "balance_title": {
     "status": "unverified",
@@ -257,7 +245,7 @@
   },
   "bank_leader_usage": {
     "status": "unverified",
-    "text": "Usage: /bank-add-leader <code> <user>"
+    "text": "Usage: /bank leader <code> <user>"
   },
   "bank_none_led": {
     "status": "unverified",
@@ -285,7 +273,7 @@
   },
   "bank_usage": {
     "status": "unverified",
-    "text": "Usage: /bank <currency code>"
+    "text": "Usage: /bank info <currency code>"
   },
   "category_food": {
     "status": "unverified",
@@ -309,7 +297,7 @@
   },
   "chat_not_setup": {
     "status": "unverified",
-    "text": "This chat is not set up yet. A Bot Admin must link it to a union with /setup first."
+    "text": "This chat is not set up yet. A Bot Admin must link it to a union with /server setup first."
   },
   "choice_invalid": {
     "status": "unverified",
@@ -369,7 +357,7 @@
   },
   "convert_usage": {
     "status": "unverified",
-    "text": "Usage: /convert <amount> <from code> <to code>"
+    "text": "Usage: /bank convert <amount> <from code> <to code>"
   },
   "could_not_resolve_user": {
     "status": "unverified",
@@ -385,11 +373,11 @@
   },
   "craft_usage": {
     "status": "unverified",
-    "text": "Usage: /craft <good code> [enterprise]"
+    "text": "Usage: /good craft <good code> [enterprise]"
   },
   "create_bank_ask_chat": {
     "status": "unverified",
-    "text": "🏦 Founding a bank! Send the ID of the central server (it must be set up with /setup)."
+    "text": "🏦 Founding a bank! Send the ID of the central server (it must be set up with /server setup)."
   },
   "create_bank_ask_code": {
     "status": "unverified",
@@ -413,7 +401,7 @@
   },
   "create_bank_chat_not_setup": {
     "status": "unverified",
-    "text": "That server is not set up. Run /setup there first."
+    "text": "That server is not set up. Run /server setup there first."
   },
   "create_bank_created": {
     "status": "unverified",
@@ -441,7 +429,7 @@
   },
   "create_good_usage": {
     "status": "unverified",
-    "text": "Usage: /create_good <name> | <base value> | <energy cost> | [emoji] | [category] | [currency] | [enterprise]"
+    "text": "Usage: /good add <name> | <base value> | <energy cost> | [emoji] | [category] | [currency] | [enterprise]"
   },
   "create_good_wrong_union": {
     "status": "unverified",
@@ -497,7 +485,7 @@
   },
   "edit_admin_usage": {
     "status": "unverified",
-    "text": "Usage: /edit_party_admin <party code or its full name>"
+    "text": "Usage: /party edit-admin <party code or its full name>"
   },
   "edit_ask_article": {
     "status": "unverified",
@@ -541,7 +529,7 @@
   },
   "edit_bank_ask_central": {
     "status": "unverified",
-    "text": "Send the chat ID of the new central server (it must be bound with /setup)."
+    "text": "Send the chat ID of the new central server (it must be bound with /server setup)."
   },
   "edit_bank_ask_code": {
     "status": "unverified",
@@ -565,7 +553,7 @@
   },
   "edit_bank_bad_central": {
     "status": "unverified",
-    "text": "That chat is not set up. Bind it with /setup first."
+    "text": "That chat is not set up. Bind it with /server setup first."
   },
   "edit_bank_bad_code": {
     "status": "unverified",
@@ -641,7 +629,7 @@
   },
   "edit_bank_specify": {
     "status": "unverified",
-    "text": "Name the bank: /edit-bank <option> <currency code>."
+    "text": "Name the bank: /bank edit <option> <currency code>."
   },
   "edit_ent_ask_desc": {
     "status": "unverified",
@@ -805,7 +793,7 @@
   },
   "ent_assign_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_assign <user> | <position> [| <enterprise>] — or reply to the worker; “-” clears."
+    "text": "Usage: /enterprise assign <user> | <position> [| <enterprise>] — or reply to the worker; “-” clears."
   },
   "ent_choose": {
     "status": "unverified",
@@ -867,7 +855,7 @@
   },
   "ent_join_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_join <code>"
+    "text": "Usage: /enterprise join <code>"
   },
   "ent_kick_done": {
     "status": "unverified",
@@ -879,7 +867,7 @@
   },
   "ent_kick_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_kick <user> [code] — or reply to the worker's message."
+    "text": "Usage: /enterprise kick <user> [code] — or reply to the worker's message."
   },
   "ent_leader_added": {
     "status": "unverified",
@@ -931,7 +919,7 @@
   },
   "ent_position_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_position <name> | <salary> [| <enterprise>] — the salary is 12.34, 5% or 0."
+    "text": "Usage: /enterprise position <name> | <salary> [| <enterprise>] — the salary is 12.34, 5% or 0."
   },
   "ent_salary_cleared": {
     "status": "unverified",
@@ -943,11 +931,11 @@
   },
   "ent_salary_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_salary <user> <salary> [enterprise] — the salary is 12.34, 5% or 0; a reply also works."
+    "text": "Usage: /enterprise salary <user> <salary> [enterprise] — the salary is 12.34, 5% or 0; a reply also works."
   },
   "ent_sell_usage": {
     "status": "unverified",
-    "text": "Usage: /ent_sell <good code> <buyer> [quantity] [price] [enterprise]"
+    "text": "Usage: /enterprise sell <good code> <buyer> [quantity] [price] [enterprise]"
   },
   "ent_transfer_declined": {
     "status": "unverified",
@@ -1019,7 +1007,7 @@
   },
   "export_usage": {
     "status": "unverified",
-    "text": "Usage: /export <good code> <qty> <target enterprise> [price] [currency] [your enterprise]"
+    "text": "Usage: /enterprise export <good code> <qty> <target enterprise> [price] [currency] [your enterprise]"
   },
   "find_channel_not_found": {
     "status": "unverified",
@@ -1063,7 +1051,7 @@
   },
   "fine_usage": {
     "status": "unverified",
-    "text": "Usage: /fine <user> <amount> [reason] (or reply to a user: /fine <amount> [reason])"
+    "text": "Usage: /bank fine <user> <amount> [reason] (or reply to a user: /bank fine <amount> [reason])"
   },
   "force_leave_failed": {
     "status": "unverified",
@@ -1091,91 +1079,7 @@
   },
   "force_leave_usage": {
     "status": "unverified",
-    "text": "Usage: /force_leave <discord|telegram> <id>"
-  },
-  "founday_added": {
-    "status": "unverified",
-    "text": "✅ I will congratulate {name} every year in {channel} at {time} UTC. Founded: {date} UTC. Wiki language: {lang_name}."
-  },
-  "founday_future_date": {
-    "status": "unverified",
-    "text": "That founding date is still in the future."
-  },
-  "founday_future_few": {
-    "status": "unverified",
-    "text": "Today {name} turns {n} years old!"
-  },
-  "founday_future_many": {
-    "status": "unverified",
-    "text": "Today {name} turns {n} years old!"
-  },
-  "founday_future_one": {
-    "status": "unverified",
-    "text": "Today {name} turns {n} year old!"
-  },
-  "founday_future_other": {
-    "status": "unverified",
-    "text": "Today {name} turns {n} years old!"
-  },
-  "founday_invalid_channel": {
-    "status": "unverified",
-    "text": "Channel not found, or it does not belong to this server."
-  },
-  "founday_invalid_date": {
-    "status": "unverified",
-    "text": "Invalid founding date. Use MM-DD-YYYY or MM-DD-YYYY HH:MM in UTC."
-  },
-  "founday_invalid_time": {
-    "status": "unverified",
-    "text": "Invalid posting time. Use HH:MM or HH in UTC."
-  },
-  "founday_invalid_url": {
-    "status": "unverified",
-    "text": "Invalid wiki link. For example: amongus.fandom.com or https://amongus.fandom.com"
-  },
-  "founday_list_empty": {
-    "status": "unverified",
-    "text": "No wiki anniversaries are set up on this server."
-  },
-  "founday_list_header": {
-    "status": "unverified",
-    "text": "Wiki anniversaries on this server:"
-  },
-  "founday_list_title": {
-    "status": "unverified",
-    "text": "Wiki anniversaries"
-  },
-  "founday_no_webhook_perm": {
-    "status": "unverified",
-    "text": "⚠️ The bot lacks the “Manage Webhooks” permission in {channel} — the greeting will be sent as an ordinary message."
-  },
-  "founday_not_found": {
-    "status": "unverified",
-    "text": "This server has no wiki anniversary with that link."
-  },
-  "founday_past_few": {
-    "status": "unverified",
-    "text": "Today {name} turned {n} years old!"
-  },
-  "founday_past_many": {
-    "status": "unverified",
-    "text": "Today {name} turned {n} years old!"
-  },
-  "founday_past_one": {
-    "status": "unverified",
-    "text": "Today {name} turned {n} year old!"
-  },
-  "founday_past_other": {
-    "status": "unverified",
-    "text": "Today {name} turned {n} years old!"
-  },
-  "founday_removed": {
-    "status": "unverified",
-    "text": "🗑️ I will no longer congratulate the wiki {url}."
-  },
-  "founday_webhook_name": {
-    "status": "unverified",
-    "text": "Birthdays"
+    "text": "Usage: /bot leave <discord|telegram> <id>"
   },
   "fx_log_line": {
     "status": "unverified",
@@ -1191,7 +1095,7 @@
   },
   "give_good_usage": {
     "status": "unverified",
-    "text": "Usage: /give_good <user> <good code> [qty] — or reply to the user with /give_good <good code> [qty]."
+    "text": "Usage: /good give <user> <good code> [qty] — or reply to the user with /good give <good code> [qty]."
   },
   "give_no_goods": {
     "status": "unverified",
@@ -1239,7 +1143,7 @@
   },
   "govt_usage": {
     "status": "unverified",
-    "text": "Usage: /govt <name>"
+    "text": "Usage: /govt info <name>"
   },
   "group_only": {
     "status": "unverified",
@@ -1251,195 +1155,180 @@
   },
   "help.cmd_add_discord": {
     "status": "unverified",
-    "text": "/add_discord <discord_name> — link your Discord account (finish with /add-telegram on Discord)"
+    "text": "/account_discord <discord_name> — link your Discord account (finish with /account telegram on Discord)"
   },
   "help.cmd_add_enterprise": {
     "status": "unverified",
-    "text": "/add-enterprise — found an enterprise on this server (interactive dialog; verified)"
+    "text": "/enterprise add — found an enterprise on this server (interactive dialog; verified)"
   },
   "help.cmd_add_govt": {
     "status": "unverified",
-    "text": "/add-govt <union> <name> <member> <members> — create a governing body (bot admins)"
+    "text": "/govt add <union> <name> <member> <members> — create a governing body (bot admins)"
   },
   "help.cmd_add_govt_tg": {
     "status": "unverified",
-    "text": "/add_govt <union> <name> <member> <members> — create a governing body (bot admins)"
+    "text": "/govt add <union> <name> <member> <members> — create a governing body (bot admins)"
   },
   "help.cmd_add_party": {
     "status": "unverified",
-    "text": "/add-party [founder_id] — found a party (interactive; requires a role set by /allow-parties)"
+    "text": "/party add [founder_id] — found a party (interactive; requires a role set by /union parties)"
   },
   "help.cmd_add_party_tg": {
     "status": "unverified",
-    "text": "/add_party [founder] — found a party (interactive; needs a Fandom account known to the bot)"
+    "text": "/party add [founder] — found a party (interactive; needs a Fandom account known to the bot)"
   },
   "help.cmd_add_telegram": {
     "status": "unverified",
-    "text": "/add-telegram <@username> — link your Telegram account (finish with /add-discord on Telegram)"
+    "text": "/account telegram <@username> — link your Telegram account (finish with /account_discord on Telegram)"
   },
   "help.cmd_add_unia": {
     "status": "unverified",
-    "text": "/add-unia <code> <names…> — create a new union that /setup can link chats to (bot admins)"
+    "text": "/union add <code> <names…> — create a new union that /server setup can link chats to (bot admins)"
   },
   "help.cmd_add_unia_tg": {
     "status": "unverified",
-    "text": "/add_unia <code> <names…> — create a new union that /setup can link chats to (bot admins)"
+    "text": "/union add <code> <names…> — create a new union that /server setup can link chats to (bot admins)"
   },
-  "help.cmd_allow_parties": {
-    "status": "unverified",
-    "text": "/allow-parties <union> <enable|disable> [role_ids] — enable or disable parties in a union (bot admins)"
-  },
-  "help.cmd_allow_parties_tg": {
-    "status": "unverified",
-    "text": "/allow_parties <union> <enable|disable> [role_ids] — enable or disable parties in a union (bot admins)"
-  },
+  "help.cmd_allow_parties": {"status": "unverified", "text": "/union parties <union> <enable|disable|add|remove> [roles] — switch parties on or off in a union and choose the roles that may found one (bot admins; sponsors for their unions)"},
+  "help.cmd_allow_parties_tg": {"status": "unverified", "text": "/union parties <union> <enable|disable|add|remove> [roles] — switch parties on or off in a union and choose the roles that may found one (bot admins; sponsors for their unions)"},
   "help.cmd_auto_export": {
     "status": "unverified",
-    "text": "/auto-export <good> <qty|off> <enterprise> [price] [currency] — a recurring weekly shipment (the receiving leader accepts once)"
+    "text": "/enterprise autoexport <good> <qty|off> <enterprise> [price] [currency] — a recurring weekly shipment (the receiving leader accepts once)"
   },
   "help.cmd_autocraft": {
     "status": "unverified",
-    "text": "/autocraft <good> <on|off> [enterprise] — continuous 24/7 production, slower than by hand"
+    "text": "/good autocraft <good> <on|off> [enterprise] — continuous 24/7 production, slower than by hand"
   },
   "help.cmd_autosend": {
     "status": "unverified",
-    "text": "/autosend <good> <percent> <user|party|enterprise> — auto-send a share of a good's stock daily"
+    "text": "/good autosend <good> <percent> <user|party|enterprise> — auto-send a share of a good's stock daily"
   },
   "help.cmd_backup": {
     "status": "unverified",
-    "text": "/backup — get a database backup (bot admins)"
+    "text": "/bot backup — get a database backup (bot admins)"
   },
-  "help.cmd_balance": {
-    "status": "unverified",
-    "text": "/balance [code] — your balance, energy and profession"
-  },
+  "help.cmd_balance": {"status": "unverified", "text": "/bank balance [code] — your balance, energy, profession and place on the leaderboard"},
   "help.cmd_bank": {
     "status": "unverified",
-    "text": "/bank <code> — a bank's card: currency, leaders, money supply, accounts"
+    "text": "/bank info <code> — a bank's card: currency, leaders, money supply, accounts"
   },
   "help.cmd_bank_add_leader": {
     "status": "unverified",
-    "text": "/bank-add-leader <code> <user> — add a co-leader to a bank"
+    "text": "/bank leader <code> <user> — add a co-leader to a bank"
   },
   "help.cmd_bank_transfer": {
     "status": "unverified",
-    "text": "/bank-transfer <code> <user> — hand a bank's leadership to another user"
+    "text": "/bank transfer <code> <user> — hand a bank's leadership to another user"
   },
   "help.cmd_convert": {
     "status": "unverified",
-    "text": "/convert <amount> <from> <to> — convert between your accounts"
+    "text": "/bank convert <amount> <from> <to> — convert between your accounts"
   },
   "help.cmd_craft": {
     "status": "unverified",
-    "text": "/craft <good> [enterprise] — start producing a batch; it is ready in a few minutes"
+    "text": "/good craft <good> [enterprise] — start producing a batch; it is ready in a few minutes"
   },
   "help.cmd_create_bank": {
     "status": "unverified",
-    "text": "/create-bank — found a bank and its currency (bot/server admins; interactive)"
+    "text": "/bank add — found a bank and its currency (bot/server admins; interactive)"
   },
   "help.cmd_create_good": {
     "status": "unverified",
-    "text": "/create-good <name> <value> <energy> [emoji] [category] [currency] [enterprise] — create a good of yours or of your enterprise"
+    "text": "/good add <name> <value> <energy> [emoji] [category] [currency] [enterprise] — create a good of yours or of your enterprise"
   },
-  "help.cmd_edit_bank": {
-    "status": "unverified",
-    "text": "/edit-bank [option] [code] — manage a bank: currency name, emoji, code, central server, leaders, deletion"
-  },
-  "help.cmd_edit_bank_tg": {
-    "status": "unverified",
-    "text": "/edit_bank [option] [code] — manage a bank: currency name, emoji, code, central server, leaders, deletion"
-  },
+  "help.cmd_edit_bank": {"status": "unverified", "text": "/bank edit [option] [code] — manage a bank: currency name, emoji, code, central server, conversion fees, leaders, deletion, bank tax, audit channel, forms of the currency name"},
+  "help.cmd_edit_bank_tg": {"status": "unverified", "text": "/bank edit [option] [code] — manage a bank: currency name, emoji, code, central server, conversion fees, leaders, deletion, bank tax, audit channel, forms of the currency name"},
   "help.cmd_edit_enterprise": {
     "status": "unverified",
-    "text": "/edit-enterprise [option] [code] — manage your enterprise: texts, logo, leaders, salaries, deletion"
+    "text": "/enterprise edit [option] [code] — manage your enterprise: texts, logo, leaders, salaries, deletion"
   },
   "help.cmd_edit_party": {
     "status": "unverified",
-    "text": "/edit-party [option] — manage your party (founders and leaders)"
+    "text": "/party edit [option] — manage your party (founders and leaders)"
   },
   "help.cmd_edit_party_admin": {
     "status": "unverified",
-    "text": "/edit-party-admin <code|name> — change any setting of any party (bot admins)"
+    "text": "/party edit-admin <code|name> — change any setting of any party (bot admins)"
   },
   "help.cmd_edit_party_admin_tg": {
     "status": "unverified",
-    "text": "/edit_party_admin <code|name> — change any setting of any party (bot admins)"
+    "text": "/party edit-admin <code|name> — change any setting of any party (bot admins)"
   },
   "help.cmd_edit_party_tg": {
     "status": "unverified",
-    "text": "/edit_party [option] — manage your party (founders and leaders)"
+    "text": "/party edit [option] — manage your party (founders and leaders)"
   },
   "help.cmd_edit_rules": {
     "status": "unverified",
-    "text": "/edit-rules [option] — manage your party's rules (founders and leaders)"
+    "text": "/party rules [option] — manage your party's rules (founders and leaders)"
   },
   "help.cmd_edit_rules_tg": {
     "status": "unverified",
-    "text": "/edit_rules [option] — manage your party's rules (founders and leaders)"
+    "text": "/party rules [option] — manage your party's rules (founders and leaders)"
   },
   "help.cmd_ent_assign": {
     "status": "unverified",
-    "text": "/ent-assign <user> <position> — assign a worker to a position (leaders)"
+    "text": "/enterprise assign <user> <position> — assign a worker to a position (leaders)"
   },
   "help.cmd_ent_join": {
     "status": "unverified",
-    "text": "/ent-join <code> — ask to join an enterprise (its leaders approve)"
+    "text": "/enterprise join <code> — ask to join an enterprise (its leaders approve)"
   },
   "help.cmd_ent_kick": {
     "status": "unverified",
-    "text": "/ent-kick <user> [code] — remove a worker (enterprise leaders)"
+    "text": "/enterprise kick <user> [code] — remove a worker (enterprise leaders)"
   },
   "help.cmd_ent_leave": {
     "status": "unverified",
-    "text": "/ent-leave [code] — leave an enterprise"
+    "text": "/enterprise leave [code] — leave an enterprise"
   },
   "help.cmd_ent_position": {
     "status": "unverified",
-    "text": "/ent-position <name> <salary> — a position and its salary: a sum or a percent of sales (leaders)"
+    "text": "/enterprise position <name> <salary> — a position and its salary: a sum or a percent of sales (leaders)"
   },
   "help.cmd_ent_salary": {
     "status": "unverified",
-    "text": "/ent-salary <user> <salary> — a worker's personal salary (leaders)"
+    "text": "/enterprise salary <user> <salary> — a worker's personal salary (leaders)"
   },
   "help.cmd_ent_sell": {
     "status": "unverified",
-    "text": "/ent-sell <good> <buyer> [qty] [price] — sell the enterprise's goods (leaders)"
+    "text": "/enterprise sell <good> <buyer> [qty] [price] — sell the enterprise's goods (leaders)"
   },
   "help.cmd_enterprise": {
     "status": "unverified",
-    "text": "/enterprise [code] — an enterprise's card, or this server's list"
+    "text": "/enterprise info [code] — an enterprise's card, or this server's list"
   },
   "help.cmd_export": {
     "status": "unverified",
-    "text": "/export <good> <qty> <enterprise> [price] [currency] — ship goods to another enterprise (its leader must accept; delivery takes transit time)"
+    "text": "/enterprise export <good> <qty> <enterprise> [price] [currency] — ship goods to another enterprise (its leader must accept; delivery takes transit time)"
   },
   "help.cmd_find_with": {
     "status": "unverified",
-    "text": "/find-with <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages containing the keywords (server admins)"
+    "text": "/find with <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages containing the keywords (server admins)"
   },
   "help.cmd_find_without": {
     "status": "unverified",
-    "text": "/find-without <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages NOT containing the keywords (server admins)"
+    "text": "/find without <channel_id> <MM-DD-YYYY[ + 7D]> <keywords;…> — reply-mention authors of messages NOT containing the keywords (server admins)"
   },
   "help.cmd_fine": {
     "status": "unverified",
-    "text": "/fine <user> <amount> [reason] — fine a user in your bank's currency (bank leaders)"
+    "text": "/bank fine <user> <amount> [reason] — fine a user in your bank's currency (bank leaders)"
   },
   "help.cmd_force_leave": {
     "status": "unverified",
-    "text": "/force_leave <platform> <id> — make the bot leave a chat (bot admins)"
+    "text": "/bot leave <platform> <id> — make the bot leave a chat (bot admins)"
   },
   "help.cmd_give_good": {
     "status": "unverified",
-    "text": "/give-good <user> <good> [qty] — hand goods to another user"
+    "text": "/good give <user> <good> [qty] — hand goods to another user"
   },
   "help.cmd_goods": {
     "status": "unverified",
-    "text": "/goods — the goods available for production here"
+    "text": "/good info — the goods available for production here"
   },
   "help.cmd_govt": {
     "status": "unverified",
-    "text": "/govt <name> — information about a governing body of this union"
+    "text": "/govt info <name> — information about a governing body of this union"
   },
   "help.cmd_help": {
     "status": "unverified",
@@ -1447,223 +1336,208 @@
   },
   "help.cmd_inventory": {
     "status": "unverified",
-    "text": "/inventory — your crafted goods"
+    "text": "/good inventory — your crafted goods"
   },
   "help.cmd_lang": {
     "status": "unverified",
-    "text": "/lang <code> — set the default bot language for the whole server/group (server admins)"
+    "text": "/server lang <code> — set the default bot language for the whole server/group (server admins)"
   },
   "help.cmd_list_chats": {
     "status": "unverified",
-    "text": "/list_chats — list all chats the bot is in (bot admins)"
+    "text": "/bot chats — list all chats the bot is in (bot admins)"
   },
   "help.cmd_loc_compare": {
     "status": "unverified",
-    "text": "/loc-compare <code> — compare a reply across languages"
+    "text": "/locale compare <code> — compare a reply across languages"
   },
   "help.cmd_loc_compare_tg": {
     "status": "unverified",
-    "text": "/loc_compare <code> — compare a reply across languages"
+    "text": "/locale compare <code> — compare a reply across languages"
   },
   "help.cmd_loc_reply": {
     "status": "unverified",
-    "text": "/loc-reply <code> <text> — reply to a localization suggestion (bot admins)"
+    "text": "/locale reply <code> <text> — reply to a localization suggestion (bot admins)"
   },
   "help.cmd_loc_reply_tg": {
     "status": "unverified",
-    "text": "/loc_reply <code> <text> — reply to a localization suggestion (bot admins)"
+    "text": "/locale reply <code> <text> — reply to a localization suggestion (bot admins)"
   },
   "help.cmd_loc_suggest": {
     "status": "unverified",
-    "text": "/loc-suggest <lang> <code> <text> — suggest a localization"
+    "text": "/locale suggest <lang> <code> <text> — suggest a localization"
   },
   "help.cmd_loc_suggest_tg": {
     "status": "unverified",
-    "text": "/loc_suggest <lang> <code> <text> — suggest a localization"
+    "text": "/locale suggest <lang> <code> <text> — suggest a localization"
   },
   "help.cmd_locale": {
     "status": "unverified",
-    "text": "/locale [code] — localization status, or a language's file"
+    "text": "/locale info [code] — localization status, or a language's file"
   },
   "help.cmd_localizer_add": {
     "status": "unverified",
-    "text": "/localizer-add <user> — grant Localizer status: localization editing in the control panel (bot admins)"
+    "text": "/localizer add <user> — grant Localizer status: localization editing in the control panel (bot admins)"
   },
   "help.cmd_localizer_add_tg": {
     "status": "unverified",
-    "text": "/localizer-add <ID | @username | reply> — grant Localizer status: localization editing in the control panel (bot admins)"
+    "text": "/localizer add <ID | @username | reply> — grant Localizer status: localization editing in the control panel (bot admins)"
   },
   "help.cmd_localizer_rem": {
     "status": "unverified",
-    "text": "/localizer-rem <user> — revoke a delegated Localizer status (bot admins)"
+    "text": "/localizer remove <user> — revoke a delegated Localizer status (bot admins)"
   },
   "help.cmd_localizer_rem_tg": {
     "status": "unverified",
-    "text": "/localizer-rem <ID | @username | reply> — revoke a delegated Localizer status (bot admins)"
+    "text": "/localizer remove <ID | @username | reply> — revoke a delegated Localizer status (bot admins)"
   },
   "help.cmd_locallang": {
     "status": "unverified",
-    "text": "/locallang <code> — set bot language for this channel/topic (ru, uk, pl, en, es, pt)"
+    "text": "/server lang-channel <code> — set bot language for this channel/topic (ru, uk, pl, en, es, pt)"
   },
   "help.cmd_open_account": {
     "status": "unverified",
-    "text": "/open-account <code> — open an account in a bank"
+    "text": "/bank open <code> — open an account in a bank"
   },
   "help.cmd_party": {
     "status": "unverified",
-    "text": "/party <code|name> — information about a party of this union"
+    "text": "/party info <code|name> — information about a party of this union"
   },
   "help.cmd_party_dues": {
     "status": "unverified",
-    "text": "/party-dues <code> <amount> — set your party's monthly member dues (party leaders)"
+    "text": "/party dues <code> <amount> — set your party's monthly member dues (party leaders)"
   },
   "help.cmd_party_join": {
     "status": "unverified",
-    "text": "/party-join <code|name> — request to join a party of this union"
+    "text": "/party join <code|name> — request to join a party of this union"
   },
   "help.cmd_party_join_tg": {
     "status": "unverified",
-    "text": "/party_join <code|name> — request to join a party of this union"
+    "text": "/party join <code|name> — request to join a party of this union"
   },
   "help.cmd_party_kick": {
     "status": "unverified",
-    "text": "/party-kick <id|username> — remove a member from your party (party leaders)"
+    "text": "/party kick <id|username> — remove a member from your party (party leaders)"
   },
   "help.cmd_party_kick_tg": {
     "status": "unverified",
-    "text": "/party_kick <id|username> — remove a member from your party (party leaders)"
+    "text": "/party kick <id|username> — remove a member from your party (party leaders)"
   },
   "help.cmd_party_leave": {
     "status": "unverified",
-    "text": "/party-leave — leave your party in this union"
+    "text": "/party leave — leave your party in this union"
   },
   "help.cmd_party_leave_tg": {
     "status": "unverified",
-    "text": "/party_leave — leave your party in this union"
+    "text": "/party leave — leave your party in this union"
   },
   "help.cmd_pay": {
     "status": "unverified",
-    "text": "/pay <user> <amount> <code> — send money to another user"
+    "text": "/bank pay <user> <amount> <code> — send money to another user"
   },
   "help.cmd_privacy": {
     "status": "unverified",
-    "text": "/privacy — manage the privacy of your data"
+    "text": "/account privacy — manage the privacy of your data"
   },
   "help.cmd_quizzes": {
     "status": "unverified",
-    "text": "/quizzes — take a quiz (works in DMs too)"
+    "text": "/quiz take — take a quiz (works in DMs too)"
   },
   "help.cmd_quizzes_clear": {
     "status": "unverified",
-    "text": "/quizzes-clear — delete your saved quiz results"
+    "text": "/quiz clear — delete your saved quiz results"
   },
   "help.cmd_quizzes_clear_tg": {
     "status": "unverified",
-    "text": "/quizzes_clear — delete your saved quiz results"
+    "text": "/quiz clear — delete your saved quiz results"
   },
   "help.cmd_quizzes_compare": {
     "status": "unverified",
-    "text": "/quizzes-compare <user> — compare quiz results with someone"
+    "text": "/quiz compare <user> — compare quiz results with someone"
   },
   "help.cmd_quizzes_compare_tg": {
     "status": "unverified",
-    "text": "/quizzes_compare <user> — compare quiz results with someone"
+    "text": "/quiz compare <user> — compare quiz results with someone"
   },
   "help.cmd_quizzes_previous": {
     "status": "unverified",
-    "text": "/quizzes-previous [number] — compare your latest quiz result with the previous one"
+    "text": "/quiz previous [number] — compare your latest quiz result with the previous one"
   },
   "help.cmd_quizzes_previous_tg": {
     "status": "unverified",
-    "text": "/quizzes_previous [number] — compare your latest quiz result with the previous one"
+    "text": "/quiz previous [number] — compare your latest quiz result with the previous one"
   },
   "help.cmd_quizzes_stop": {
     "status": "unverified",
-    "text": "/quizzes-stop — stop the quiz, keeping your progress for 7 days"
+    "text": "/quiz stop — stop the quiz, keeping your progress for 7 days"
   },
   "help.cmd_quizzes_stop_tg": {
     "status": "unverified",
-    "text": "/quizzes_stop — stop the quiz, keeping your progress for 7 days"
+    "text": "/quiz stop — stop the quiz, keeping your progress for 7 days"
   },
   "help.cmd_rates": {
     "status": "unverified",
-    "text": "/rates [code] — currency values and conversion rates"
+    "text": "/bank rates [code] — currency values and conversion rates"
   },
   "help.cmd_remadmin": {
     "status": "unverified",
-    "text": "/remadmin <user> — revoke delegated Server Admin rights (bot admins)"
+    "text": "/admin remove <user> — revoke delegated Server Admin rights (bot admins)"
   },
   "help.cmd_remadmin_tg": {
     "status": "unverified",
-    "text": "/remadmin <ID | @username | reply> — revoke delegated Server Admin rights (bot admins)"
+    "text": "/admin remove <ID | @username | reply> — revoke delegated Server Admin rights (bot admins)"
   },
   "help.cmd_sell": {
     "status": "unverified",
-    "text": "/sell <good> <buyer> [qty] [price] — sell a good to a member or an enterprise"
+    "text": "/good sell <good> <buyer> [qty] [price] — sell a good to a member or an enterprise"
   },
-  "help.cmd_set_earn": {
-    "status": "unverified",
-    "text": "/set-earn <code> <on|off> [rate] — make this channel earn a currency (leaders/admins)"
-  },
+  "help.cmd_set_earn": {"status": "unverified", "text": "/bank earn <code> <on|off> [rate] — make this channel earn a currency; a rate above 1 only for the currency's leaders and the admins of its central server (leaders/admins)"},
   "help.cmd_set_profession": {
     "status": "unverified",
-    "text": "/set-profession <user> <good_code> — set a member's profession (bank leaders)"
+    "text": "/bank profession <user> <good_code> — set a member's profession (bank leaders)"
   },
   "help.cmd_set_rate": {
     "status": "unverified",
-    "text": "/set-rate <code> <rate> — fix a pegged rate with your sole treaty partner"
+    "text": "/bank rate <code> <rate> — fix a pegged rate with your sole treaty partner"
   },
   "help.cmd_set_wage": {
     "status": "unverified",
-    "text": "/set-wage <profession> <amount> — set the monthly wage for a profession (bank leaders)"
+    "text": "/bank wage <profession> <amount> — set the monthly wage for a profession (bank leaders)"
   },
   "help.cmd_setadmin": {
     "status": "unverified",
-    "text": "/setadmin <user> — delegate Server Admin rights for this server to a user (bot admins)"
+    "text": "/admin add <user> — delegate Server Admin rights for this server to a user (bot admins)"
   },
   "help.cmd_setadmin_tg": {
     "status": "unverified",
-    "text": "/setadmin <ID | @username | reply> — delegate Server Admin rights for this group (bot admins)"
+    "text": "/admin add <ID | @username | reply> — delegate Server Admin rights for this group (bot admins)"
   },
   "help.cmd_setlogs": {
     "status": "unverified",
-    "text": "/setlogs [channel] [day] [HH:MM] [timezone] — the economic log channel: FX updates and weekly statistics (server admins)"
+    "text": "/server logs [channel] [day] [HH:MM] [timezone] — the economic log channel: FX updates and weekly statistics (server admins)"
   },
   "help.cmd_settasks": {
     "status": "unverified",
-    "text": "/settasks [channel] [HH:MM] [timezone] — the channel for the monthly production task (server admins)"
+    "text": "/server tasks [channel] [HH:MM] [timezone] — the channel for the monthly production task (server admins)"
   },
   "help.cmd_setup": {
     "status": "unverified",
-    "text": "/setup <union> <lang> — link this server/group to a union and set the language (bot admins)"
+    "text": "/server setup <union> <lang> — link this server/group to a union and set the language (bot admins)"
   },
   "help.cmd_top": {
     "status": "verified",
-    "text": "/top [week|good|wealth] [code] — leaderboards: this week's producers, a good's masters, a currency's largest holdings"
+    "text": "/good top [week|good|wealth] [code] — leaderboards: this week's producers, a good's masters, a currency's largest holdings"
   },
   "help.cmd_transit": {
     "status": "unverified",
-    "text": "/transit [code] — an enterprise's goods still on the way"
+    "text": "/enterprise transit [code] — an enterprise's goods still on the way"
   },
   "help.cmd_treaty": {
     "status": "unverified",
-    "text": "/treaty <code> — propose a currency-conversion treaty (bank leaders)"
+    "text": "/bank treaty <code> — propose a currency-conversion treaty (bank leaders)"
   },
   "help.cmd_verify": {
     "status": "unverified",
-    "text": "/verify <fandom_name> — verify your Fandom account (unlocks the Fandom-activity commands)"
-  },
-  "help.cmd_wiki_founday": {
-    "status": "unverified",
-    "text": "/wiki-founday <link> <name> <date> [channel_id] [time] [language] — congratulate a wiki on its anniversary every year (server admins)"
-  },
-  "help.cmd_wiki_founday_remove": {
-    "status": "unverified",
-    "text": "/wiki-founday-remove <link> — stop congratulating a wiki (server admins)"
-  },
-  "help.cmd_wiki_foundays": {
-    "status": "unverified",
-    "text": "/wiki-foundays — list this server's wiki anniversaries (server admins)"
+    "text": "/account verify <fandom_name> — verify your Fandom account (unlocks the Fandom-activity commands)"
   },
   "help.section_admins": {
     "status": "unverified",
@@ -1735,7 +1609,7 @@
   },
   "lang_usage": {
     "status": "unverified",
-    "text": "Usage: /lang <ru|uk|pl|en|es|pt>"
+    "text": "Usage: /server lang <ru|uk|pl|en|es|pt>"
   },
   "leader_added": {
     "status": "unverified",
@@ -1751,15 +1625,15 @@
   },
   "link_need_verify": {
     "status": "unverified",
-    "text": "Verify your Fandom account with /verify first, then link your Telegram."
+    "text": "Verify your Fandom account with /account verify first, then link your Telegram."
   },
   "link_pending_discord": {
     "status": "unverified",
-    "text": "Got it. Now run /add-discord {nick} on Telegram within 30 minutes to finish linking."
+    "text": "Got it. Now run /account_discord {nick} on Telegram within 30 minutes to finish linking."
   },
   "link_pending_telegram": {
     "status": "unverified",
-    "text": "Got it. Now run /add-telegram {nick} on Discord within 30 minutes to finish linking."
+    "text": "Got it. Now run /account telegram {nick} on Discord within 30 minutes to finish linking."
   },
   "link_success": {
     "status": "unverified",
@@ -1767,15 +1641,15 @@
   },
   "link_success_unverified": {
     "status": "unverified",
-    "text": "✅ Accounts linked. Note: the Discord account is not Fandom-verified yet — your Telegram verification will activate once it runs /verify."
+    "text": "✅ Accounts linked. Note: the Discord account is not Fandom-verified yet — your Telegram verification will activate once it runs /account verify."
   },
   "link_usage_discord": {
     "status": "unverified",
-    "text": "Usage: /add-telegram <your Telegram @username>"
+    "text": "Usage: /account telegram <your Telegram @username>"
   },
   "link_usage_telegram": {
     "status": "unverified",
-    "text": "Usage: /add-discord <your Discord username>"
+    "text": "Usage: /account_discord <your Discord username>"
   },
   "list_chats_discord_header": {
     "status": "unverified",
@@ -1807,7 +1681,7 @@
   },
   "loc_compare_usage": {
     "status": "unverified",
-    "text": "Usage: /loc_compare <reply code>"
+    "text": "Usage: /locale compare <reply code>"
   },
   "loc_cooldown": {
     "status": "unverified",
@@ -1819,7 +1693,7 @@
   },
   "loc_list_footer": {
     "status": "unverified",
-    "text": "Send /locale <code> to get the localization file."
+    "text": "Send /locale info <code> to get the localization file."
   },
   "loc_list_header": {
     "status": "unverified",
@@ -1851,7 +1725,7 @@
   },
   "loc_reply_usage": {
     "status": "unverified",
-    "text": "Usage: /loc_reply <code> <text>"
+    "text": "Usage: /locale reply <code> <text>"
   },
   "loc_suggest_confirm": {
     "status": "unverified",
@@ -1867,7 +1741,7 @@
   },
   "loc_suggest_usage": {
     "status": "unverified",
-    "text": "Usage: /loc-suggest <language> <reply code> <text>"
+    "text": "Usage: /locale suggest <language> <reply code> <text>"
   },
   "loc_unknown_lang": {
     "status": "unverified",
@@ -1887,7 +1761,7 @@
   },
   "localizer_add_usage": {
     "status": "unverified",
-    "text": "Usage: /localizer-add <user ID or @username>, or reply to the user's message with the command."
+    "text": "Usage: /localizer add <user ID or @username>, or reply to the user's message with the command."
   },
   "localizer_rem_done": {
     "status": "unverified",
@@ -1899,11 +1773,11 @@
   },
   "localizer_rem_usage": {
     "status": "unverified",
-    "text": "Usage: /localizer-rem <user ID or @username>, or reply to the user's message with the command."
+    "text": "Usage: /localizer remove <user ID or @username>, or reply to the user's message with the command."
   },
   "locallang_usage": {
     "status": "unverified",
-    "text": "Usage: /locallang <ru|uk|pl|en|es|pt>"
+    "text": "Usage: /server lang-channel <ru|uk|pl|en|es|pt>"
   },
   "no_permission": {
     "status": "unverified",
@@ -1911,7 +1785,7 @@
   },
   "open_account_usage": {
     "status": "unverified",
-    "text": "Usage: /open-account <currency code>"
+    "text": "Usage: /bank open <currency code>"
   },
   "party_choose": {
     "status": "unverified",
@@ -1919,7 +1793,7 @@
   },
   "party_dues_usage": {
     "status": "unverified",
-    "text": "Usage: /party-dues <currency code> <amount>"
+    "text": "Usage: /party dues <currency code> <amount>"
   },
   "party_feature_disabled": {
     "status": "unverified",
@@ -1979,7 +1853,7 @@
   },
   "party_join_in_other": {
     "status": "unverified",
-    "text": "You are already in the party {name}. Leave it first with /party-leave."
+    "text": "You are already in the party {name}. Leave it first with /party leave."
   },
   "party_join_leader_dm": {
     "status": "unverified",
@@ -2019,7 +1893,7 @@
   },
   "party_join_usage": {
     "status": "unverified",
-    "text": "Usage: /party-join <party code or exact name>"
+    "text": "Usage: /party join <party code or exact name>"
   },
   "party_kick_done": {
     "status": "unverified",
@@ -2031,7 +1905,7 @@
   },
   "party_kick_leader": {
     "status": "unverified",
-    "text": "You cannot kick another leader. They must leave with /party-leave."
+    "text": "You cannot kick another leader. They must leave with /party leave."
   },
   "party_kick_not_member": {
     "status": "unverified",
@@ -2039,7 +1913,7 @@
   },
   "party_kick_usage": {
     "status": "unverified",
-    "text": "Usage: /party-kick <member ID or username>"
+    "text": "Usage: /party kick <member ID or username>"
   },
   "party_leave_done": {
     "status": "unverified",
@@ -2047,7 +1921,7 @@
   },
   "party_leave_founder": {
     "status": "unverified",
-    "text": "You founded this party and cannot simply leave it. Transfer it or suspend it with /edit-party."
+    "text": "You founded this party and cannot simply leave it. Transfer it or suspend it with /party edit."
   },
   "party_leave_none": {
     "status": "unverified",
@@ -2075,7 +1949,7 @@
   },
   "party_usage": {
     "status": "unverified",
-    "text": "Usage: /party <code or name>"
+    "text": "Usage: /party info <code or name>"
   },
   "pay_done": {
     "status": "unverified",
@@ -2091,7 +1965,7 @@
   },
   "pay_usage": {
     "status": "unverified",
-    "text": "Usage: /pay <user> <amount> <code> (or reply to a user: /pay <amount> <code>)"
+    "text": "Usage: /bank pay <user> <amount> <code> (or reply to a user: /bank pay <amount> <code>)"
   },
   "privacy_block_all_off": {
     "status": "unverified",
@@ -2235,7 +2109,7 @@
   },
   "quiz_consent_prompt": {
     "status": "unverified",
-    "text": "Before the results: may I remember them? That way you'll be able to compare them later with your own past results or with other people. You can delete them anytime with /quizzes-clear."
+    "text": "Before the results: may I remember them? That way you'll be able to compare them later with your own past results or with other people. You can delete them anytime with /quiz clear."
   },
   "quiz_consent_yes": {
     "status": "unverified",
@@ -2267,7 +2141,7 @@
   },
   "quiz_saved": {
     "status": "unverified",
-    "text": "Saved. You can remove it anytime with /quizzes-clear."
+    "text": "Saved. You can remove it anytime with /quiz clear."
   },
   "quiz_start_prompt": {
     "status": "unverified",
@@ -2323,7 +2197,7 @@
   },
   "quizzes_compare_usage": {
     "status": "unverified",
-    "text": "Usage: /quizzes_compare <user id or @username>"
+    "text": "Usage: /quiz compare <user id or @username>"
   },
   "quizzes_compare_user_invalid": {
     "status": "unverified",
@@ -2347,11 +2221,11 @@
   },
   "quizzes_previous_invalid": {
     "status": "unverified",
-    "text": "There is no quiz with that number. The quiz list is /quizzes."
+    "text": "There is no quiz with that number. The quiz list is /quiz take."
   },
   "quizzes_previous_no_recent": {
     "status": "unverified",
-    "text": "More than 30 minutes have passed since you took a quiz. Give the quiz number: /quizzes-previous <number> (the list is /quizzes)."
+    "text": "More than 30 minutes have passed since you took a quiz. Give the quiz number: /quiz previous <number> (the list is /quiz take)."
   },
   "quizzes_previous_no_results": {
     "status": "unverified",
@@ -2367,7 +2241,7 @@
   },
   "quizzes_previous_usage": {
     "status": "unverified",
-    "text": "Usage: /quizzes_previous [quiz number]"
+    "text": "Usage: /quiz previous [quiz number]"
   },
   "quizzes_title": {
     "status": "unverified",
@@ -2415,7 +2289,7 @@
   },
   "remadmin_usage": {
     "status": "unverified",
-    "text": "Usage: /remadmin <user ID or @username>, or reply to the user's message with /remadmin."
+    "text": "Usage: /admin remove <user ID or @username>, or reply to the user's message with /admin remove."
   },
   "resume_confirm": {
     "status": "unverified",
@@ -2479,7 +2353,7 @@
   },
   "sell_not_sellable": {
     "status": "unverified",
-    "text": "“{name}” is a base good: it has no market value and is handed over with /give-good rather than sold."
+    "text": "“{name}” is a base good: it has no market value and is handed over with /good give rather than sold."
   },
   "sell_nothing": {
     "status": "unverified",
@@ -2495,7 +2369,7 @@
   },
   "sell_usage": {
     "status": "unverified",
-    "text": "Usage: /sell <good code> <buyer> [quantity] [price]"
+    "text": "Usage: /good sell <good code> <buyer> [quantity] [price]"
   },
   "service_event.bank_created": {
     "status": "unverified",
@@ -2527,7 +2401,7 @@
   },
   "service_event.left_unconfigured": {
     "status": "unverified",
-    "text": "👋 {platform}: the bot left “{chat}” ({chat_id}) — {days} days have passed since it was added and it was never bound to a union with /setup."
+    "text": "👋 {platform}: the bot left “{chat}” ({chat_id}) — {days} days have passed since it was added and it was never bound to a union with /server setup."
   },
   "service_event.parties_disabled": {
     "status": "unverified",
@@ -2571,7 +2445,7 @@
   },
   "set_earn_usage": {
     "status": "unverified",
-    "text": "Usage: /set-earn <code> <on|off> [rate]"
+    "text": "Usage: /bank earn <code> <on|off> [rate]"
   },
   "set_earn_wrong_union": {
     "status": "unverified",
@@ -2583,7 +2457,7 @@
   },
   "set_profession_usage": {
     "status": "unverified",
-    "text": "Usage: /set-profession <user> <good code>"
+    "text": "Usage: /bank profession <user> <good code>"
   },
   "set_rate_bad": {
     "status": "unverified",
@@ -2611,7 +2485,7 @@
   },
   "set_rate_usage": {
     "status": "unverified",
-    "text": "Usage: /set-rate <partner code> <rate>"
+    "text": "Usage: /bank rate <partner code> <rate>"
   },
   "set_wage_cleared": {
     "status": "unverified",
@@ -2627,7 +2501,7 @@
   },
   "set_wage_usage": {
     "status": "unverified",
-    "text": "Usage: /set-wage <profession> <amount>"
+    "text": "Usage: /bank wage <profession> <amount>"
   },
   "setadmin_already": {
     "status": "unverified",
@@ -2647,7 +2521,7 @@
   },
   "setadmin_usage": {
     "status": "unverified",
-    "text": "Usage: /setadmin <user ID or @username>, or reply to the user's message with /setadmin."
+    "text": "Usage: /admin add <user ID or @username>, or reply to the user's message with /admin add."
   },
   "setchannel_bad_channel": {
     "status": "unverified",
@@ -2699,7 +2573,7 @@
   },
   "setup_usage": {
     "status": "unverified",
-    "text": "Usage: /setup <UNION> <ru|uk|pl|en|es|pt>"
+    "text": "Usage: /server setup <UNION> <ru|uk|pl|en|es|pt>"
   },
   "state_no": {
     "status": "unverified",
@@ -2755,7 +2629,7 @@
   },
   "suspend_confirm": {
     "status": "unverified",
-    "text": "Suspend the party {name}? Its information will remain, /party will mark it as suspended, and a leader can resume it later."
+    "text": "Suspend the party {name}? Its information will remain, /party info will mark it as suspended, and a leader can resume it later."
   },
   "suspend_done": {
     "status": "unverified",
@@ -2873,17 +2747,14 @@
     "status": "unverified",
     "text": "These banks already have a treaty."
   },
-  "treaty_offer": {
-    "status": "unverified",
-    "text": "Bank {proposer} proposes a currency-conversion treaty with {name} [{code}]. A leader of {code} may accept."
-  },
+  "treaty_offer": {"status": "unverified", "text": "Bank {proposer} proposes a currency-conversion treaty with {name} [{code}]. A leader of {code} may accept."},
   "treaty_self": {
     "status": "unverified",
     "text": "A bank cannot make a treaty with itself."
   },
   "treaty_usage": {
     "status": "unverified",
-    "text": "Usage: /treaty <currency code>"
+    "text": "Usage: /bank treaty <currency code>"
   },
   "verify_cooldown": {
     "status": "unverified",
@@ -2899,7 +2770,7 @@
   },
   "verify_no_handle": {
     "status": "unverified",
-    "text": "{name} has no Discord account listed on their Fandom profile. Add it on your profile on any wiki, then run /verify again."
+    "text": "{name} has no Discord account listed on their Fandom profile. Add it on your profile on any wiki, then run /account verify again."
   },
   "verify_not_found": {
     "status": "unverified",
@@ -2907,11 +2778,11 @@
   },
   "verify_required": {
     "status": "unverified",
-    "text": "You must verify your Fandom account first with /verify <your Fandom username>."
+    "text": "You must verify your Fandom account first with /account verify <your Fandom username>."
   },
   "verify_required_tg": {
     "status": "unverified",
-    "text": "You must verify first: run /add-discord here and /add-telegram on Discord to link your accounts (your Discord account must be verified with /verify)."
+    "text": "You must verify first: run /account_discord here and /account telegram on Discord to link your accounts (your Discord account must be verified with /account verify)."
   },
   "verify_success": {
     "status": "unverified",
@@ -2919,7 +2790,7 @@
   },
   "verify_usage": {
     "status": "unverified",
-    "text": "Usage: /verify <your username on fandom.com>"
+    "text": "Usage: /account verify <your username on fandom.com>"
   },
   "weekday_0": {
     "status": "unverified",
@@ -2949,8 +2820,8 @@
   "sponsor_not_active": {"status": "unverified", "text": "No active Patreon role is linked to your Discord account."},
   "sponsor_union_limit": {"status": "unverified", "text": "This subscription has reached its union limit."},
   "sponsor_setup_forbidden": {"status": "unverified", "text": "You need an active subscription, Manage Server permission here, a union you own and a free server slot."},
-  "section_sponsors": {"status": "unverified", "text": "Sponsors and Bot Admins"},
-  "cmd_sponsor": {"status": "unverified", "text": "/sponsor — show your subscription, unions and server slots"},
+  "help.section_sponsors": {"status": "unverified", "text": "Sponsors and Bot Admins"},
+  "help.cmd_sponsor": {"status": "unverified", "text": "/sponsor info — show your subscription, unions and server slots"},
   "weekday_6": {
     "status": "unverified",
     "text": "Sunday"
@@ -2959,5 +2830,359 @@
   "sponsor_tier_community": {"status": "unverified", "text": "Community role"},
   "sponsor_community_pending": {"status": "unverified", "text": "Community-role benefits start in about {days} day(s) after the role was first observed."},
   "sponsor_community_grace": {"status": "unverified", "text": "Community role lost; benefits continue for {days} more day(s)."},
-  "sponsor_retention_warning": {"status": "unverified", "text": "The working grace period ended. Another active sponsor or bot administrator can take over; otherwise the bot leaves and the community data is deleted 30 days after grace ends."}
+  "sponsor_retention_warning": {"status": "unverified", "text": "The working grace period ended. Another active sponsor or bot administrator can take over; otherwise the bot leaves and the community data is deleted 30 days after grace ends."},
+  "slash_limit": {"status": "unverified", "text": "Show your current subscription usage"},
+  "help.cmd_limit": {"status": "unverified", "text": "/sponsor limit — your current subscription usage (sponsors only)."},
+  "limit_sponsors_only": {"status": "unverified", "text": "This command is available only to active sponsors, including working grace. Link Telegram to the subscribing Discord account first."},
+  "limit_status": {"status": "unverified", "text": "Unions: {unions}/{union_limit}; communities: {communities}/{community_limit}.\nEligible currency-award messages today UTC: {day}/{day_limit}; current UTC minute: {minute}/{minute_limit}. Daily budget resets at 00:00 UTC. Limits are shared by linked accounts."},
+  "slash_add_wiki": {"status": "unverified", "text": "attach a wiki to a union (bot admins)"},
+  "slash_remove_wiki": {"status": "unverified", "text": "detach a wiki from a union (bot admins)"},
+  "slash_wiki_founded": {"status": "unverified", "text": "correct a wiki's founding date (bot admins)"},
+  "slash_wiki_founded_date": {"status": "unverified", "text": "Founding date DD.MM.YYYY, or auto for the detected one"},
+  "slash_wiki_channel": {"status": "unverified", "text": "channel for this server's wiki birthday greetings (bot admins)"},
+  "slash_wiki_greeting": {"status": "unverified", "text": "greet one wiki's birthday in this server, or stop (bot admins)"},
+  "slash_wiki_greeting_enabled": {"status": "unverified", "text": "True to greet this wiki, False to stop"},
+  "slash_wiki_rep_role": {"status": "unverified", "text": "role for this server's wiki representatives (bot admins)"},
+  "slash_birthday": {"status": "unverified", "text": "set, show or forget your birthday (day and month)"},
+  "slash_birthday_day": {"status": "unverified", "text": "Day of the month (1-31)"},
+  "slash_birthday_month": {"status": "unverified", "text": "Month (1-12)"},
+  "slash_birthday_clear": {"status": "unverified", "text": "True to forget your birthday"},
+  "slash_birthday_channel": {"status": "unverified", "text": "channel for members' birthday greetings (server admins)"},
+  "slash_birthday_role": {"status": "unverified", "text": "role members hold on their birthday (server admins)"},
+  "slash_union": {"status": "unverified", "text": "show a union's public profile"},
+  "slash_edit_union": {"status": "unverified", "text": "edit a union: names, logo, owner, language, creation date (bot admins, sponsors)"},
+  "slash_param_union": {"status": "unverified", "text": "Union code"},
+  "slash_param_union_optional": {"status": "unverified", "text": "Union code (default: this server's union)"},
+  "slash_param_wiki_url": {"status": "unverified", "text": "Wiki link, e.g. confederation.fandom.com/ru"},
+  "slash_param_channel": {"status": "unverified", "text": "Channel mention or ID (default: this channel; off switches off)"},
+  "slash_param_tz": {"status": "unverified", "text": "Server timezone as a UTC offset, e.g. UTC+3"},
+  "slash_param_role": {"status": "unverified", "text": "Role mention or ID, or off"},
+  "slash_param_menu_option": {"status": "unverified", "text": "Menu item number"},
+  "add_wiki_usage_tg": {"status": "unverified", "text": "Usage: /wiki add <union code> <wiki link>"},
+  "remove_wiki_usage_tg": {"status": "unverified", "text": "Usage: /wiki remove <wiki link> [union code]"},
+  "wiki_founded_usage_tg": {"status": "unverified", "text": "Usage: /wiki founded <wiki link> <DD.MM.YYYY|auto>"},
+  "wiki_attached": {"status": "unverified", "text": "✅ Wiki attached to union {union}."},
+  "wiki_summary": {"status": "unverified", "text": "{name} — {url}\nFounded: {date} · Language: {language} · Administration: {staff}"},
+  "wiki_already_attached": {"status": "unverified", "text": "{name} is already attached to union {union}."},
+  "wiki_not_found": {"status": "unverified", "text": "I could not find a wiki at that link. Example: confederation.fandom.com/ru"},
+  "wiki_unknown": {"status": "unverified", "text": "No attached wiki matches that link."},
+  "wiki_specify_union": {"status": "unverified", "text": "This wiki belongs to several unions ({codes}); name the union as well."},
+  "wiki_not_in_union": {"status": "unverified", "text": "{name} is not attached to union {union}."},
+  "wiki_detached": {"status": "unverified", "text": "🗑️ {name} detached from union {union}."},
+  "wiki_bad_date": {"status": "unverified", "text": "Invalid date. Use DD.MM.YYYY, YYYY-MM-DD or auto."},
+  "wiki_founded_set": {"status": "unverified", "text": "📅 {name}: birthdays now count from {date}."},
+  "wiki_channel_set": {"status": "unverified", "text": "🎂 The birthdays of this union's wikis will be announced in {channel} at {time} ({tz})."},
+  "wiki_channel_off": {"status": "unverified", "text": "Wiki birthday greetings are switched off in this server."},
+  "wiki_greeting_on": {"status": "unverified", "text": "🎂 {name} will be greeted on its birthday in this server again."},
+  "wiki_greeting_off": {"status": "unverified", "text": "{name} will no longer be greeted on its birthday in this server."},
+  "rep_role_set": {"status": "unverified", "text": "✅ {role} will go to members who have been bureaucrats, administrators or content moderators on one of the union's wikis for over {days} days, when I can tie their Discord account to that wiki account."},
+  "rep_role_off": {"status": "unverified", "text": "The wiki representative role is switched off; I will take it back from the members I gave it to."},
+  "role_bad": {"status": "unverified", "text": "Role not found. Mention a role of this server or give its ID."},
+  "role_set_cannot_manage": {"status": "unverified", "text": "⚠️ {role} is saved, but I cannot give it: I need the Manage Roles permission and my own role must be above it."},
+  "wiki_bday_line": {"status": "unverified", "text": "Today {items}!"},
+  "wiki_bday_and": {"status": "unverified", "text": " and "},
+  "wiki_bday_contrast": {"status": "unverified", "text": "{past}, while {future}"},
+  "wiki_bday_past_one": {"status": "unverified", "text": "{name} turned {n} year old"},
+  "wiki_bday_past_few": {"status": "unverified", "text": "{name} turned {n} years old"},
+  "wiki_bday_past_many": {"status": "unverified", "text": "{name} turned {n} years old"},
+  "wiki_bday_past_other": {"status": "unverified", "text": "{name} turned {n} years old"},
+  "wiki_bday_future_one": {"status": "unverified", "text": "{name} turns {n} year old"},
+  "wiki_bday_future_few": {"status": "unverified", "text": "{name} turns {n} years old"},
+  "wiki_bday_future_many": {"status": "unverified", "text": "{name} turns {n} years old"},
+  "wiki_bday_future_other": {"status": "unverified", "text": "{name} turns {n} years old"},
+  "birthday_date": {"status": "unverified", "text": "{date}"},
+  "birthday_none": {"status": "unverified", "text": "No birthday is saved for you."},
+  "birthday_current": {"status": "unverified", "text": "🎂 Your birthday: {date}."},
+  "birthday_saved": {"status": "unverified", "text": "🎂 Saved: your birthday is {date}. A linked Discord and Telegram account share it."},
+  "birthday_cleared": {"status": "unverified", "text": "Your birthday has been forgotten."},
+  "birthday_bad_date": {"status": "unverified", "text": "That date does not exist. Give a day (1-31) and a month (1-12)."},
+  "birthday_bad_date_tg": {"status": "unverified", "text": "Usage: /birthday set DD.MM, e.g. /birthday set 25.12; /birthday set off forgets it."},
+  "birthday_channel_set": {"status": "unverified", "text": "🎂 Members will be congratulated on their birthday in {channel} at {time} ({tz})."},
+  "birthday_channel_set_tg": {"status": "unverified", "text": "🎂 Members will be congratulated on their birthday here at {time} ({tz})."},
+  "birthday_channel_off": {"status": "unverified", "text": "Birthday greetings are switched off."},
+  "birthday_role_set": {"status": "unverified", "text": "🎂 Members will hold {role} on their birthday, from its earliest start in UTC or {tz} to its latest end."},
+  "birthday_role_off": {"status": "unverified", "text": "The birthday role is switched off; I will take it back from the members I gave it to."},
+  "birthday_greeting_1": {"status": "unverified", "text": "🎂 Happy birthday, {user}! May this year bring you plenty of joy, good friends and bright ideas."},
+  "birthday_greeting_2": {"status": "unverified", "text": "🎉 {user}, today is your day! We wish you warmth, inspiration and lots of reasons to smile."},
+  "birthday_greeting_3": {"status": "unverified", "text": "🥳 Happy birthday, {user}! May every new page of this year be even better than the last."},
+  "birthday_greeting_4": {"status": "unverified", "text": "🎈 Congratulations on your birthday, {user}! We wish you good health, kind people around you and dreams that come true."},
+  "birthday_greeting_5": {"status": "unverified", "text": "🌟 Happy birthday, {user}! May your ideas find support and your efforts bring wonderful results."},
+  "birthday_greeting_6": {"status": "unverified", "text": "🎁 Happy birthday, {user}! May today be full of pleasant surprises and the whole year full of good news."},
+  "birthday_greeting_7": {"status": "unverified", "text": "🍰 Today we celebrate {user}! We wish you energy for new plans and plenty of time for what you love."},
+  "birthday_greeting_8": {"status": "unverified", "text": "✨ Happy birthday, {user}! We are glad you are with us, and we wish you a generous and happy year."},
+  "birthday_greeting_9": {"status": "unverified", "text": "🎊 Many happy returns, {user}! May luck walk beside you and every road lead somewhere wonderful."},
+  "birthday_greeting_10": {"status": "unverified", "text": "🌈 Happy birthday, {user}! May your days be bright, your mood sunny and your heart light."},
+  "birthday_greeting_11": {"status": "unverified", "text": "🎂 Congratulations, {user}! May this new year of your life bring discoveries, friendships and moments worth remembering."},
+  "birthday_greeting_12": {"status": "unverified", "text": "🥂 Happy birthday, {user}! We wish you a year full of success, calm happiness and people who make you smile."},
+  "edit_union_specify": {"status": "unverified", "text": "Name the union code as well."},
+  "edit_union_menu_header": {"status": "unverified", "text": "Editing union {name} [{code}]. Reply with a number:"},
+  "edit_union_opt_name": {"status": "unverified", "text": "Names"},
+  "edit_union_opt_logo": {"status": "unverified", "text": "Logo"},
+  "edit_union_opt_owner": {"status": "unverified", "text": "Owner"},
+  "edit_union_opt_lang": {"status": "unverified", "text": "Language"},
+  "edit_union_ask_name": {"status": "unverified", "text": "Current names:\n{current}\n\nSend new names as en=Name | ru=Название; xx=- removes the name in that language."},
+  "edit_union_bad_name": {"status": "unverified", "text": "I could not read that. Use code=Name pairs separated by |, with the codes en, ru, uk, pl, es, pt."},
+  "edit_union_names_done": {"status": "unverified", "text": "✅ Names updated:\n{names}"},
+  "edit_union_ask_logo": {"status": "unverified", "text": "Send the new logo as an image."},
+  "edit_union_done": {"status": "unverified", "text": "✅ Done."},
+  "edit_union_ask_owner": {"status": "unverified", "text": "Mention the new owner or send their Discord ID. A sponsor can hand the union only to an active sponsor with room for it and its communities; a bot admin can hand it to anyone, or send none to make it an operator union."},
+  "edit_union_ask_owner_tg": {"status": "unverified", "text": "Send the Discord ID of the new owner. A sponsor can hand the union only to an active sponsor with room for it and its communities; a bot admin can hand it to anyone, or send none to make it an operator union."},
+  "edit_union_owner_admin_only": {"status": "unverified", "text": "Only a bot admin can hand a union over to the bot admins."},
+  "edit_union_owner_operator": {"status": "unverified", "text": "✅ Union {union} is now run by the bot admins."},
+  "edit_union_owner_need_id": {"status": "unverified", "text": "Send a Discord account ID (digits only)."},
+  "edit_union_owner_needs_link": {"status": "unverified", "text": "The new owner's Discord account has no linked Telegram account to accept here. Offer the union with /union edit on Discord."},
+  "edit_union_owner_not_sponsor": {"status": "unverified", "text": "The new owner must be an active sponsor."},
+  "edit_union_owner_same": {"status": "unverified", "text": "That account already owns this union."},
+  "edit_union_owner_no_union_slot": {"status": "unverified", "text": "The new owner's subscription has no free union slot."},
+  "edit_union_owner_no_server_slot": {"status": "unverified", "text": "The new owner's subscription has no room for this union's communities."},
+  "edit_union_owner_offer": {"status": "unverified", "text": "{mention}, you are offered ownership of union {union} [{code}]. It will count towards your subscription's limits. Do you accept?"},
+  "edit_union_owner_done": {"status": "unverified", "text": "✅ Union {union} now belongs to {user}."},
+  "edit_union_owner_declined": {"status": "unverified", "text": "The ownership offer was declined."},
+  "edit_union_owner_stale": {"status": "unverified", "text": "The offer is no longer valid: the union changed hands in the meantime."},
+  "edit_union_ask_lang": {"status": "unverified", "text": "Send the union's language code ({supported}). Wiki birthday greetings are written in it first."},
+  "edit_union_bad_lang": {"status": "unverified", "text": "Unknown language code. Use one of: ru, uk, pl, en, es, pt."},
+  "edit_union_lang_done": {"status": "unverified", "text": "✅ Union language: {language}."},
+  "union_profile_specify": {"status": "unverified", "text": "Give a union code: this chat is not bound to a union."},
+  "union_profile_slow_down": {"status": "unverified", "text": "Too many requests — try again in a minute."},
+  "union_profile_lang": {"status": "unverified", "text": "Language"},
+  "union_profile_created": {"status": "unverified", "text": "Created"},
+  "union_profile_communities": {"status": "unverified", "text": "Communities"},
+  "union_profile_section_wikis": {"status": "unverified", "text": "Wikis"},
+  "union_profile_wikis": {"status": "unverified", "text": "Wikis"},
+  "union_profile_wiki_langs": {"status": "unverified", "text": "Wiki languages"},
+  "union_profile_staff": {"status": "unverified", "text": "Administration members"},
+  "union_profile_section_politics": {"status": "unverified", "text": "Politics"},
+  "union_profile_parties": {"status": "unverified", "text": "Parties"},
+  "union_profile_govt": {"status": "unverified", "text": "Governing bodies"},
+  "union_profile_section_economy": {"status": "unverified", "text": "Economy"},
+  "union_profile_banks": {"status": "unverified", "text": "Banks and currencies"},
+  "union_profile_accounts": {"status": "unverified", "text": "Open accounts"},
+  "union_profile_enterprises": {"status": "unverified", "text": "Enterprises"},
+  "union_profile_goods": {"status": "unverified", "text": "Goods"},
+  "service_event.union_owner_changed": {"status": "unverified", "text": "👑 Union {code} owner changed to {owner} by {user}."},
+  "help.cmd_union": {"status": "unverified", "text": "/union info [code or name] — a union's public profile"},
+  "help.cmd_birthday": {"status": "unverified", "text": "/birthday set [day] [month] [clear] — set, show or forget your birthday"},
+  "help.cmd_birthday_tg": {"status": "unverified", "text": "/birthday set [DD.MM|off] — set, show or forget your birthday"},
+  "help.cmd_birthday_channel": {"status": "unverified", "text": "/birthday channel [channel|off] [timezone] — where members are congratulated at 10:00 server time (server admins)"},
+  "help.cmd_birthday_channel_tg": {"status": "unverified", "text": "/birthday channel [off] [timezone] — congratulate members here at 10:00 group time (server admins)"},
+  "help.cmd_birthday_role": {"status": "unverified", "text": "/birthday role <role|off> [timezone] — the role members hold through their birthday (server admins)"},
+  "help.cmd_add_wiki": {"status": "unverified", "text": "/wiki add <union> <link> — attach a wiki to a union; its name, language, founding date and administration are read at once (bot admins)"},
+  "help.cmd_add_wiki_tg": {"status": "unverified", "text": "/wiki add <union> <link> — attach a wiki to a union; its name, language, founding date and administration are read at once (bot admins)"},
+  "help.cmd_remove_wiki": {"status": "unverified", "text": "/wiki remove <link> [union] — detach a wiki from a union (bot admins)"},
+  "help.cmd_remove_wiki_tg": {"status": "unverified", "text": "/wiki remove <link> [union] — detach a wiki from a union (bot admins)"},
+  "help.cmd_wiki_founded": {"status": "unverified", "text": "/wiki founded <link> <DD.MM.YYYY|auto> — correct a wiki's founding date (bot admins)"},
+  "help.cmd_wiki_founded_tg": {"status": "unverified", "text": "/wiki founded <link> <DD.MM.YYYY|auto> — correct a wiki's founding date (bot admins)"},
+  "help.cmd_wiki_channel": {"status": "unverified", "text": "/wiki channel [channel|off] [timezone] — where the union's wiki birthdays are announced at 10:00 server time (bot admins)"},
+  "help.cmd_wiki_greeting": {"status": "unverified", "text": "/wiki greeting <link> <true/false> — greet one wiki's birthday in this server, or stop (bot admins)"},
+  "help.cmd_wiki_rep_role": {"status": "unverified", "text": "/wiki rep-role <role|off> — role for members who have been bureaucrats, administrators or content moderators of a union wiki for over 30 days (bot admins)"},
+  "help.cmd_edit_union": {"status": "unverified", "text": "/union edit [union] [option] — a union's names, logo, owner, language and creation date (bot admins; sponsors for their own unions)"},
+  "help.cmd_edit_union_tg": {"status": "unverified", "text": "/union edit [code] [option] — a union's names, logo, owner, language and creation date (bot admins; sponsors for their own unions)"},
+  "union_profile_lists_hint": {"status": "unverified", "text": "Full lists: the buttons below."},
+  "union_list_kind_wikis": {"status": "unverified", "text": "Wikis"},
+  "union_list_kind_parties": {"status": "unverified", "text": "Parties"},
+  "union_list_kind_govt": {"status": "unverified", "text": "Governing bodies"},
+  "union_list_kind_banks": {"status": "unverified", "text": "Banks and currencies"},
+  "union_list_kind_enterprises": {"status": "unverified", "text": "Enterprises"},
+  "union_list_title": {"status": "unverified", "text": "{union}: {kind}"},
+  "union_list_empty": {"status": "unverified", "text": "Nothing here yet."},
+  "union_list_wiki_line": {"status": "unverified", "text": "{name} — {url}"},
+  "union_list_party_line": {"status": "unverified", "text": "{name} [{code}] · members: {members}"},
+  "union_list_govt_line": {"status": "unverified", "text": "{name} · members: {members}"},
+  "union_list_bank_line": {"status": "unverified", "text": "{emoji}{name} [{code}] · accounts: {accounts}"},
+  "union_list_enterprise_line": {"status": "unverified", "text": "{name} [{code}] · {community}"},
+  "edit_union_owner_warn_limits": {"status": "unverified", "text": "⚠️ This puts {user} over their subscription's limits: nothing is taken away, but they cannot create unions or add communities until they have room again."},
+  "edit_union_owner_warn_not_sponsor": {"status": "unverified", "text": "⚠️ {user} has no active subscription. While that lasts, messages in the union's earning channels earn no currency, and they cannot edit the union themselves; bot admins still can."},
+  "edit_union_owner_warn_lapsed": {"status": "unverified", "text": "⚠️ {user}'s subscription has ended. Messages in the union's earning channels will earn no currency, and unless the subscription is renewed the bot will leave the union's communities and erase their data {when}."},
+  "edit_union_owner_when_soon": {"status": "unverified", "text": "at its next hourly check"},
+  "edit_union_owner_when_date": {"status": "unverified", "text": "on {date}"},
+  "edit_union_owner_confirm": {"status": "unverified", "text": "Send {code} to hand the union over anyway; anything else cancels."},
+  "wiki_blocked": {"status": "unverified", "text": "The wiki's protection (Cloudflare) blocked the bot's request — this is a block on the bot's server address, not a wrong link. Try again later."},
+  "link_already": {"status": "unverified", "text": "✅ These accounts are already linked."},
+  "link_waiting_discord": {"status": "unverified", "text": "The Discord account {nick} is waiting to be linked with this Telegram account. If that is you, run /account_discord {nick} here."},
+  "link_waiting_telegram": {"status": "unverified", "text": "The Telegram account @{nick} is waiting to be linked with this Discord account. If that is you, run /account telegram {nick} here."},
+  "ent_salary_no_currency": {"status": "unverified", "text": "no currency chosen"},
+  "tax_bad_percent": {"status": "unverified", "text": "Send a percentage from 0 to 50, e.g. 5 or 2.5."},
+  "tax_part_community": {"status": "unverified", "text": "community tax {amount}"},
+  "tax_part_bank": {"status": "unverified", "text": "bank tax {amount}"},
+  "tax_withheld": {"status": "unverified", "text": "Taxes withheld from the recipient: {taxes}; received {net}."},
+  "audit_title": {"status": "unverified", "text": "Bank audit"},
+  "audit_fine": {"status": "unverified", "text": "{bank}: {by} fined {user} {amount}. Reason: {reason}"},
+  "audit_emit": {"status": "unverified", "text": "{bank}: {by} issued {amount} to {target}. Reason: {reason}"},
+  "audit_wages": {"status": "unverified", "text": "{bank}: monthly wages paid — {total} to {count} account(s)."},
+  "audit_dues": {"status": "unverified", "text": "{bank}: monthly party dues collected — {total} from {count} member payment(s)."},
+  "audit_fee": {"status": "unverified", "text": "{bank}: {by} changed the conversion fees: {current}"},
+  "audit_tax": {"status": "unverified", "text": "{bank}: {by} set the bank tax to {percent}."},
+  "audit_leader_added": {"status": "unverified", "text": "{bank}: {user} became a co-leader."},
+  "audit_leader_transfer": {"status": "unverified", "text": "{bank}: leadership passed to {user}."},
+  "bank_field_tax": {"status": "unverified", "text": "Bank tax"},
+  "edit_bank_opt_tax": {"status": "unverified", "text": "Bank tax on payments and sales"},
+  "edit_bank_opt_audit": {"status": "unverified", "text": "Audit channel"},
+  "edit_bank_ask_tax": {"status": "unverified", "text": "The bank tax is now {current}. Send the new rate from 0 to {max}: it is taken from every payment and sale in this currency and shared among the bank's leaders."},
+  "edit_bank_tax_set": {"status": "unverified", "text": "✅ Bank tax: {percent}."},
+  "edit_bank_ask_audit": {"status": "unverified", "text": "Send any message here to make this channel the bank's audit channel (fines, emissions, wages, dues, fee and tax changes, leadership changes), or off to switch it off."},
+  "edit_bank_audit_set": {"status": "unverified", "text": "✅ This channel is now the bank's audit channel."},
+  "edit_bank_audit_off": {"status": "unverified", "text": "The bank's audit channel is switched off."},
+  "balance_rank": {"status": "unverified", "text": "Place on the leaderboard: {place} of {total}"},
+  "set_earn_rate_leaders_only": {"status": "unverified", "text": "Only the currency's leaders, bot admins and server admins of the bank's central server may set a multiplier above 1. Run it without a multiplier, or with 1 or less."},
+  "emit_wrong_union": {"status": "unverified", "text": "That party or enterprise belongs to another union than the currency."},
+  "emit_bad_target": {"status": "unverified", "text": "Name a person (mention or ID), or a party or enterprise by its code."},
+  "emit_over_cap": {"status": "unverified", "text": "That is over this month's emission limit; {left} can still be issued this month."},
+  "emit_done": {"status": "unverified", "text": "🏦 Issued {amount} to {target}. Reason: {reason}"},
+  "emit_usage_tg": {"status": "unverified", "text": "Usage: /bank emit <@user|ID|party code|enterprise code> <amount> <currency code> [reason], or reply to a person: /bank emit <amount> <currency code> [reason]"},
+  "slash_emit": {"status": "unverified", "text": "issue a currency to a person, party or enterprise (bank leaders)"},
+  "slash_emit_target": {"status": "unverified", "text": "Person (mention or ID), or party or enterprise code"},
+  "slash_emit_amount": {"status": "unverified", "text": "Amount, e.g. 100.00"},
+  "slash_emit_code": {"status": "unverified", "text": "Currency code"},
+  "slash_emit_reason": {"status": "unverified", "text": "Reason (contest prize, grant…)"},
+  "slash_transactions": {"status": "unverified", "text": "your own transaction history"},
+  "slash_transactions_code": {"status": "unverified", "text": "Currency code (default: all)"},
+  "transactions_title": {"status": "unverified", "text": "Your transactions"},
+  "transactions_none": {"status": "unverified", "text": "No transactions yet."},
+  "transactions_pages_tg": {"status": "unverified", "text": "Page {page} of {total}; the next one: /bank transactions [code] {page_next}"},
+  "transactions_sent_private": {"status": "unverified", "text": "I sent your transactions to our private chat."},
+  "transactions_start_private": {"status": "unverified", "text": "Open a private chat with me and press Start first — then I can send you your transactions."},
+  "tx_bank": {"status": "unverified", "text": "bank {code}"},
+  "tx_line": {"status": "unverified", "text": "{date} · {amount} · {other} · {what}"},
+  "tx_reason_message": {"status": "unverified", "text": "earned by messages"},
+  "tx_reason_pay": {"status": "unverified", "text": "payment"},
+  "tx_reason_sell": {"status": "unverified", "text": "sale"},
+  "tx_reason_fine": {"status": "unverified", "text": "fine"},
+  "tx_reason_wage": {"status": "unverified", "text": "wage"},
+  "tx_reason_salary": {"status": "unverified", "text": "salary"},
+  "tx_reason_party_dues": {"status": "unverified", "text": "party dues"},
+  "tx_reason_emit": {"status": "unverified", "text": "emission"},
+  "tx_reason_convert_in": {"status": "unverified", "text": "conversion (in)"},
+  "tx_reason_convert_out": {"status": "unverified", "text": "conversion (out)"},
+  "tx_reason_convert_fee": {"status": "unverified", "text": "conversion fee"},
+  "tx_reason_consumption": {"status": "unverified", "text": "goods bought by the daily consumption"},
+  "tx_reason_export": {"status": "unverified", "text": "export payment"},
+  "tx_reason_export_escrow": {"status": "unverified", "text": "export payment held in escrow"},
+  "tx_reason_shipment_refund": {"status": "unverified", "text": "refund of an undelivered shipment"},
+  "tx_reason_link_merge": {"status": "unverified", "text": "merged from a linked account"},
+  "tx_reason_tax_community": {"status": "unverified", "text": "community tax"},
+  "tx_reason_tax_bank": {"status": "unverified", "text": "bank tax"},
+  "union_list_kind_economy": {"status": "unverified", "text": "Economy"},
+  "econ_supply": {"status": "unverified", "text": "Money supply: {amount} (7 days: {change})"},
+  "econ_debt": {"status": "unverified", "text": "Debts: {amount}"},
+  "econ_top_share": {"status": "unverified", "text": "Held by the richest 10%: {share}"},
+  "econ_turnover": {"status": "unverified", "text": "Turnover in 7 days: {amount}"},
+  "server_profile_section_community": {"status": "unverified", "text": "Community"},
+  "server_profile_union": {"status": "unverified", "text": "Union"},
+  "server_profile_lang": {"status": "unverified", "text": "Language"},
+  "server_profile_tz": {"status": "unverified", "text": "Timezone"},
+  "server_profile_section_economy": {"status": "unverified", "text": "Economy"},
+  "server_profile_banks": {"status": "unverified", "text": "Banks based here"},
+  "server_profile_currencies": {"status": "unverified", "text": "Currencies in use"},
+  "server_profile_accounts": {"status": "unverified", "text": "Accounts in the server's banks"},
+  "server_profile_enterprises": {"status": "unverified", "text": "Enterprises"},
+  "server_profile_section_taxes": {"status": "unverified", "text": "Taxes"},
+  "server_profile_tax": {"status": "unverified", "text": "Community tax (payments, sales, earnings)"},
+  "server_profile_untitled": {"status": "unverified", "text": "This community"},
+  "server_profile_bank_tax": {"status": "unverified", "text": "Bank tax {code}"},
+  "slash_server": {"status": "unverified", "text": "this server's profile: economy and taxes"},
+  "slash_edit_server": {"status": "unverified", "text": "edit this server: community tax, timezone (server admins)"},
+  "edit_server_menu_header": {"status": "unverified", "text": "Editing {name}. Reply with a number:"},
+  "edit_server_opt_tax": {"status": "unverified", "text": "Community tax"},
+  "edit_server_opt_tz": {"status": "unverified", "text": "Timezone"},
+  "edit_server_ask_tax": {"status": "unverified", "text": "The community tax is now {current}. Send the new rate from 0 to {max}: it is taken from payments and sales made here and from currency earned by messages here, and it leaves circulation."},
+  "edit_server_tax_set": {"status": "unverified", "text": "✅ Community tax: {percent}."},
+  "edit_server_ask_tz": {"status": "unverified", "text": "The timezone is now {current}. Send a UTC offset, e.g. UTC+3 or -05:00. Greetings and the birthday role follow it."},
+  "edit_server_tz_set": {"status": "unverified", "text": "✅ Timezone: {tz}."},
+  "privacy_opt_hide_top": {"status": "unverified", "text": "hide me from the /good top leaderboards (currently hidden: {state})"},
+  "privacy_top_hidden": {"status": "unverified", "text": "You are hidden from the /good top leaderboards now."},
+  "privacy_top_shown": {"status": "unverified", "text": "You are shown on the /good top leaderboards again."},
+  "help.cmd_emit": {"status": "unverified", "text": "/bank emit <target> <amount> <code> [reason] — issue a currency to a person, party or enterprise; leaders up to a monthly limit (bank leaders)"},
+  "help.cmd_emit_tg": {"status": "unverified", "text": "/bank emit <@user|code> <amount> <currency> [reason] — issue a currency (also as a reply); leaders up to a monthly limit (bank leaders)"},
+  "help.cmd_transactions": {"status": "unverified", "text": "/bank transactions [code] — your own transaction history (only you see it)"},
+  "help.cmd_transactions_tg": {"status": "unverified", "text": "/bank transactions [code] [page] — your own transaction history, sent to the private chat"},
+  "help.cmd_server": {"status": "unverified", "text": "/server info — this server's profile: banks, currencies, accounts, enterprises, taxes"},
+  "help.cmd_edit_server": {"status": "unverified", "text": "/server edit [option] — community tax and timezone (server admins)"},
+  "help.cmd_edit_server_tg": {"status": "unverified", "text": "/server edit [option] — community tax and timezone (server admins)"},
+  "month_gen_1": {"status": "unverified", "text": "January"},
+  "month_gen_2": {"status": "unverified", "text": "February"},
+  "month_gen_3": {"status": "unverified", "text": "March"},
+  "month_gen_4": {"status": "unverified", "text": "April"},
+  "month_gen_5": {"status": "unverified", "text": "May"},
+  "month_gen_6": {"status": "unverified", "text": "June"},
+  "month_gen_7": {"status": "unverified", "text": "July"},
+  "month_gen_8": {"status": "unverified", "text": "August"},
+  "month_gen_9": {"status": "unverified", "text": "September"},
+  "month_gen_10": {"status": "unverified", "text": "October"},
+  "month_gen_11": {"status": "unverified", "text": "November"},
+  "month_gen_12": {"status": "unverified", "text": "December"},
+  "date_long": {"status": "unverified", "text": "{month} {day}, {year}"},
+  "date_day_month": {"status": "unverified", "text": "{month} {day}"},
+  "edit_union_opt_created": {"status": "unverified", "text": "Creation date"},
+  "edit_union_ask_created": {"status": "unverified", "text": "Send the union's creation date as DD.MM.YYYY or YYYY-MM-DD (now: {current}). It is shown in the union's profile and the calendar."},
+  "edit_union_created_done": {"status": "unverified", "text": "✅ Union creation date: {date}."},
+  "edit_union_bad_created": {"status": "unverified", "text": "Invalid date. Use DD.MM.YYYY or YYYY-MM-DD."},
+  "calendar_title": {"status": "unverified", "text": "📅 Event calendar: {start} – {end}"},
+  "calendar_empty": {"status": "unverified", "text": "Nothing on these days."},
+  "calendar_more": {"status": "unverified", "text": "…and {count} more that do not fit. Hide one kind of event to see them."},
+  "calendar_scope_global": {"status": "unverified", "text": "Everywhere: every union, every union wiki and everyone who saved a birthday"},
+  "calendar_btn_union": {"status": "unverified", "text": "Unions"},
+  "calendar_btn_wiki": {"status": "unverified", "text": "Wikis"},
+  "calendar_btn_person": {"status": "unverified", "text": "Birthdays"},
+  "calendar_btn_global": {"status": "unverified", "text": "🌍 Everywhere"},
+  "calendar_btn_local": {"status": "unverified", "text": "🏠 This community"},
+  "slash_calendar": {"status": "unverified", "text": "upcoming founding days of unions and wikis, and members' birthdays"},
+  "help.cmd_calendar": {"status": "unverified", "text": "/calendar — the coming founding days of unions and wikis and members' birthdays, a month per page; buttons hide a kind of event or show every community"},
+  "slash_group_account": {"status": "unverified", "text": "your account: Fandom verification, linking Telegram, privacy"},
+  "slash_group_admin": {"status": "unverified", "text": "appoint or remove this server's Server Admins (bot admins)"},
+  "slash_group_bank": {"status": "unverified", "text": "banks and money: accounts, payments, earning, rates, treaties"},
+  "slash_group_birthday": {"status": "unverified", "text": "your birthday and the server's birthday greetings"},
+  "slash_group_bot": {"status": "unverified", "text": "bot-wide tools: chats, leaving a chat, backups (bot admins)"},
+  "slash_group_enterprise": {"status": "unverified", "text": "enterprises: founding, staff, salaries, sales and shipments"},
+  "slash_group_find": {"status": "unverified", "text": "find message authors by keywords in a channel (server admins)"},
+  "slash_group_good": {"status": "unverified", "text": "goods: creating, crafting, inventory, selling, leaderboards"},
+  "slash_group_govt": {"status": "unverified", "text": "governing bodies of a union"},
+  "slash_group_locale": {"status": "unverified", "text": "the bot's localization: status, comparison, suggestions"},
+  "slash_group_localizer": {"status": "unverified", "text": "grant or revoke Localizer status (bot admins)"},
+  "slash_group_olympiad": {"status": "unverified", "text": "the wiki Olympiad: opening, contests and voting"},
+  "slash_group_party": {"status": "unverified", "text": "parties: founding, membership, rules and dues"},
+  "slash_group_quiz": {"status": "unverified", "text": "quizzes: take one, stop it, compare results"},
+  "slash_group_server": {"status": "unverified", "text": "this server: setup, profile, language, log and task channels"},
+  "slash_group_sponsor": {"status": "unverified", "text": "your Democrate subscription and its limits"},
+  "slash_group_union": {"status": "unverified", "text": "unions: profiles, founding, editing, parties"},
+  "slash_group_wiki": {"status": "unverified", "text": "a union's wikis: attaching, founding dates, greetings, representatives"},
+  "union_not_found": {"status": "unverified", "text": "No union matches that."},
+  "union_not_found_suggest": {"status": "unverified", "text": "Union not found. Perhaps you were looking for one of these? Reply with a number within 30 minutes:"},
+  "slash_param_union_query": {"status": "unverified", "text": "Union code or name (default: this server's union)"},
+  "allow_parties_roles_set": {"status": "unverified", "text": "✅ Union {code}: roles allowed to use /party add — {roles}."},
+  "allow_parties_no_roles_left": {"status": "unverified", "text": "⚠️ Union {code} has no role left that may use /party add: on Discord only Bot Admins can found a party until you add one."},
+  "allow_parties_still_off": {"status": "unverified", "text": "Parties are still switched off in {code}; turn them on with /union parties {code} enable."},
+  "service_event.parties_roles": {"status": "unverified", "text": "🏛️ {user} changed who may found parties in union {code}: roles {roles}."},
+  "service_event.party_role_deleted": {"status": "unverified", "text": "🏛️ The role “{role}” ({role_id}) was deleted on {server}; it no longer lets anyone found a party in union {code}."},
+  "edit_bank_opt_forms": {"status": "unverified", "text": "Forms of the currency name"},
+  "edit_bank_ask_forms_lang": {"status": "unverified", "text": "Which language are the forms for? Send its code: {supported}. Already filled in: {current}."},
+  "edit_bank_bad_forms_lang": {"status": "unverified", "text": "That is not one of the six language codes."},
+  "edit_bank_ask_forms": {"status": "unverified", "text": "Send the forms of “{name}” in {language} in one message, separated by commas, in this order: {order}.\nExample: {example}\nPut “-” in place of a form you are not sure of, or send just “-” to forget this language's forms."},
+  "edit_bank_bad_forms": {"status": "unverified", "text": "The number of forms does not match the order asked for. Send them again, separated by commas."},
+  "edit_bank_forms_set": {"status": "unverified", "text": "✅ Forms saved for {language}. Amounts in this language now read like this: {sample}."},
+  "edit_bank_forms_cleared": {"status": "unverified", "text": "The forms for {language} are forgotten; amounts in this language show the currency code again."},
+  "currency_forms_order_ru": {"status": "unverified", "text": "nominative, genitive, dative, accusative, instrumental, prepositional, genitive plural (as after 5)"},
+  "currency_forms_order_uk": {"status": "unverified", "text": "nominative, genitive, dative, accusative, instrumental, locative, nominative plural (as after 2), genitive plural (as after 5)"},
+  "currency_forms_order_pl": {"status": "unverified", "text": "nominative, genitive, dative, accusative, instrumental, locative, nominative plural (as after 2), genitive plural (as after 5)"},
+  "currency_forms_order_en": {"status": "unverified", "text": "singular, plural"},
+  "currency_forms_order_es": {"status": "unverified", "text": "singular, plural"},
+  "currency_forms_order_pt": {"status": "unverified", "text": "singular, plural"},
+  "currency_forms_example_ru": {"status": "unverified", "text": "гривна, гривны, гривне, гривну, гривной, гривне, гривен"},
+  "currency_forms_example_uk": {"status": "unverified", "text": "гривня, гривні, гривні, гривню, гривнею, гривні, гривні, гривень"},
+  "currency_forms_example_pl": {"status": "unverified", "text": "złoty, złotego, złotemu, złotego, złotym, złotym, złote, złotych"},
+  "currency_forms_example_en": {"status": "unverified", "text": "dollar, dollars"},
+  "currency_forms_example_es": {"status": "unverified", "text": "peso, pesos"},
+  "currency_forms_example_pt": {"status": "unverified", "text": "real, reais"},
+  "slash_earn_info": {"status": "unverified", "text": "where a currency is earned, with details (bank leaders, server admins)"},
+  "slash_earn_info_code": {"status": "unverified", "text": "Currency code (default: every one you may see)"},
+  "help.cmd_earn_info": {"status": "unverified", "text": "/bank earn-info [code] — channels where currency is earned: multiplier, community tax, messages and money over 7 days, who switched them on (bank leaders: their currencies; server admins: this server)"},
+  "help.cmd_earn_info_tg": {"status": "unverified", "text": "/bank earn-info [code] [page] — channels where currency is earned, with details, sent to the private chat (bank leaders: their currencies; server admins: this group)"},
+  "earn_info_title": {"status": "unverified", "text": "💰 Earning channels"},
+  "earn_info_line": {"status": "unverified", "text": "{place} — {currency} ×{rate}; community tax {tax}"},
+  "earn_info_stats": {"status": "unverified", "text": "↳ 7 days: {messages} messages counted, {amount} earned"},
+  "earn_info_set": {"status": "unverified", "text": "↳ switched on by {user}, {date}"},
+  "earn_info_set_unknown": {"status": "unverified", "text": "↳ switched on before the bot recorded who did it"},
+  "earn_info_empty": {"status": "unverified", "text": "No channels earn currency here."},
+  "earn_info_topic": {"status": "unverified", "text": "{group}, topic {topic}"},
+  "earn_info_unknown_channel": {"status": "unverified", "text": "channel {id} (not visible to the bot)"},
+  "earn_info_pages_tg": {"status": "unverified", "text": "Page {page} of {total}; the next one: /bank earn-info [code] {page_next}"}
 }

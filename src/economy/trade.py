@@ -33,14 +33,14 @@ from economy.money import _minor, unit_value
 
 def asking_price(owner, good, qty):
     """What `qty` units are worth at the seller's own quality: the price
-    `/sell` offers when nobody named one.
+    `/good sell` offers when nobody named one.
 
     The same arithmetic the daily meal pays and the shipment escrow is measured
     against, so a good has one value across the economy however it changes
     hands."""
     return unit_value(good, db.get_produced(owner, good["code"])) * max(int(qty), 0)
 
-def sell(seller, buyer, good, qty, price, bank_code):
+def sell(seller, buyer, good, qty, price, bank_code, server=None):
     """Sell up to `qty` units of `good` from `seller` to `buyer` for `price`.
 
     Goods move between two holders and money between two accounts of the same
@@ -51,7 +51,9 @@ def sell(seller, buyer, good, qty, price, bank_code):
     The buyer may be a person or an enterprise, and so may the seller. When an
     enterprise sells, the proceeds count into its period sales — the base for
     percent-of-sales salaries. Base-category goods carry no market value and are
-    given away rather than sold (`/give-good`). Returns (status, info)."""
+    given away rather than sold (`/good give`). The seller pays the taxes of
+    the community the sale was made in (`server`) and of the currency out of
+    what it received (economy/taxes.py). Returns (status, info)."""
     if db.is_base_good(good["code"]):
         return "not_sellable", {}
     if seller == buyer:
@@ -70,11 +72,15 @@ def sell(seller, buyer, good, qty, price, bank_code):
             return "no_funds", {}
     db.add_inventory(seller, good["code"], -qty)
     db.add_inventory(buyer, good["code"], qty)
+    taxes = None
+    if price > 0:
+        from economy.taxes import withhold
+        taxes = withhold(bank_code, seller, price, server)
     if price > 0 and seller[0] == "enterprise":
         ent = db.get_enterprise(seller[2])
         if ent and ent["salary_bank"] == bank_code:
-            db.add_enterprise_sales(seller[2], price)
-    return "ok", {"qty": qty, "total": price,
+            db.add_enterprise_sales(seller[2], taxes["net"])
+    return "ok", {"qty": qty, "total": price, "taxes": taxes,
                   "unit": price // qty if qty else 0}
 
 def convertible(from_code, to_code):
@@ -157,7 +163,7 @@ def parse_convert_fee_input(text):
 
 def convert_fee_summary(bank_code, lang):
     """The bank's conversion spreads as one readable line, for the settings
-    dialog and the `/bank` card: the default first, then each currency that
+    dialog and the `/bank info` card: the default first, then each currency that
     has one of its own. Percent, because that is what a fee is read in."""
     from utils import localized
 

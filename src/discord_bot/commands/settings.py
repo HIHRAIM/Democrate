@@ -1,12 +1,12 @@
 """Per-chat settings: the language of a server or of one channel, and the two
 scheduled-post channels.
 
-`/lang` writes the bare server id and `/locallang` writes `guild:channel`; the
+`/server lang` writes the bare server id and `/server lang-channel` writes `guild:channel`; the
 lookup in db/settings.py resolves the most specific key outwards, which is the
 whole mechanism behind a channel that speaks a different language from its
 server.
 
-`_set_channel_cmd` serves both `/setlogs` and `/settasks` because they differ
+`_set_channel_cmd` serves both `/server logs` and `/server tasks` because they differ
 only in which arguments they accept: the weekly statistics need a weekday, the
 monthly task does not. Both store a UTC offset rather than a timezone name, and
 main.py: _due_channel_posts converts with it.
@@ -26,15 +26,14 @@ from utils import (
 
 from discord_bot.client import _chat_key, _refuse_not_setup, bot, is_server_admin
 from discord_bot.dialogs import _ereply
+from discord_bot.groups import server_group
 
-@bot.tree.command(name="lang", description="set the default bot language for the whole server (server admins)")
+@server_group.command(name="lang", description="set the default bot language for the whole server (server admins)")
 @app_commands.describe(code="Language code (ru, uk, pl, en, es, pt)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
 async def lang_command(interaction: discord.Interaction, code: str):
     """Set the language of the whole server (Server Admins).
 
-    Writes the bare server id, which is the key `/locallang` overrides per
+    Writes the bare server id, which is the key `/server lang-channel` overrides per
     channel. Also usable in a private chat with the bot, where it sets the
     language of that conversation."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -70,10 +69,8 @@ async def lang_command(interaction: discord.Interaction, code: str):
 
     await interaction.response.send_message(localized("lang_set_server", code, code=code), ephemeral=True)
 
-@bot.tree.command(name="locallang", description="set bot language for this channel/thread (server admins)")
+@server_group.command(name="lang-channel", description="set bot language for this channel/thread (server admins)")
 @app_commands.describe(code="Language code (ru, uk, pl, en, es, pt)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
 async def locallang_command(interaction: discord.Interaction, code: str):
     """Set the language of this channel or thread alone (Server Admins).
 
@@ -115,7 +112,7 @@ async def locallang_command(interaction: discord.Interaction, code: str):
     await interaction.response.send_message(localized("lang_set", code, code=code), ephemeral=True)
 
 async def _set_channel_cmd(interaction, kind, chat_id, weekday, post_time, tz):
-    """Shared body of /setlogs and /settasks: server admins bind (or unbind with
+    """Shared body of /server logs and /server tasks: server admins bind (or unbind with
     'off') the channel and optionally tune the schedule."""
     lang = get_chat_lang(_chat_key(interaction))
     if interaction.guild is None:
@@ -180,7 +177,7 @@ async def _set_channel_cmd(interaction, kind, chat_id, weekday, post_time, tz):
     await _ereply(interaction, f"set{kind}_done", lang, ephemeral=False,
                   channel=f"<#{channel.id}>", schedule=schedule)
 
-@bot.tree.command(name="setlogs", description="set this server's economic log channel (server admins)")
+@server_group.command(name="logs", description="set this server's economic log channel (server admins)")
 @app_commands.describe(chat_id="Channel ID (default: this channel; 'off' unbinds)",
                        weekday="Weekly statistics day: 1-7 (1 = Monday) or a name",
                        post_time="Weekly statistics time, HH:MM",
@@ -194,7 +191,7 @@ async def setlogs_cmd(interaction: discord.Interaction, chat_id: str = None,
     the weekly statistics at the configured weekday and time."""
     await _set_channel_cmd(interaction, "logs", chat_id, weekday, post_time, tz)
 
-@bot.tree.command(name="settasks", description="set this server's monthly-task channel (server admins)")
+@server_group.command(name="tasks", description="set this server's monthly-task channel (server admins)")
 @app_commands.describe(chat_id="Channel ID (default: this channel; 'off' unbinds)",
                        post_time="Posting time on the 1st, HH:MM",
                        tz="Timezone as a UTC offset, e.g. UTC+3")

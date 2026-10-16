@@ -1,19 +1,19 @@
 """Goods and what one person does with them: creating a good, crafting it,
 the inventory, selling, the standing orders, professions and gifts.
 
-`/craft` starts a timed run and returns immediately — the batch is announced
+`/good craft` starts a timed run and returns immediately — the batch is announced
 later by main.py: production_loop in the channel the run was started in, which
 is why the command stores a notify key rather than awaiting anything. Energy is
 charged up front. Up to five goods may be on the bench at once, one run of
 each, and the batch is divided between them.
 
 A good belongs to a person or an enterprise; the bank named at creation only
-*denominates* it — it prices the good and it is the currency `/sell` is paid
-in, but it never buys anything itself. `/create-good` therefore needs a bank of
+*denominates* it — it prices the good and it is the currency `/good sell` is paid
+in, but it never buys anything itself. `/good add` therefore needs a bank of
 the current union, and the union's shared code namespace decides whether the
 code it asks for is free.
 
-`/sell` is a sale between two holders and needs the buyer's consent, which is
+`/good sell` is a sale between two holders and needs the buyer's consent, which is
 why it ends in a consent view rather than in a reply.
 
 Not this module's zone: enterprises and their warehouse
@@ -37,6 +37,7 @@ from discord_bot.client import _chat_key, bot
 from discord_bot.dialogs import (
     _ConsentView, _EntConsentView, _econ_embed, _ereply, _parse_user_ref, _say,
 )
+from discord_bot.groups import bank_group, good_group
 
 def _resolve_good_bank(chat, currency):
     """The bank a new good is denominated in: the named one (it must belong to
@@ -60,7 +61,7 @@ def _normalize_category(raw):
         return None, True
     return (s, True) if s in db.GOOD_CATEGORIES else (None, False)
 
-@bot.tree.command(name="create-good", description="create a good you or your enterprise will produce")
+@good_group.command(name="add", description="create a good you or your enterprise will produce")
 @app_commands.describe(name="Good name", base_value="Base value in the chosen currency, e.g. 5.00",
                        energy_cost="Energy cost per unit", emoji="Optional emoji",
                        category="Base category the good counts toward",
@@ -72,7 +73,7 @@ async def create_good_cmd(interaction: discord.Interaction, name: str, base_valu
     """Create a good you or your enterprise will produce.
 
     The good belongs to a person or an enterprise; the bank only *denominates* it
-    and is where `/sell` sends it. A category ties its quality to the server's
+    and is where `/good sell` sends it. A category ties its quality to the server's
     provision. `base_value` is parsed into minor units and `energy_cost` is a plain
     integer."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -134,7 +135,7 @@ def _resolve_production_target(platform, user_id, guild_key, enterprise_query):
     server = (platform, str(guild_key)) if guild_key else (None, None)
     return owner, server, None
 
-@bot.tree.command(name="craft", description="start producing a good — the batch arrives in a few minutes")
+@good_group.command(name="craft", description="start producing a good — the batch arrives in a few minutes")
 @app_commands.describe(good_code="Good code (4 characters)",
                        enterprise="Enterprise code to produce for (its workers only)")
 async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise: str = None):
@@ -180,7 +181,7 @@ async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise
         started += "\n" + localized("production_first_run", lang)
     await _say(interaction, embed=_econ_embed(started))
 
-@bot.tree.command(name="inventory", description="your crafted goods")
+@good_group.command(name="inventory", description="your crafted goods")
 async def inventory_cmd(interaction: discord.Interaction):
     """Show your crafted goods."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -240,13 +241,17 @@ async def _offer_sale(interaction, lang, seller, buyer, good, qty, price, bank, 
 
     async def on_accept(interaction2):
         """Move the goods one way and the money the other, or say why not."""
+        server = ("discord", str(interaction.guild_id)) if interaction.guild_id else None
         status, info = economy.sell(seller, buyer, good, qty, price,
-                                    bank["code"] if bank else None)
+                                    bank["code"] if bank else None, server)
         if status == "ok":
             text = localized("sell_done", lang, qty=info["qty"], emoji=emoji, name=name,
                              buyer=buyer_name,
                              total=economy.format_money(info["total"], bank) if bank
                              else localized("export_free", lang))
+            taxes = economy.taxes_line(info.get("taxes"), bank, lang) if bank else ""
+            if taxes:
+                text += "\n" + taxes
         else:
             text = localized(f"sell_{status}", lang, name=name)
         await channel.send(embed=_econ_embed(text))
@@ -267,7 +272,7 @@ async def _offer_sale(interaction, lang, seller, buyer, good, qty, price, bank, 
                view=_ConsentView(lang, consent_target[1], on_accept, on_decline),
                allowed_mentions=discord.AllowedMentions(users=True))
 
-@bot.tree.command(name="sell", description="sell a good to another member or an enterprise")
+@good_group.command(name="sell", description="sell a good to another member or an enterprise")
 @app_commands.describe(good_code="Good code", buyer="Buyer: a user ID/mention or an enterprise code",
                        qty="How many (default: all)",
                        price="Total price (default: what the batch is worth)")
@@ -313,7 +318,7 @@ async def sell_cmd(interaction: discord.Interaction, good_code: str, buyer: str,
     await _offer_sale(interaction, lang, seller, target, good, want, minor, bank,
                       buyer_name, consent_target)
 
-@bot.tree.command(name="autocraft", description="produce a good 24/7, slower than by hand")
+@good_group.command(name="autocraft", description="produce a good 24/7, slower than by hand")
 @app_commands.describe(good_code="Good code", action="on | off",
                        enterprise="Enterprise code to produce for (its workers only)")
 async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action: str,
@@ -346,7 +351,7 @@ async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action
                   ephemeral=False, name=good_display_name(good, lang),
                   lines=others + 1 if on else others)
 
-@bot.tree.command(name="autosend", description="auto-send a share of a good to a user or party")
+@good_group.command(name="autosend", description="auto-send a share of a good to a user or party")
 @app_commands.describe(good_code="Good code", percent="Percent 0-100 (0 to stop)",
                        target="Recipient: a user ID/mention or a party code")
 async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent: int, target: str):
@@ -385,7 +390,7 @@ async def autosend_cmd(interaction: discord.Interaction, good_code: str, percent
     await _ereply(interaction, "autosend_on", lang, ephemeral=False, name=good["name"],
                   percent=percent, target=tname)
 
-@bot.tree.command(name="set-profession", description="set a member's profession in your bank (bank leaders)")
+@bank_group.command(name="profession", description="set a member's profession in your bank (bank leaders)")
 @app_commands.describe(user="Member ID or mention", good_code="Good code that becomes their profession")
 async def set_profession_cmd(interaction: discord.Interaction, user: str, good_code: str):
     """Override a member's profession in your bank (bank leaders).
@@ -409,7 +414,7 @@ async def set_profession_cmd(interaction: discord.Interaction, user: str, good_c
     await _ereply(interaction, "set_profession_done", lang, ephemeral=False,
                   user=f"<@{tid}>", name=good["name"])
 
-@bot.tree.command(name="give-good", description="hand goods from your inventory to another user")
+@good_group.command(name="give", description="hand goods from your inventory to another user")
 @app_commands.describe(user="Recipient ID or mention", good_code="Good code", qty="How many (default 1)")
 async def give_good_cmd(interaction: discord.Interaction, user: str, good_code: str, qty: int = 1):
     """Hand goods from your inventory to another user.
@@ -443,7 +448,7 @@ async def give_good_cmd(interaction: discord.Interaction, user: str, good_code: 
     await _ereply(interaction, "give_done", lang, ephemeral=False, qty=qty, emoji=emoji,
                   name=good_display_name(good, lang), user=f"<@{target_id}>")
 
-@bot.tree.command(name="goods", description="the goods this server can produce")
+@good_group.command(name="info", description="the goods this server can produce")
 async def goods_cmd(interaction: discord.Interaction):
     """List the goods this server can produce, base goods included."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -475,7 +480,7 @@ async def goods_cmd(interaction: discord.Interaction):
                           color=discord.Color(DEFAULT_EMBED_COLOR))
     await _say(interaction, embed=embed)
 
-@bot.tree.command(name="top", description="leaderboards: this week's producers, a good, or a currency")
+@good_group.command(name="top", description="leaderboards: this week's producers, a good, or a currency")
 @app_commands.describe(kind="week (default) | good | wealth",
                        code="Good code for 'good', currency code for 'wealth'")
 async def top_cmd(interaction: discord.Interaction, kind: str = "week", code: str = None):

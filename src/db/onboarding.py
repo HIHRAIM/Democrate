@@ -69,7 +69,7 @@ def get_pending_deadlines(platform):
     ).fetchall()
 
 def mark_settled(platform, prefix):
-    """Note that the chat has been through /setup, which takes it out of the
+    """Note that the chat has been through /server setup, which takes it out of the
     rule for good."""
     now = int(time.time())
     cur.execute(

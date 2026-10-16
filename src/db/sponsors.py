@@ -157,6 +157,17 @@ def operator_takeover_union(code, old_owner):
     conn.commit()
     return bool(changed.rowcount)
 
+def set_union_owner(code, discord_id):
+    """Hand a union to another sponsor, or with None make it an operator
+    union. The new owner's row starts unarchived and claimed now; whether
+    the new owner has room for it is the caller's question
+    (sponsors.py: can_receive_union)."""
+    cur.execute("DELETE FROM sponsor_unions WHERE code=?", (str(code),))
+    if discord_id is not None:
+        cur.execute("INSERT INTO sponsor_unions (code, discord_id, claimed_at) VALUES (?,?,?)",
+                    (str(code), str(discord_id), int(time.time())))
+    conn.commit()
+
 def purge_lapsed_chat(platform, server_id, discord_id):
     """Delete only records keyed to one departed server or group.
 

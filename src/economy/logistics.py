@@ -126,8 +126,9 @@ def dispatch_shipment(from_code, to_code, good, qty, price, bank_code, notify, l
 
 def arrive_shipment(row):
     """Settle a due shipment: deliver the surviving goods to the buyer and pay
-    the escrow to the seller (counting into its period sales when it lands in the
-    salary currency). If a side vanished mid-transit, everything goes to the
+    the escrow to the seller (counting it into period sales when it lands in the
+    salary currency), less the taxes of the seller's community and of the
+    currency. If a side vanished mid-transit, everything goes to the
     survivor. Returns info for the arrival notice, or None when both are gone."""
     db.delete_shipment(row["id"])
     good = db.get_good(row["good_code"])
@@ -152,9 +153,12 @@ def arrive_shipment(row):
     delivered = qty - lost
     db.add_inventory(buyer, good["code"], delivered)
     if escrow > 0 and bank_code and db.get_bank(bank_code):
+        from economy.taxes import withhold
         db.mint(bank_code, seller, escrow, "export")
+        net = withhold(bank_code, seller, escrow,
+                       (from_ent["platform"], str(from_ent["server_id"])))["net"]
         if from_ent["salary_bank"] == bank_code:
-            db.add_enterprise_sales(row["from_ent"], escrow)
+            db.add_enterprise_sales(row["from_ent"], net)
     return {"qty": delivered, "lost": lost, "good": good,
             "from_ent": from_ent, "to_ent": to_ent}
 

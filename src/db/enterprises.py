@@ -59,13 +59,52 @@ def create_enterprise(code, name, platform, server_id, founder_platform, founder
             (code, founder_platform, str(founder_id), founder_name))
         conn.commit()
 
+NEUTRAL_SUFFIXES = ("Works", "Company", "Industries", "Cooperative", "Collective", "Guild")
+NEUTRAL_PLACEHOLDER = "Community"
+NEUTRAL_OLD_DESCRIPTION = "Base goods supplied by members who do not work for a local enterprise."
+
+def own_description(ent):
+    """The description somebody wrote for an enterprise, or None. A neutral
+    enterprise used to be created with a fixed English sentence in this
+    column; the cards say what it is in the reader's language instead, so
+    that sentence is not a description."""
+    text = (ent["description"] or "").strip()
+    if not text or (ent["neutral"] and text == NEUTRAL_OLD_DESCRIPTION):
+        return None
+    return text
+
+def salary_currency_label(ent):
+    """The salary currency of an enterprise as 'Name [CODE]', or None when
+    none is chosen."""
+    if not ent["salary_bank"]:
+        return None
+    bank = get_bank(ent["salary_bank"])
+    return f"{bank['currency_name']} [{bank['code']}]" if bank else ent["salary_bank"]
+
+def _neutral_name(base, suffix):
+    """A neutral enterprise's name: the community's name and a suffix, cut
+    to sixty characters."""
+    base = str(base or NEUTRAL_PLACEHOLDER).strip() or NEUTRAL_PLACEHOLDER
+    return f"{base[:max(1, 60 - len(suffix) - 1)].rstrip()} {suffix}"
+
+def _name_suffix(name):
+    """The suffix a bot-made name ends in, or a fresh one."""
+    last = (name or "").rsplit(" ", 1)[-1]
+    return last if last in NEUTRAL_SUFFIXES else random.choice(NEUTRAL_SUFFIXES)
+
 def ensure_neutral_enterprise(platform, server_id, title=None):
     """Create the one community-owned base producer, including old communities.
 
     This is idempotent. A transfer turns the old company into an ordinary
     enterprise and this function gives the community a new neutral producer.
     A Server Admin may instead delete it, which opts that community out until
-    `/setup` is run again. Neutral production never uses its inventory.
+    `/server setup` is run again. Neutral production never uses its inventory.
+
+    The name is the community's name and a suffix, and it is marked
+    `auto_name`: it follows the community's name (`rename_auto_neutral`) until
+    somebody renames the enterprise by hand. A community whose name the bot
+    does not know yet gets the placeholder "Community" — never its id, which
+    is what the backfill of old communities used to write into the name.
     """
     from db.unions import generate_code
 
@@ -81,18 +120,53 @@ def ensure_neutral_enterprise(platform, server_id, title=None):
         code = generate_code()
         if not code:
             raise RuntimeError("No enterprise code available for neutral producer")
-        suffix = random.choice(("Works", "Company", "Industries", "Cooperative",
-                                "Collective", "Guild"))
-        base = str(title or chat["title"] or f"Community {server_id}").strip()
-        name = f"{base[:max(1, 60-len(suffix)-1)].rstrip()} {suffix}"
+        name = _neutral_name(title or chat["title"], random.choice(NEUTRAL_SUFFIXES))
         cur.execute(
             "INSERT INTO enterprises (code, name, platform, server_id,"
-            " founder_platform, founder_id, founder_name, description, neutral, created_at)"
-            " VALUES (?,?,?,?,?,?,?,?,1,?)",
-            (code, name, platform, str(server_id), "system", "0", "Community",
-             "Base goods supplied by members who do not work for a local enterprise.", _now()))
+            " founder_platform, founder_id, founder_name, description, neutral, auto_name,"
+            " created_at) VALUES (?,?,?,?,?,?,?,NULL,1,1,?)",
+            (code, name, platform, str(server_id), "system", "0", "Community", _now()))
         conn.commit()
         return get_enterprise(code)
+
+def rename_auto_neutral(platform, server_id, title):
+    """Give the community's neutral enterprise its new name when the bot
+    learns or relearns the community's name, unless somebody renamed the
+    enterprise by hand. The suffix it already had is kept."""
+    if not title:
+        return
+    rows = cur.execute("SELECT code, name FROM enterprises WHERE platform=? AND server_id=?"
+                       " AND neutral=1 AND auto_name=1", (platform, str(server_id))).fetchall()
+    for row in rows:
+        name = _neutral_name(title, _name_suffix(row["name"]))
+        if name != row["name"]:
+            cur.execute("UPDATE enterprises SET name=? WHERE code=?", (name, row["code"]))
+    conn.commit()
+
+def repair_neutral_names():
+    """Take community ids out of neutral enterprise names, once per start.
+
+    The backfill of communities bound before their names were stored used to
+    name the enterprise "Community <id> <suffix>". Such a name is marked as
+    bot-made and rewritten at once — with the community's name when it is
+    known, with the placeholder otherwise — so no id is left in a name even
+    while the community's name is still unknown. Returns how many were
+    renamed."""
+    fixed = 0
+    with _db_lock:
+        rows = cur.execute(
+            "SELECT e.code, e.name, e.server_id, c.title FROM enterprises e"
+            " LEFT JOIN chats c ON c.platform=e.platform AND c.chat_id=e.server_id"
+            " WHERE e.neutral=1").fetchall()
+        for row in rows:
+            if not (row["name"] or "").startswith(f"{NEUTRAL_PLACEHOLDER} {row['server_id']}"):
+                continue
+            name = _neutral_name(row["title"], _name_suffix(row["name"]))
+            cur.execute("UPDATE enterprises SET name=?, auto_name=1 WHERE code=?",
+                        (name, row["code"]))
+            fixed += 1
+        conn.commit()
+    return fixed
 
 def is_enterprise_worker_anywhere(user_platform, user_id, canonical=None):
     """Check active enterprises under both identities before neutral credit."""
@@ -146,9 +220,12 @@ def update_enterprise_field(code, field, value):
 
     `salary_period` ('weekly' or 'monthly') and `salary_bank` are here because
     they are ordinary settings; the identity columns — code, server, founder, logo
-    — are not, and each has its own function."""
+    — are not, and each has its own function. A name set here is a person's
+    choice, so it stops following the community's name (`auto_name`)."""
     assert field in ("name", "description", "salary_period", "salary_bank")
     cur.execute(f"UPDATE enterprises SET {field}=? WHERE code=?", (value, code))
+    if field == "name":
+        cur.execute("UPDATE enterprises SET auto_name=0 WHERE code=?", (code,))
     conn.commit()
 
 def update_enterprise_logo(code, logo, logo_mime):
@@ -309,7 +386,7 @@ def get_enterprise_member(code, platform, user_id):
         (code, platform, str(user_id))).fetchone()
 
 def add_enterprise_member(code, platform, user_id, display_name):
-    """Hire a worker. Reached from an approved `/ent-join` and from nothing
+    """Hire a worker. Reached from an approved `/enterprise join` and from nothing
     else; the position starts empty."""
     cur.execute(
         "INSERT OR REPLACE INTO enterprise_members"
@@ -405,7 +482,7 @@ def get_position_salary(code, position):
         (code, position)).fetchone()
 
 def get_enterprise_positions(code):
-    """Every position the enterprise defines, by name — the `/enterprise` card
+    """Every position the enterprise defines, by name — the `/enterprise info` card
     and the assignment menus."""
     return cur.execute(
         "SELECT * FROM enterprise_positions WHERE enterprise_code=? ORDER BY position",

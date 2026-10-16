@@ -1,16 +1,16 @@
 """What an ordinary member runs about themselves on Telegram: `/help`,
-`/add_discord`, `/privacy`.
+`/account_discord`, `/account_privacy`.
 
 `help_cmd` is a hand-written list of localization keys, like HELP_SECTIONS on
 the Discord side, and it carries the same trap: a command moved between modules
 keeps working while quietly vanishing from the help. It is also chunked by
 hand, because Telegram caps a message at 4096 characters and there is no
-paginated embed to fall back on. The Olympiad block lists only `/setolympiad`
+paginated embed to fall back on. The Olympiad block lists only `/olympiad_set`
 while no Olympiad runs — the rest of its commands refuse to answer then, so
 listing them would point at nothing.
 
-There is no `/verify` here: Fandom verification happens on Discord, and
-`/add_discord` is one half of the thirty-minute handshake that lends a Telegram
+There is no `/account verify` here: Fandom verification happens on Discord, and
+`/account_discord` is one half of the thirty-minute handshake that lends a Telegram
 account that verification.
 
 Not this module's zone: the identity model (db/users.py) and the quiz data the
@@ -43,7 +43,7 @@ async def help_cmd(message: Message):
     embed to fall back on. The chunks are sent together and delete themselves after
     a minute, so a help request does not sit in a group forever.
 
-    The Olympiad block lists only `/setolympiad` while no Olympiad runs — the
+    The Olympiad block lists only `/olympiad_set` while no Olympiad runs — the
     rest of its commands do not answer then, so listing them would point at
     nothing."""
     chat_key = _chat_key(message)
@@ -64,7 +64,8 @@ async def help_cmd(message: Message):
 
     everyone_lines = "\n".join([
         escape_html(localized_help("cmd_add_discord", lang)),
-        escape_html(localized("cmd_sponsor", lang)),
+        escape_html(localized_help("cmd_sponsor", lang)),
+        escape_html(localized_help("cmd_limit", lang)),
         escape_html(localized_help("cmd_party", lang)),
         escape_html(localized_help("cmd_govt", lang)),
         escape_html(localized_help("cmd_add_party_tg", lang)),
@@ -78,6 +79,10 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_quizzes_clear_tg", lang)),
         escape_html(localized_help("cmd_quizzes_compare_tg", lang)),
         escape_html(localized_help("cmd_quizzes_previous_tg", lang)),
+        escape_html(localized_help("cmd_union", lang)),
+        escape_html(localized_help("cmd_server", lang)),
+        escape_html(localized_help("cmd_birthday_tg", lang)),
+        escape_html(localized_help("cmd_calendar", lang)),
         escape_html(localized_help("cmd_privacy", lang)),
         escape_html(localized_help("cmd_locale", lang)),
         escape_html(localized_help("cmd_loc_compare_tg", lang)),
@@ -90,6 +95,8 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_locallang", lang)),
         escape_html(localized_help("cmd_setlogs", lang)),
         escape_html(localized_help("cmd_settasks", lang)),
+        escape_html(localized_help("cmd_birthday_channel_tg", lang)),
+        escape_html(localized_help("cmd_edit_server_tg", lang)),
     ])
 
     bot_admins_lines = "\n".join([
@@ -99,6 +106,10 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_localizer_add_tg", lang)),
         escape_html(localized_help("cmd_localizer_rem_tg", lang)),
         escape_html(localized_help("cmd_add_unia_tg", lang)),
+        escape_html(localized_help("cmd_edit_union_tg", lang)),
+        escape_html(localized_help("cmd_add_wiki_tg", lang)),
+        escape_html(localized_help("cmd_remove_wiki_tg", lang)),
+        escape_html(localized_help("cmd_wiki_founded_tg", lang)),
         escape_html(localized_help("cmd_allow_parties_tg", lang)),
         escape_html(localized_help("cmd_add_govt_tg", lang)),
         escape_html(localized_help("cmd_edit_party_admin_tg", lang)),
@@ -116,8 +127,10 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_bank_transfer", lang)),
         escape_html(localized_help("cmd_open_account", lang)),
         escape_html(localized_help("cmd_balance", lang)),
+        escape_html(localized_help("cmd_transactions_tg", lang)),
         escape_html(localized_help("cmd_pay", lang)),
         escape_html(localized_help("cmd_set_earn", lang)),
+        escape_html(localized_help("cmd_earn_info_tg", lang)),
         escape_html(localized_help("cmd_create_good", lang)),
         escape_html(localized_help("cmd_goods", lang)),
         escape_html(localized_help("cmd_craft", lang)),
@@ -129,6 +142,7 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_autosend", lang)),
         escape_html(localized_help("cmd_set_profession", lang)),
         escape_html(localized_help("cmd_fine", lang)),
+        escape_html(localized_help("cmd_emit_tg", lang)),
         escape_html(localized_help("cmd_treaty", lang)),
         escape_html(localized_help("cmd_set_rate", lang)),
         escape_html(localized_help("cmd_convert", lang)),
@@ -177,13 +191,16 @@ async def help_cmd(message: Message):
         chunks.append(current)
     await asyncio.gather(*(_reply_autodelete(chunk) for chunk in chunks))
 
-@router.message(Command("add_discord", "add-discord"))
+@router.message(Command("account_discord", "account-discord", "add_discord", "add-discord"))
 async def add_discord_tg(message: Message):
     """Start linking your Discord account: name your Discord username here
-    and run `/add-telegram` there within thirty minutes.
+    and run `/account telegram` there within thirty minutes.
 
     This is what lends a Telegram account the Fandom verification done on Discord —
-    there is no `/verify` on this side."""
+    there is no `/account verify` on this side. Like its Discord twin, it says so when
+    the accounts are already linked, tells which name to type when the
+    Discord side named this account under another one, and gives the other
+    side *this* account's Telegram name to type."""
     lang = get_chat_lang(_chat_key(message))
     if not message.from_user:
         return
@@ -196,6 +213,12 @@ async def add_discord_tg(message: Message):
         return
 
     discord_nick = parts[1].strip().lstrip("@")
+    link = db.get_link_by_telegram(message.from_user.id)
+    if link and link["discord_id"]:
+        linked_name = await _discord_username(link["discord_id"])
+        if linked_name is None or linked_name.lower() == discord_nick.lower():
+            await message.reply(localized("link_already", lang))
+            return
     result, dc_id, _tg = db.register_link_attempt(
         "telegram", message.from_user.id, message.from_user.username, discord_nick)
     if result == "linked":
@@ -203,13 +226,33 @@ async def add_discord_tg(message: Message):
             await message.reply(localized("link_success", lang))
         else:
             await message.reply(localized("link_success_unverified", lang))
+    elif result == "waiting":
+        await message.reply(localized("link_waiting_discord", lang, nick=dc_id))
     else:
-        await message.reply(localized("link_pending_telegram", lang, nick=discord_nick))
+        await message.reply(localized("link_pending_telegram", lang,
+                                      nick=message.from_user.username))
+
+async def _discord_username(discord_id):
+    """The current username of a Discord account, or None when Discord does
+    not say. The Discord half is imported at the call site."""
+    try:
+        from discord_bot import bot as dc_bot
+        user = dc_bot.get_user(int(discord_id)) or await dc_bot.fetch_user(int(discord_id))
+        return getattr(user, "name", None)
+    except Exception:
+        return None
 
 async def _run_privacy_action_tg(message: Message, lang, action):
     """Run one privacy action: show what is stored, delete quiz results, or
     toggle comparison. Acts across the caller's linked accounts."""
     user_id = message.from_user.id
+
+    if action == "hide_top":
+        hidden = not db.is_leaderboard_hidden("telegram", user_id)
+        db.set_leaderboard_hidden("telegram", user_id, hidden)
+        await message.answer(localized("privacy_top_hidden" if hidden else "privacy_top_shown",
+                                       lang))
+        return
 
     if action == "clear_all":
         db.delete_user_quiz_results("telegram", user_id)
@@ -255,7 +298,7 @@ async def _run_privacy_action_tg(message: Message, lang, action):
             "privacy_block_quiz_on" if blocked else "privacy_block_quiz_off", lang,
             name=quizzes.quiz_name(quiz_id, lang)))
 
-@router.message(Command("privacy"))
+@router.message(Command("account_privacy", "account-privacy", "privacy"))
 async def privacy_tg(message: Message):
     """Manage the data the bot keeps about you. Deletions here are immediate
     and not undoable."""

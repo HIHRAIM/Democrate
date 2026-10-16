@@ -1,0 +1,13 @@
+{
+  "wiki_bday_line": "Сёння {items}!",
+  "wiki_bday_and": " і ",
+  "wiki_bday_contrast": "{past}, а {future}",
+  "wiki_bday_past_one": "{name} споўніўся {n} год",
+  "wiki_bday_past_few": "{name} споўнілася {n} гады",
+  "wiki_bday_past_many": "{name} споўнілася {n} гадоў",
+  "wiki_bday_past_other": "{name} споўнілася {n} гадоў",
+  "wiki_bday_future_one": "{name} споўніцца {n} год",
+  "wiki_bday_future_few": "{name} споўніцца {n} гады",
+  "wiki_bday_future_many": "{name} споўніцца {n} гадоў",
+  "wiki_bday_future_other": "{name} споўніцца {n} гадоў"
+}

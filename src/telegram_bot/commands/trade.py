@@ -1,12 +1,12 @@
-"""What links two banks, or a bank and a party, on Telegram: `/treaty`,
-`/set_rate`, `/convert`, `/rates`, `/set_wage`, `/party_dues`.
+"""What links two banks, or a bank and a party, on Telegram: `/bank_treaty`,
+`/bank_rate`, `/bank_convert`, `/bank_rates`, `/bank_wage`, `/party_dues`.
 
 A treaty needs the other bank's leader to accept it with the inline buttons.
-`/set_rate` refuses whenever either bank has a second treaty partner — the
+`/bank_rate` refuses whenever either bank has a second treaty partner — the
 check is economy/trade.py: can_manual_peg — because a fixed edge inside a
 triangle of currencies lets the triangle disagree with itself.
 
-`/set_wage` and `/party_dues` set monthly obligations rather than moving
+`/bank_wage` and `/party_dues` set monthly obligations rather than moving
 anything; the transfers happen on the monthly tick (economy/payroll.py).
 
 Not this module's zone: the daily currency valuation (economy/trade.py), the
@@ -24,7 +24,7 @@ from telegram_bot.commands.banks import _resolve_led_bank_tg
 from telegram_bot.dialogs import _econ_consent_keyboard, _register_econ_consent
 from telegram_bot.parties import _resolve_led_party_tg
 
-@router.message(Command("treaty"))
+@router.message(Command("bank_treaty", "bank-treaty", "treaty"))
 async def treaty_tg(message: Message):
     """Propose a currency-conversion treaty to another bank (bank leaders).
 
@@ -52,10 +52,10 @@ async def treaty_tg(message: Message):
     token = _register_econ_consent({"action": "treaty", "mine": mine["code"],
                                     "other": other["code"], "lang": lang})
     await message.answer(localized("treaty_offer", lang, proposer=mine["code"],
-                                   code=other["code"], name=other["currency_name"]),
+                                   code=other["code"], name=economy.currency_name(other)),
                          reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("set_rate", "set-rate"))
+@router.message(Command("bank_rate", "bank-rate", "set_rate", "set-rate"))
 async def set_rate_tg(message: Message):
     """Fix the rate with your bank's sole treaty partner (bank leaders).
 
@@ -94,7 +94,7 @@ async def set_rate_tg(message: Message):
                                    b=other["code"]),
                          reply_markup=_econ_consent_keyboard(lang, token))
 
-@router.message(Command("convert"))
+@router.message(Command("bank_convert", "bank-convert", "convert"))
 async def convert_tg(message: Message):
     """Convert between your own accounts at the current rate, minus the
     spread."""
@@ -126,7 +126,7 @@ async def convert_tg(message: Message):
                                   rate=f"{info['rate']:.4f}",
                                   fee=economy.format_money(info["fee"], fb)))
 
-@router.message(Command("rates"))
+@router.message(Command("bank_rates", "bank-rates", "rates"))
 async def rates_tg(message: Message):
     """Show currency values, or one currency's rates against its treaty
     partners."""
@@ -158,7 +158,7 @@ async def rates_tg(message: Message):
                             value=f"{b['value']:.4f}") for b in banks]
     await message.reply("\n".join(lines))
 
-@router.message(Command("set_wage", "set-wage"))
+@router.message(Command("bank_wage", "bank-wage", "set_wage", "set-wage"))
 async def set_wage_tg(message: Message):
     """Set the monthly wage for a profession in your bank (bank leaders).
 

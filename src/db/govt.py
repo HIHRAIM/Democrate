@@ -2,7 +2,7 @@
 
 A body is a name plus its own words for one member and for several; it holds
 no money, has no leaders and no join requests, and everything about it is one
-command each way. The relation is read from both sides: /govt lists a body's
+command each way. The relation is read from both sides: /govt info lists a body's
 members with the party each belongs to, and db/parties.py: party_govt_seats
 reads the same rows to put a seat count on a party card.
 
@@ -48,7 +48,7 @@ def get_govt_body(body_id):
 
 def get_govt_members(body_id):
     """The people holding a body's seats, ordered by the display name stored
-    when they were seated. The row carries no party: /govt looks that up per
+    when they were seated. The row carries no party: /govt info looks that up per
     member through db/parties.py: find_user_party, so a member who changes
     party is shown under the new one."""
     return cur.execute(

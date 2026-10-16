@@ -7,6 +7,11 @@ DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 PATREON_GUILD_ID = GUILD_ID
 PATREON_TIER_ROLES = {1: ROLE_ID, 2: ROLE_ID}
 SPONSOR_URL = "https://www.patreon.com/YOUR_CAMPAIGN"
+# Optional: custom emoji that stand for the platforms in Discord embeds
+# (the union profile counts communities as "<emoji> 3"), e.g.
+# "<:discord:123456789>". Leave them out, or None, to write the names.
+DISCORD_EMOJI = None
+TELEGRAM_EMOJI = None
 TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
 ADMINS = {

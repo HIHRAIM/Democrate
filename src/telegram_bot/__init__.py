@@ -15,14 +15,16 @@ the same command name, so their relative order cannot change behaviour.
 
 The rest of the order is the dependency order: `client` first (it owns `bot`,
 `dp` and `router`), then the dialog toolkit, then the party renderers, then the
-four callback handlers, then the commands, then the Olympiad — whose four
-commands sit just above the catchall, as they did in the flat module.
+five callback handlers, then the birthday greeting pass (no handler, only what
+main.py's celebration loop calls), then the commands, then the Olympiad —
+whose four commands sit just above the catchall, as they did in the flat
+module.
 
 `callbacks` is imported *before* `commands` on purpose: aiogram keeps a
 separate observer per update type, so this fixes the callback_query order
-(party consent, quiz button, economy consent, Olympiad button) independently of
-the commands. Everything those handlers need from a command module is imported
-at the call site, which is what keeps that possible.
+(party consent, quiz button, economy consent, union list, Olympiad button)
+independently of the commands. Everything those handlers need from a command
+module is imported at the call site, which is what keeps that possible.
 
 The re-exports are the package's public API: `bot` is the aiogram Bot every
 other module reaches for as ``telegram_bot.bot``, and `main` is the polling
@@ -98,19 +100,26 @@ from telegram_bot.dialogs import DIALOG_TIMEOUT, TEMP_REPLY_SECONDS, TG_USER_REF
 from telegram_bot.parties import COLOR_RE, URL_RE
 from telegram_bot import callbacks
 from telegram_bot.callbacks import (
+    handle_calendar,
     handle_econ_consent,
     handle_olympiad_button,
     handle_party_consent,
     handle_quiz_button,
+    handle_union_list,
 )
+from telegram_bot import celebrations
+from telegram_bot.celebrations import birthday_pass
 from telegram_bot import commands
 from telegram_bot.commands.unions import (
     UNION_CODE_RE,
     add_unia_cmd,
     allow_parties_tg,
+    edit_union_tg,
     force_leave_cmd,
     list_chats_cmd,
     setup_cmd,
+    union_list_message,
+    union_tg,
 )
 from telegram_bot.commands.settings import (
     lang_cmd,
@@ -156,6 +165,8 @@ from telegram_bot.commands.quizzes import (
 )
 from telegram_bot.commands.banks import (
     balance_tg,
+    emit_tg,
+    transactions_tg,
     bank_add_leader_tg,
     bank_transfer_tg,
     bank_tg,
@@ -165,6 +176,7 @@ from telegram_bot.commands.banks import (
     open_account_tg,
     pay_tg,
     set_earn_tg,
+    earn_info_tg,
 )
 from telegram_bot.commands.trade import (
     convert_tg,
@@ -200,6 +212,9 @@ from telegram_bot.commands.enterprises import (
     export_tg,
     transit_tg,
 )
+from telegram_bot.commands.wikis import add_wiki_tg, remove_wiki_tg, wiki_founded_tg
+from telegram_bot.commands.birthdays import birthday_channel_tg, birthday_tg, calendar_tg
+from telegram_bot.commands.servers import edit_server_tg, server_tg
 from telegram_bot.olympiad import (
     editcontest_tg,
     olympiad_tg,

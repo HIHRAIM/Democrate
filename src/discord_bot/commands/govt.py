@@ -1,4 +1,4 @@
-"""Governing bodies: `/add-govt` creates one, `/govt` shows who sits in it.
+"""Governing bodies: `/govt add` creates one, `/govt info` shows who sits in it.
 
 A body holds no money and has no leaders, so there is nothing here beyond
 creation and display — the interesting half of the relation is read from the
@@ -24,8 +24,9 @@ from utils import (
 
 from discord_bot.client import _chat_key, _refuse_not_setup, bot
 from discord_bot.dialogs import _numbered_choice, _say
+from discord_bot.groups import govt_group
 
-@bot.tree.command(name="add-govt", description="create a government body in a union (bot admins)")
+@govt_group.command(name="add", description="create a government body in a union (bot admins)")
 @app_commands.describe(
     union="Union code",
     name="Name of the government body",
@@ -108,7 +109,7 @@ async def _send_govt_info(interaction, body, lang):
     embed.set_footer(text=db.get_union_name(body["union_code"], lang))
     await _say(interaction, embed=embed)
 
-@bot.tree.command(name="govt", description="information about a government body of this union")
+@govt_group.command(name="info", description="information about a government body of this union")
 @app_commands.describe(query="Name of the government body")
 async def govt_cmd(interaction: discord.Interaction, query: str):
     """Show a governing body of this union and who sits in it.

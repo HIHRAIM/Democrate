@@ -3,13 +3,13 @@
 A run is a live dialog: the question goes out as an embed with a dropdown of
 its options, and `_wait_message_or_view` waits for either a pick or a typed
 answer, whichever comes first. `_active_quizzes` maps a user to the running
-session so that `/quizzes-stop` can reach into it — it must exist exactly once,
+session so that `/quiz stop` can reach into it — it must exist exactly once,
 and its Telegram twin is `_active_quizzes_tg`.
 
 Every choice here is answerable through a component and not only by typing, and
-that is a requirement rather than a convenience. These five commands are
-`allowed_installs(users=True)`: they can be run where the app is installed on
-somebody's account rather than in the server, and there the bot receives the
+that is a requirement rather than a convenience. The `/quiz` group may be
+installed on a user account (discord_bot/groups.py): its commands can be run
+where the app is installed on somebody's account rather than in the server, and there the bot receives the
 interaction but no messages at all. A dialog that waits for a typed number in
 that situation simply never hears it — the command answers, the list appears,
 and nothing happens for half an hour. Typing still works everywhere it used to;
@@ -17,7 +17,7 @@ the dropdown is what makes the dialog answerable everywhere the command is.
 
 A result is stored only after the taker says yes, and reading it always goes
 through the identity set (db/quizzes.py), so a linked Discord+Telegram pair
-sees one history. `/quizzes-compare` asks the *other* person's privacy row
+sees one history. `/quiz compare` asks the *other* person's privacy row
 before showing anything.
 
 `_resume_state` is shared with the Telegram half: a run paused on one platform
@@ -43,6 +43,7 @@ from discord_bot.client import _chat_key, bot
 from discord_bot.dialogs import (
     _ChoiceSelect, _QuizButtons, _parse_user_ref, _wait_message_or_view,
 )
+from discord_bot.groups import quiz_group
 
 _active_quizzes = {}
 
@@ -145,7 +146,7 @@ def _resume_state(row, quiz_id, n):
 async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
     """Run one quiz from the first question to the stored result.
 
-    The session is registered in `_active_quizzes` so `/quizzes-stop` can reach into
+    The session is registered in `_active_quizzes` so `/quiz stop` can reach into
     it, and each question waits for either an option button or a typed answer. A
     paused run keeps its progress — including the shuffled option order, which is
     why resuming shows the same options in the same places. The result is stored
@@ -278,9 +279,7 @@ async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
 
     await msg.edit(embed=_quiz_results_embed(quiz_id, lang, results, name), view=None)
 
-@bot.tree.command(name="quizzes", description="take a quiz (works in DMs too)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@quiz_group.command(name="take", description="take a quiz (works in DMs too)")
 async def quizzes_cmd(interaction: discord.Interaction):
     """Take a quiz. Works in a private chat with the bot as well as in a
     server; a paused run is offered for resuming rather than restarted."""
@@ -294,9 +293,7 @@ async def quizzes_cmd(interaction: discord.Interaction):
         return
     await _run_quiz_discord(interaction, chosen)
 
-@bot.tree.command(name="quizzes-stop", description="pause the quiz you are taking; your progress is kept for 7 days")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@quiz_group.command(name="stop", description="pause the quiz you are taking; your progress is kept for 7 days")
 async def quizzes_stop_cmd(interaction: discord.Interaction):
     """Pause the quiz you are taking; the progress is kept for seven days."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -309,9 +306,7 @@ async def quizzes_stop_cmd(interaction: discord.Interaction):
         localized("quiz_stop_saved", lang, name=quizzes.quiz_name(session["quiz_id"], lang)),
         ephemeral=True)
 
-@bot.tree.command(name="quizzes-clear", description="delete your saved quiz results")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@quiz_group.command(name="clear", description="delete your saved quiz results")
 async def quizzes_clear_cmd(interaction: discord.Interaction):
     """Delete your saved quiz results — one quiz's, or all of them.
 
@@ -358,14 +353,12 @@ async def _quiz_target_name(target_id):
     except Exception:
         return str(target_id)
 
-@bot.tree.command(name="quizzes-compare", description="compare quiz results with another user")
+@quiz_group.command(name="compare", description="compare quiz results with another user")
 @app_commands.describe(user="The other user's ID or mention")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
 async def quizzes_compare_cmd(interaction: discord.Interaction, user: str):
     """Compare quiz results with another user.
 
-    Refused when the other person forbade comparison in `/privacy` — theirs is the
+    Refused when the other person forbade comparison in `/account privacy` — theirs is the
     veto, not the caller's — and when either side has no stored result for the
     quiz."""
     lang = get_chat_lang(_chat_key(interaction))
@@ -435,10 +428,8 @@ def _quiz_history_embed(quiz_id, lang, latest, previous):
                             name=quizzes.quiz_name(quiz_id, lang))[:256]
     return embed
 
-@bot.tree.command(name="quizzes-previous", description="compare your latest quiz result with the one before it")
-@app_commands.describe(number="Quiz number from /quizzes; omit it within 30 minutes of finishing a quiz")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@quiz_group.command(name="previous", description="compare your latest quiz result with the one before it")
+@app_commands.describe(number="Quiz number from /quiz take; omit it within 30 minutes of finishing a quiz")
 async def quizzes_previous_cmd(interaction: discord.Interaction, number: int = None):
     """Compare your latest result with the one before it.
 

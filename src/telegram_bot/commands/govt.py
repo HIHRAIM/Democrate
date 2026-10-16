@@ -1,4 +1,4 @@
-"""Governing bodies on Telegram: `/add_govt` creates one, `/govt` shows who
+"""Governing bodies on Telegram: `/govt_add` creates one, `/govt_info` shows who
 sits in it.
 
 The search and the member lines are shared with the Discord half and imported
@@ -19,7 +19,7 @@ from discord_bot import _govt_member_lines, _search_govt
 from telegram_bot.client import GROUP_CHAT_TYPES, _chat_key, router
 from telegram_bot.dialogs import _numbered_choice_tg
 
-@router.message(Command("add_govt", "add-govt"))
+@router.message(Command("govt_add", "govt-add", "add_govt", "add-govt"))
 async def add_govt_tg(message: Message):
     """Create a governing body in a union (Bot Admins), with its own words
     for one member and for several."""
@@ -56,7 +56,7 @@ async def add_govt_tg(message: Message):
                   singular=chunks[1], plural=chunks[2])
     )
 
-@router.message(Command("govt"))
+@router.message(Command("govt_info", "govt-info", "govt"))
 async def govt_tg(message: Message):
     """Show a governing body of this union and who sits in it, with the party
     each member belongs to."""

@@ -8,7 +8,7 @@ rather than a bare (platform, user_id) match, which is what makes that shared
 history work from either side.
 
 `quiz_privacy` is the other person's veto: a row with no_compare blocks
-/quizzes-compare against them, and a row with an empty quiz_id blocks it for
+/quiz compare against them, and a row with an empty quiz_id blocks it for
 every quiz at once.
 
 Not this module's zone: the quiz engine, its questions and its scoring
@@ -92,7 +92,7 @@ def get_user_quiz_results_for(platform, user_id, quiz_id):
     ).fetchall()
 
 def get_latest_quiz_result(platform, user_id, quiz_id):
-    """The newest attempt of one quiz, or None. This is what `/quizzes-compare`
+    """The newest attempt of one quiz, or None. This is what `/quiz compare`
     puts side by side, so the comparison is always between two people's most
     recent runs rather than their best ones."""
     where, params = _identity_filter(user_identities(platform, user_id))
@@ -112,7 +112,7 @@ def get_previous_quiz_result(platform, user_id, quiz_id):
     ).fetchone()
 
 def get_last_quiz_result(platform, user_id):
-    """The user's most recent attempt of any quiz — /quizzes-previous uses its
+    """The user's most recent attempt of any quiz — /quiz previous uses its
     timestamp to decide whether the no-argument form is still allowed."""
     where, params = _identity_filter(user_identities(platform, user_id))
     return cur.execute(
@@ -130,7 +130,7 @@ def get_user_quiz_ids(platform, user_id):
     return [r["quiz_id"] for r in rows]
 
 def delete_quiz_result(result_id):
-    """Erase one attempt by id — the single-result branch of `/privacy`."""
+    """Erase one attempt by id — the single-result branch of `/account privacy`."""
     cur.execute("DELETE FROM quiz_results WHERE id=?", (result_id,))
     conn.commit()
 
@@ -173,7 +173,7 @@ def is_quiz_compare_blocked(platform, user_id, quiz_id=None):
 def get_blocked_quiz_ids(platform, user_id):
     """The quiz ids this person blocked individually, as a set.
 
-    Deliberately excludes the '' row that blocks everything: `/privacy` shows
+    Deliberately excludes the '' row that blocks everything: `/account privacy` shows
     the global switch separately, and mixing the two would make the list look
     like a per-quiz choice the person never made."""
     where, params = _identity_filter(user_identities(platform, user_id))
@@ -184,7 +184,7 @@ def get_blocked_quiz_ids(platform, user_id):
     return {r["quiz_id"] for r in rows}
 
 def save_quiz_progress(platform, user_id, quiz_id, lang, qindex, orders_json, answers_json):
-    """Park an unfinished quiz so /quizzes can pick it up again within a week."""
+    """Park an unfinished quiz so /quiz take can pick it up again within a week."""
     cur.execute(
         "INSERT INTO quiz_progress"
         " (platform, user_id, quiz_id, lang, qindex, orders_json, answers_json, created_at)"

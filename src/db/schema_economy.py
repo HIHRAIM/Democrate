@@ -138,6 +138,29 @@ def init_economy():
         PRIMARY KEY (bank_code, target_code)
     );
 
+    -- Administrative events of a bank waiting to be posted to its audit
+    -- channel (banks.audit_platform / audit_channel): fines, emissions, the
+    -- monthly wages and dues, fee and tax changes, leadership changes. The
+    -- economy writes here from synchronous code; main.py: audit_loop posts
+    -- each row in the channel's language and deletes it. `fields` is the
+    -- JSON of the event's already formatted values.
+    CREATE TABLE IF NOT EXISTS audit_outbox (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bank_code TEXT NOT NULL,
+        event TEXT NOT NULL,
+        fields TEXT,
+        created_at INTEGER
+    );
+
+    -- People who asked in /account privacy not to be shown on the /good top boards, under
+    -- the account that asked; read across a linked pair by stats.py.
+    CREATE TABLE IF NOT EXISTS leaderboard_hidden (
+        platform TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        set_at INTEGER,
+        PRIMARY KEY (platform, user_id)
+    );
+
     CREATE TABLE IF NOT EXISTS wages (
         bank_code TEXT,
         good_code TEXT,
@@ -270,6 +293,28 @@ def init_economy():
     CREATE INDEX IF NOT EXISTS idx_server_consumption
         ON server_consumption (platform, server_id, created_at);
 
+    -- How a currency's name is declined in one language, filled in by its
+    -- bank's leaders in /bank edit: `forms` is a JSON object of form → word,
+    -- e.g. {"nom": "гривна", "gen": "гривны", …} (economy/names.py lists the
+    -- forms per language). Amounts are written with the name in a language
+    -- that has the form they need, and texts take the cases from here.
+    CREATE TABLE IF NOT EXISTS currency_forms (
+        bank_code TEXT NOT NULL,
+        lang TEXT NOT NULL,
+        forms TEXT NOT NULL,
+        PRIMARY KEY (bank_code, lang)
+    );
+
+    -- What each earning channel produced per UTC day: counted messages and
+    -- the currency minted for them after tax. No text, no authors. Read by
+    -- /bank earn-info for the last seven days; retention removes rows after
+    -- eight.
+    CREATE TABLE IF NOT EXISTS earn_channel_stats (
+        platform TEXT NOT NULL, chan_key TEXT NOT NULL, day TEXT NOT NULL,
+        messages INTEGER NOT NULL DEFAULT 0, minted INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (platform, chan_key, day)
+    );
+
     -- Accepted earning messages from people outside local enterprises.
     -- One row per person and UTC day; daily neutral production reads this,
     -- and retention removes it after the seven-day reporting window.
@@ -338,7 +383,13 @@ def _migrate_economy():
     and enterprises: goods gain an owner and a category, autocraft becomes the
     continuous 24/7 autoproduction (fractional units carry over between hourly
     runs; a worker may run it for an enterprise), banks remember the previous
-    published value for the FX change log."""
+    published value for the FX change log, the tax its leaders charge on
+    payments and sales in the currency, and where its audit channel is; an
+    earning channel remembers who switched it on and when. An
+    enterprise learns whether it is
+    a community's neutral producer, and whether its name is still the one the
+    bot made up for it (`auto_name`), which follows the community's name until
+    somebody renames the enterprise."""
     with _db_lock:
         _ensure_column("goods", "owner_type", "TEXT")
         _ensure_column("goods", "owner_platform", "TEXT")
@@ -350,8 +401,16 @@ def _migrate_economy():
         _ensure_column("autocraft", "server_platform", "TEXT")
         _ensure_column("autocraft", "server_id", "TEXT")
         _ensure_column("banks", "prev_value", "REAL")
+        _ensure_column("banks", "tax_percent", "REAL NOT NULL DEFAULT 0")
+        _ensure_column("banks", "audit_platform", "TEXT")
+        _ensure_column("banks", "audit_channel", "TEXT")
         _ensure_column("enterprises", "neutral", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column("enterprises", "auto_name", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column("server_consumption", "neutral_units", "REAL NOT NULL DEFAULT 0")
+        _ensure_column("earn_channels", "set_by_platform", "TEXT")
+        _ensure_column("earn_channels", "set_by_id", "TEXT")
+        _ensure_column("earn_channels", "set_by_name", "TEXT")
+        _ensure_column("earn_channels", "set_at", "INTEGER")
         cur.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_enterprises_one_neutral"
             " ON enterprises (platform, server_id) WHERE neutral=1")

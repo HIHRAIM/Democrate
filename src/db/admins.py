@@ -1,6 +1,6 @@
 """Delegated rights: Server Admins and Localizers.
 
-Server Admins are explicitly appointed with /setadmin. Native Discord and
+Server Admins are explicitly appointed with /admin add. Native Discord and
 Telegram permissions do not grant this role. A Localizer is also every
 appointed Server Admin implicitly, for as long as they remain one.
 
@@ -15,7 +15,7 @@ per-object roles kept beside their objects.
 from db import conn, cur
 
 def add_server_admin(platform, server_id, user_id, username=None, added_by=None):
-    """Delegate bot server-admin rights to a user (set with /setadmin).
+    """Delegate bot server-admin rights to a user (set with /admin add).
     The username, when known, is kept for the control panel's username login."""
     cur.execute(
         "INSERT INTO server_admins (platform, server_id, user_id, username, added_by, added_at)"
@@ -28,7 +28,7 @@ def add_server_admin(platform, server_id, user_id, username=None, added_by=None)
     conn.commit()
 
 def remove_server_admin(platform, server_id, user_id):
-    """Revoke a server-admin appointment (/remadmin); absent rows are harmless."""
+    """Revoke a server-admin appointment (/admin remove); absent rows are harmless."""
     cur.execute(
         "DELETE FROM server_admins WHERE platform=? AND server_id=? AND user_id=?",
         (platform, str(server_id), str(user_id))
@@ -36,7 +36,7 @@ def remove_server_admin(platform, server_id, user_id):
     conn.commit()
 
 def is_server_admin(platform, server_id, user_id):
-    """Whether /setadmin appointed this user in this community.
+    """Whether /admin add appointed this user in this community.
 
     Bot Admin access, where allowed, is checked separately by the caller."""
     return cur.execute(
@@ -45,7 +45,7 @@ def is_server_admin(platform, server_id, user_id):
     ).fetchone() is not None
 
 def add_localizer(platform, user_id, username=None, added_by=None):
-    """Grant localizer status (set with /localizer-add): the user may edit
+    """Grant localizer status (set with /localizer add): the user may edit
     this bot's localization through the control panel.  The username, when
     known, is kept for the panel's username login."""
     cur.execute(

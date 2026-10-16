@@ -145,7 +145,7 @@ class _OlyDialogTg:
             error_text=olympiad.text("candidates_invalid", self.lang, max=limit))
         return answer[1] if answer else None
 
-@router.message(Command("setolympiad"))
+@router.message(Command("olympiad_set", "olympiad-set", "setolympiad"))
 async def setolympiad_tg(message: Message):
     """Open the Olympiad and fix its voting period, or cancel it with 'off'
     (Bot Admins).
@@ -196,7 +196,7 @@ async def _olympiad_admin_gate_tg(message: Message, lang):
         return False
     return True
 
-@router.message(Command("setcontest"))
+@router.message(Command("olympiad_contest_add", "olympiad-contest-add", "setcontest"))
 async def setcontest_tg(message: Message):
     """Create a contest of the Olympiad through a dialog (Bot Admins)."""
     lang = get_chat_lang(_chat_key(message))
@@ -204,7 +204,7 @@ async def setcontest_tg(message: Message):
         return
     await olympiad.run_setcontest(_OlyDialogTg(message, lang), lang)
 
-@router.message(Command("editcontest"))
+@router.message(Command("olympiad_contest_edit", "olympiad-contest-edit", "editcontest"))
 async def editcontest_tg(message: Message):
     """Manage a contest's candidate wikis through a dialog (Bot Admins)."""
     lang = get_chat_lang(_chat_key(message))
@@ -229,7 +229,7 @@ async def _ask_dm_language_tg(dialog, message):
     await dialog.send(olympiad.text("lang_chosen", code))
     return code
 
-@router.message(Command("olympiad"))
+@router.message(Command("olympiad_vote", "olympiad-vote", "olympiad"))
 async def olympiad_tg(message: Message):
     """Vote in the Olympiad — private chat with the bot only.
 

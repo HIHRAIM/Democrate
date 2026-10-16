@@ -9,13 +9,13 @@ bank balances — is a fact about the union, while only its formatting is a fact
 about the platform. When a field is added to a party, it is added here once.
 
 `_edit_party_option` is the one place a party field is validated and written,
-and it is reached from three commands with different rights: `/edit-party`
-(the founder and leaders), `/edit-rules` (the same people, rules only) and
-`/edit-party-admin` (any Bot Admin, any union). The menu texts differ per
+and it is reached from three commands with different rights: `/party edit`
+(the founder and leaders), `/party rules` (the same people, rules only) and
+`/party edit-admin` (any Bot Admin, any union). The menu texts differ per
 entry point, the writes do not.
 
 `_resolve_party_union` is the gate every party command goes through except
-`/edit-party-admin` — a Bot Admin must still be able to tidy up a union after
+`/party edit-admin` — a Bot Admin must still be able to tidy up a union after
 parties were switched off.
 
 Not this module's zone: the commands themselves
@@ -32,7 +32,7 @@ import db
 import economy
 from message_relay import clean_display_name
 from utils import (
-    DEFAULT_EMBED_COLOR, PARTY_CODE_RE, find_close_names, format_stored_user,
+    DEFAULT_EMBED_COLOR, PARTY_CODE_RE, format_stored_user, search_by_name,
     localized, send_service_event,
 )
 
@@ -50,7 +50,7 @@ async def _resolve_party_union(interaction: discord.Interaction, lang):
     """The union of this server, refusing when the server is not set up or the
     union has not turned parties on. Returns the union code, or None.
 
-    Every party command goes through this — /edit-party-admin excepted, so a Bot
+    Every party command goes through this — /party edit-admin excepted, so a Bot
     Admin can still tidy up a union after parties were switched off."""
     if interaction.guild is None:
         await interaction.response.send_message(localized("guild_only", lang), ephemeral=True)
@@ -225,7 +225,7 @@ def _edit_menu_text(party, lang):
     return "\n".join(lines)
 
 def _rules_menu_text(party, lang):
-    """The `/edit-rules` menu — a single toggle today, phrased with its
+    """The `/party rules` menu — a single toggle today, phrased with its
     current state so a leader can see what pressing it would do."""
     state = localized("state_yes" if party["allow_member_invites"] else "state_no", lang)
     return localized("rules_menu_1", lang, state=state)
@@ -363,8 +363,8 @@ async def _edit_party_option(interaction, party, lang, option, admin=False):
     """Run one numbered option of the edit menus.
 
     The single place a party field is validated and written, reached from three
-    commands with different rights: `/edit-party` and `/edit-rules` for the
-    founder and leaders, `/edit-party-admin` for a Bot Admin. `admin` unlocks
+    commands with different rights: `/party edit` and `/party rules` for the
+    founder and leaders, `/party edit-admin` for a Bot Admin. `admin` unlocks
     options 11–13 — the invite rule, moving the party to another union, and
     dissolving it — and nothing else differs between the callers."""
     if option == 1:
@@ -450,17 +450,8 @@ async def _edit_party_option(interaction, party, lang, option, admin=False):
         await _say(interaction, localized("edit_invalid_option", lang), ephemeral=True)
 
 def _search_party(union_code, query):
-    """(exact_match_or_None, suggestions). Falls back to 3 random union parties."""
-    q = (query or "").strip()
-    parties = db.get_union_parties(union_code)
-    for p in parties:
-        if p["code"].lower() == q.lower() or p["name"].lower() == q.lower():
-            return p, []
-    candidates = {}
-    for p in parties:
-        candidates.setdefault(p["name"].lower(), p)
-        candidates.setdefault(p["code"].lower(), p)
-    close = find_close_names(q, candidates)
-    if not close:
-        close = list(db.get_random_union_parties(union_code, 3))
-    return None, close
+    """(exact match or None, near matches) among the union's parties, by code
+    or name (utils.search_by_name). Input that resembles no party finds
+    nothing."""
+    return search_by_name(query, db.get_union_parties(union_code),
+                          lambda p: [p["code"], p["name"]])

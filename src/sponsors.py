@@ -161,6 +161,63 @@ def can_manage_union(discord_id, code):
     return (is_admin("discord", discord_id) or
             (db.union_owner(code) == str(discord_id) and db.sponsor_tier(discord_id) != 0))
 
+async def can_receive_union(discord_id, code):
+    """Whether a union may be handed to `discord_id`: an active sponsor, after
+    a fresh role check, with room for one more union and for every community
+    the union already holds. Returns None when they may, otherwise the
+    localization key of the reason."""
+    tier = await refresh_tier(discord_id)
+    if tier == 0:
+        return "edit_union_owner_not_sponsor"
+    if db.union_owner(code) == str(discord_id):
+        return "edit_union_owner_same"
+    caps = limits(tier)
+    if len(db.sponsor_unions(discord_id)) >= caps["unions"]:
+        return "edit_union_owner_no_union_slot"
+    if db.sponsor_server_usage(discord_id) + len(db.get_union_chats(code)) > caps["servers"]:
+        return "edit_union_owner_no_server_slot"
+    return None
+
+def retention_deadline(discord_id):
+    """When cleanup_due_chats will leave and erase the communities of the
+    unions this account owns, as Unix seconds, or None when no such clock
+    runs — an active sponsor, one in working grace, or an account that never
+    had a paid or community role. The arithmetic is the one
+    db/sponsors.py: due_sponsor_owners compares against."""
+    row = db.cur.execute("SELECT grace_since, grace_tier FROM sponsor_tiers WHERE discord_id=?",
+                         (str(discord_id),)).fetchone()
+    if not row or row["grace_since"] is None or row["grace_tier"] is None:
+        return None
+    if db.sponsor_tier(discord_id) != 0:
+        return None
+    window = 86400 if row["grace_tier"] == -1 else 30 * 86400
+    return int(row["grace_since"]) + window + 30 * 86400
+
+def owner_change_warning(discord_id, reason, lang, user):
+    """What a Bot Admin is told before or after handing a union to an owner
+    `can_receive_union` refused: (needs confirmation, warning text).
+
+    Over the new owner's limits nothing breaks — they only cannot add unions
+    or communities — so that is a warning after the fact. An owner without an
+    active subscription stops the union's message earning and cannot edit
+    it, and an owner whose subscription ended may be on the clock of
+    `retention_deadline`, after which the bot leaves and erases the union's
+    communities; that is asked to be confirmed first."""
+    from utils import localized
+    if reason in ("edit_union_owner_no_union_slot", "edit_union_owner_no_server_slot"):
+        return False, localized("edit_union_owner_warn_limits", lang, user=user)
+    if reason != "edit_union_owner_not_sponsor":
+        return False, ""
+    deadline = retention_deadline(discord_id)
+    if deadline is None:
+        return True, localized("edit_union_owner_warn_not_sponsor", lang, user=user)
+    if deadline <= time.time() + 3600:
+        when = localized("edit_union_owner_when_soon", lang)
+    else:
+        when = localized("edit_union_owner_when_date", lang,
+                         date=time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(deadline)))
+    return True, localized("edit_union_owner_warn_lapsed", lang, user=user, when=when)
+
 def linked_sponsor_id(telegram_id):
     """Resolve Telegram to the same quota and owner as Discord."""
     row = db.get_link_by_telegram(telegram_id)
@@ -202,3 +259,16 @@ def allow_activity_for_bank(bank_code):
     if not allowed:
         _activity_denied_until[owner] = (int(now) // 60 + 1) * 60
     return allowed
+
+def limit_text(owner, lang):
+    """Current subscription usage, including the active UTC minute."""
+    from utils import localized
+    caps = limits(db.sponsor_tier(owner))
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    row = db.cur.execute("SELECT minute_started,minute_units FROM sponsor_activity_usage"
+                         " WHERE discord_id=? AND day=?", (str(owner), day)).fetchone()
+    minute = int(row[1]) if row and int(row[0]) == int(time.time()) // 60 else 0
+    return localized("limit_status", lang, unions=len(db.sponsor_unions(owner)),
+        union_limit=caps["unions"], communities=db.sponsor_server_usage(owner),
+        community_limit=caps["servers"], day=db.activity_usage(owner), day_limit=caps["activity_day"],
+        minute=minute, minute_limit=caps["activity_minute"])

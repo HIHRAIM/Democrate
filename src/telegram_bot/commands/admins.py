@@ -1,5 +1,5 @@
 """Delegating rights on Telegram, and the manual database backup:
-`/setadmin`, `/remadmin`, `/localizer_add`, `/localizer_rem`, `/backup`.
+`/admin_add`, `/admin_remove`, `/localizer_add`, `/localizer_remove`, `/bot_backup`.
 
 Resolving *who* an admin command is about is the part that differs from
 Discord: there is no user-id mention syntax that survives a copy-paste, so
@@ -7,7 +7,7 @@ Discord: there is no user-id mention syntax that survives a copy-paste, so
 text-mention entity, a numeric id or a public @username, in that order of
 preference.
 
-`/backup` sends an encrypted snapshot and nothing else; a deployment without
+`/bot_backup` sends an encrypted snapshot and nothing else; a deployment without
 BACKUP_KEY gets an error rather than a plaintext database.
 
 Not this module's zone: per-object leadership (parties, banks, enterprises),
@@ -24,7 +24,7 @@ from telegram_bot.client import (
     router,
 )
 
-@router.message(Command("setadmin"))
+@router.message(Command("admin_add", "admin-add", "setadmin"))
 async def setadmin_cmd(message: Message):
     """Delegate server-admin rights in this group (Bot Admins).
 
@@ -67,7 +67,7 @@ async def setadmin_cmd(message: Message):
     except Exception:
         pass
 
-@router.message(Command("remadmin"))
+@router.message(Command("admin_remove", "admin-remove", "remadmin"))
 async def remadmin_cmd(message: Message):
     """Revoke a delegated server-admin grant (Bot Admins). A native group
     administrator keeps their rights and cannot be demoted here."""
@@ -133,7 +133,7 @@ async def localizer_add_cmd(message: Message):
     except Exception:
         pass
 
-@router.message(Command("localizer_rem", "localizer-rem"))
+@router.message(Command("localizer_remove", "localizer-remove", "localizer_rem", "localizer-rem"))
 async def localizer_rem_cmd(message: Message):
     """Revoke a delegated Localizer status (Bot Admins)."""
     lang = get_chat_lang(_chat_key(message))
@@ -159,7 +159,7 @@ async def localizer_rem_cmd(message: Message):
 
     await message.reply(localized("localizer_rem_done", lang, user_id=uid))
 
-@router.message(Command("backup"))
+@router.message(Command("bot_backup", "bot-backup", "backup"))
 async def backup_cmd(message: Message):
     """Send an encrypted database snapshot (Bot Admins).
 

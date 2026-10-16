@@ -19,9 +19,11 @@ submodule's docstring — with the interface unchanged: everything is re-importe
 here, so call sites keep saying ``economy.craft_cost(...)``.
 
 The import order at the bottom is the dependency order, from the arithmetic
-outwards: money → activity → production → trade → logistics → tasks →
-consumption → payroll. `payroll` comes last because the three schedulers call
-into all of the others, and `consumption` follows `tasks` because the provision
+outwards: money → names → activity → production → trade → logistics → tasks →
+consumption → taxes → audit → emission → payroll. `taxes` and `audit` import only `db`
+at module level (activity, trade and logistics reach for them at the call
+site), and payroll records its runs for the audit channels. `payroll` comes
+last because the three schedulers call into all of the others, and `consumption` follows `tasks` because the provision
 score reads last month's task verdict. There are no cycles here and none should
 be introduced; re-export new helpers by name, never ``import *``.
 
@@ -45,7 +47,6 @@ from economy.money import (
     craft_cost,
     format_amount,
     format_energy,
-    format_money,
     mastery_cap,
     mastery_level,
     mastery_scale,
@@ -53,6 +54,16 @@ from economy.money import (
     parse_amount,
     parse_salary,
     unit_value,
+)
+from economy.names import (
+    FORMS,
+    CurrencyName,
+    Money,
+    amount_form,
+    currency_name,
+    format_money,
+    forms_sample,
+    parse_currency_forms,
 )
 from economy.activity import (
     earn_from_message,
@@ -114,6 +125,24 @@ from economy.consumption import (
     provision_report,
     run_consumption,
     server_gdp,
+)
+from economy.taxes import (
+    MAX_TAX_PERCENT,
+    earning_after_tax,
+    format_percent,
+    parse_percent,
+    taxes_line,
+    withhold,
+)
+from economy.audit import (
+    EVENTS as AUDIT_EVENTS,
+    flush as flush_audits,
+    record as record_audit,
+)
+from economy.emission import (
+    emit,
+    emit_cap,
+    emit_left,
 )
 from economy.payroll import (
     resolve_salary,

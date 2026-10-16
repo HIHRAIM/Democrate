@@ -1,6 +1,6 @@
 """Goods and everything a person or an enterprise does with them:
 inventories, mastery, professions, production runs and the standing orders
-behind /autocraft and /autosend, plus the channels that earn a currency.
+behind /good autocraft and /good autosend, plus the channels that earn a currency.
 
 Mastery is the number of units of one good an owner has ever produced, and it
 is the input to every formula in economy/money.py — quality level, unit value
@@ -21,7 +21,7 @@ from db.unions import generate_code
 
 def create_good(bank_code, name, base_value, energy_cost, emoji, owner=None, category=None):
     """Create a market good. It belongs to `owner` — a person or an enterprise —
-    and is only *denominated* in the bank's currency (the bank buys it on /sell,
+    and is only *denominated* in the bank's currency (the bank buys it on /good sell,
     it does not own it). `category` optionally ties it to a base category, so
     its quality feeds the owner server's provision."""
     code = generate_code()
@@ -54,7 +54,7 @@ def get_bank_goods(bank_code):
 def find_bank_good(bank_code, query):
     """Find a bank's good by its code or its exact name, case-insensitively.
 
-    Matching by name as well as by code is what lets `/set-wage` take a
+    Matching by name as well as by code is what lets `/bank wage` take a
     profession the way a person says it. Returns None on no match; there is no
     fuzzy fallback here, so the caller decides whether to suggest anything."""
     q = (query or "").strip()
@@ -95,7 +95,7 @@ def add_inventory(owner, good_code, delta):
 
 def get_inventory(owner):
     """An owner's non-empty stock joined to the goods rows, by name — what
-    `/inventory` and the enterprise card print. Rows that fell to zero are
+    `/good inventory` and the enterprise card print. Rows that fell to zero are
     filtered out rather than deleted, so the row survives as a cheap
     record."""
     ot, op, oi = owner
@@ -216,23 +216,83 @@ def get_profession(owner, bank_code):
     top = get_bank_mastery(owner, bank_code)
     return top[0]["good_code"] if top else None
 
-def set_earn_channel(platform, chan_key, bank_code, rate):
+def set_earn_channel(platform, chan_key, bank_code, rate, set_by=None):
     """Make one channel or topic earn a bank's currency.
 
     `chan_key` is the channel id on Discord and the group's chat id on
     Telegram, and one row per (platform, key) is what lets several banks
     coexist on one server: each channel names the currency it feeds. `rate` is
-    a multiplier on the currency reward only — energy is never scaled."""
+    a multiplier on the currency reward only — energy is never scaled.
+    `set_by` is (platform, user id, name) of whoever ran the command, kept
+    with the time for /bank earn-info."""
+    who = set_by or (None, None, None)
     cur.execute(
-        "INSERT INTO earn_channels (platform, chan_key, bank_code, rate) VALUES (?,?,?,?)"
+        "INSERT INTO earn_channels (platform, chan_key, bank_code, rate, set_by_platform,"
+        " set_by_id, set_by_name, set_at) VALUES (?,?,?,?,?,?,?,?)"
         " ON CONFLICT(platform, chan_key) DO UPDATE SET bank_code=excluded.bank_code,"
-        " rate=excluded.rate",
-        (platform, str(chan_key), bank_code, float(rate)))
+        " rate=excluded.rate, set_by_platform=excluded.set_by_platform,"
+        " set_by_id=excluded.set_by_id, set_by_name=excluded.set_by_name,"
+        " set_at=excluded.set_at",
+        (platform, str(chan_key), bank_code, float(rate), who[0],
+         None if who[1] is None else str(who[1]), who[2], _now()))
+    conn.commit()
+
+def earn_channels_where(bank_code=None, platform=None, key_prefix=None, keys=None):
+    """Earning channels, narrowed to one currency, one platform, the keys
+    that start with `key_prefix` (a Telegram group's topics) or the given
+    `keys` (a Discord server's channels) — every one of them without
+    arguments."""
+    sql, params = "SELECT * FROM earn_channels WHERE 1=1", []
+    if bank_code:
+        sql += " AND bank_code=?"
+        params.append(bank_code)
+    if platform:
+        sql += " AND platform=?"
+        params.append(platform)
+    if key_prefix is not None:
+        sql += " AND chan_key LIKE ?"
+        params.append(f"{key_prefix}%")
+    if keys is not None:
+        keys = [str(k) for k in keys]
+        if not keys:
+            return []
+        sql += f" AND chan_key IN ({','.join('?' for _ in keys)})"
+        params.extend(keys)
+    return cur.execute(sql + " ORDER BY platform, bank_code, chan_key", params).fetchall()
+
+def record_earn_stat(platform, chan_key, minted):
+    """Count one earning message in a channel for today (UTC), with the
+    currency it minted."""
+    from datetime import datetime, timezone
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    cur.execute(
+        "INSERT INTO earn_channel_stats (platform, chan_key, day, messages, minted)"
+        " VALUES (?,?,?,1,?) ON CONFLICT(platform, chan_key, day) DO UPDATE SET"
+        " messages=messages+1, minted=minted+excluded.minted",
+        (platform, str(chan_key), day, int(minted)))
+    conn.commit()
+
+def earn_stats_since(platform, chan_key, days=7):
+    """(messages, minted) of one earning channel over the last `days` UTC
+    days, today included."""
+    from datetime import datetime, timedelta, timezone
+    first = (datetime.now(timezone.utc) - timedelta(days=days - 1)).strftime("%Y-%m-%d")
+    row = cur.execute(
+        "SELECT COALESCE(SUM(messages),0) AS m, COALESCE(SUM(minted),0) AS c"
+        " FROM earn_channel_stats WHERE platform=? AND chan_key=? AND day>=?",
+        (platform, str(chan_key), first)).fetchone()
+    return int(row["m"]), int(row["c"])
+
+def cleanup_old_earn_stats(days=8):
+    """Keep only the days /bank earn-info reads."""
+    from datetime import datetime, timedelta, timezone
+    first = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    cur.execute("DELETE FROM earn_channel_stats WHERE day<?", (first,))
     conn.commit()
 
 def remove_earn_channel(platform, chan_key):
     """Stop a channel earning. Returns whether it was earning at all, so
-    `/set-earn off` can say which."""
+    `/bank earn off` can say which."""
     c = cur.execute("DELETE FROM earn_channels WHERE platform=? AND chan_key=?",
                     (platform, str(chan_key)))
     conn.commit()
@@ -252,7 +312,7 @@ def resolve_earn_channel(platform, keys):
     `keys` is the message's place from the most specific outwards — on Discord
     a thread or forum post, then the channel it hangs under, then its category;
     on Telegram a forum topic and then the group itself. The first key with a
-    row wins, which is what makes `/set-earn` in a channel cover the threads
+    row wins, which is what makes `/bank earn` in a channel cover the threads
     inside it while a thread may still name a currency of its own. The same
     outwards resolution db/settings.py does for the language, for the same
     reason: people expect a setting on a place to apply inside it."""
@@ -297,7 +357,7 @@ def count_autocraft(owner, exclude_good=None):
 
     Both the limit on how many goods may run at once and the divisor the hourly
     tick cuts each line's rate by: five lines produce what one line would, in
-    five streams. `exclude_good` is what lets `/autocraft on` ask "how many
+    five streams. `exclude_good` is what lets `/good autocraft on` ask "how many
     others" before adding this one."""
     ot, op, oi = owner
     sql = ("SELECT COUNT(*) AS n FROM autocraft WHERE owner_type=? AND owner_platform=?"
@@ -417,3 +477,36 @@ def set_autocraft_carry(owner, good_code, carry):
         " AND owner_id=? AND good_code=?",
         (float(carry), ot, op, str(oi), good_code))
     conn.commit()
+
+def merge_owner_goods(old_owner, new_owner):
+    """Move everything goods-shaped of `old_owner` onto `new_owner` when a
+    Telegram account is linked to a Discord one: stock and mastery add up,
+    a profession override, an autocraft line or an autosend order the new
+    owner already has wins over the old one, goods defined and production
+    runs under way change hands, and autosend orders aimed at the old owner
+    now reach the new one."""
+    ot, op, oi = old_owner
+    nt, np_, ni = new_owner
+    old = (ot, op, str(oi))
+    new = (nt, np_, str(ni))
+    where = "owner_type=? AND owner_platform=? AND owner_id=?"
+    with _db_lock:
+        for table, column in (("inventory", "qty"), ("mastery", "produced")):
+            for row in cur.execute(f"SELECT good_code, {column} FROM {table} WHERE {where}",
+                                   old).fetchall():
+                cur.execute(
+                    f"INSERT INTO {table} (owner_type, owner_platform, owner_id, good_code, {column})"
+                    f" VALUES (?,?,?,?,?) ON CONFLICT(owner_type, owner_platform, owner_id, good_code)"
+                    f" DO UPDATE SET {column}={table}.{column}+excluded.{column}",
+                    (*new, row["good_code"], row[column] or 0))
+            cur.execute(f"DELETE FROM {table} WHERE {where}", old)
+        for table in ("professions", "autocraft", "autosend"):
+            cur.execute(f"UPDATE OR IGNORE {table} SET owner_type=?, owner_platform=?,"
+                        f" owner_id=? WHERE {where}", (*new, *old))
+            cur.execute(f"DELETE FROM {table} WHERE {where}", old)
+        cur.execute("UPDATE autosend SET target_type=?, target_platform=?, target_id=?"
+                    " WHERE target_type=? AND target_platform=? AND target_id=?", (*new, *old))
+        for table in ("goods", "productions"):
+            cur.execute(f"UPDATE {table} SET owner_type=?, owner_platform=?, owner_id=?"
+                        f" WHERE {where}", (*new, *old))
+        conn.commit()

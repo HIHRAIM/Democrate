@@ -6,8 +6,8 @@ economy ticks and the moment the setup-deadline rule came into force live
 there, which is how a restart neither skips a period nor runs one twice.
 
 Chat languages resolve from the most specific key outwards — the exact
-channel/thread/topic set by /locallang, then the bare server or group id set
-by /lang or /setup, then the legacy '<group_id>:0' key — and return None when
+channel/thread/topic set by /server lang-channel, then the bare server or group id set
+by /server lang or /server setup, then the legacy '<group_id>:0' key — and return None when
 nothing matches, leaving the default to the caller. A row marked `is_dm` is
 somebody's private conversation with the bot and is dropped after a year;
 a community's choice is kept as long as the bot is in it.
@@ -70,8 +70,8 @@ def cleanup_old_dm_langs(max_age_seconds=365 * 24 * 3600):
 def get_chat_lang(chat_id):
     """
     Lookup language for given chat_id. Resolution order:
-      1. exact chat_id (channel/thread/topic — set with /locallang),
-      2. bare community prefix (guild id / group chat id — set with /lang or /setup),
+      1. exact chat_id (channel/thread/topic — set with /server lang-channel),
+      2. bare community prefix (guild id / group chat id — set with /server lang or /server setup),
       3. legacy '<group_id>:0' key (group-wide behavior).
     If not found → returns None.
     """
@@ -95,9 +95,9 @@ def get_chat_lang(chat_id):
     return None
 
 def add_loc_suggestion(code, platform, user_id, username, lang, rkey, suggestion, ui_lang):
-    """Store one `/loc-suggest` under a short random code.
+    """Store one `/locale suggest` under a short random code.
 
-    The row exists so that `/loc-reply <code>` can answer the person later, on
+    The row exists so that `/locale reply <code>` can answer the person later, on
     whichever platform they wrote from — hence platform and user_id — and in
     the language they were using when they wrote (`ui_lang`), which is not
     necessarily `lang`, the language their suggestion is *about*. INSERT OR
@@ -113,7 +113,7 @@ def add_loc_suggestion(code, platform, user_id, username, lang, rkey, suggestion
 
 def get_loc_suggestion(code):
     """The suggestion behind a code, or None once it was answered or expired —
-    `/loc-reply` must check, because the code is typed by hand from a message
+    `/locale reply` must check, because the code is typed by hand from a message
     that may be a year old."""
     return cur.execute(
         "SELECT * FROM loc_suggestions WHERE code=?",
@@ -121,7 +121,7 @@ def get_loc_suggestion(code):
     ).fetchone()
 
 def delete_loc_suggestion(code):
-    """Drop a suggestion once it has been answered. Only `/loc-reply` calls
+    """Drop a suggestion once it has been answered. Only `/locale reply` calls
     this: an unanswered suggestion waits for the yearly sweep instead."""
     cur.execute("DELETE FROM loc_suggestions WHERE code=?", (code,))
     conn.commit()

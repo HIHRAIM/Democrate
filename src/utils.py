@@ -10,6 +10,10 @@ is built from *this file's* directory — so utils.py must stay directly in
 has forgotten how to speak. `localized_help` and `localized_service_event` are
 separate entry points because their keys live under their own prefixes.
 
+A command is written in the texts the way Discord spells it, `/bank pay`, and
+`localized` / `localized_help` rewrite it as `/bank_pay` while a Telegram
+update is being handled (`command_spelling`, COMMAND_GROUPS).
+
 `is_admin` reads config.py rather than the database, so the one role able to
 grant every other cannot itself be granted or revoked through the bot.
 `_rate_buckets` is the in-memory sliding-window limiter — one dictionary, and
@@ -19,7 +23,7 @@ Not this module's zone: anything that knows about a platform. Nothing here
 imports discord or aiogram, which is what lets both halves and the background
 loops share it.
 """
-import calendar
+import contextvars
 import difflib
 import logging
 import re
@@ -46,8 +50,8 @@ def format_quiz_date(ts):
         return "?"
 
 def resolve_previous_quiz(platform, user_id, number):
-    """Which quiz /quizzes-previous should compare. With a number, the quiz at
-    that position in the /quizzes menu; without one, the quiz just taken —
+    """Which quiz /quiz previous should compare. With a number, the quiz at
+    that position in the /quiz take menu; without one, the quiz just taken —
     but only within QUIZ_PREVIOUS_WINDOW of finishing it.
     Returns (quiz_id, None) or (None, error_reply_key)."""
     ids = quizzes.list_quizzes()
@@ -65,9 +69,10 @@ def resolve_previous_quiz(platform, user_id, number):
 def privacy_actions(platform, user_id):
     """The privacy areas open to this user, in menu order. Options that would do
     nothing — deleting results nobody stored, picking among a single quiz — are
-    left out, so the numbering shifts with what the user actually has."""
+    left out, so the numbering shifts with what the user actually has. Hiding
+    from the /good top boards is always offered, and always first."""
     quiz_ids = db.get_user_quiz_ids(platform, user_id)
-    actions = []
+    actions = ["hide_top"]
     if quiz_ids:
         actions.append("clear_all")
     if len(quiz_ids) > 1:
@@ -83,7 +88,10 @@ def privacy_option_labels(platform, user_id, lang, actions):
     action is a toggle."""
     blocked_all = db.is_quiz_compare_blocked(platform, user_id)
     state = localized("state_yes" if blocked_all else "state_no", lang)
+    hidden = db.is_leaderboard_hidden(platform, user_id)
     texts = {
+        "hide_top": localized("privacy_opt_hide_top", lang,
+                              state=localized("state_yes" if hidden else "state_no", lang)),
         "clear_all": localized("privacy_opt_clear_all", lang),
         "clear_one": localized("privacy_opt_clear_one", lang),
         "block_all": localized("privacy_opt_block_all", lang, state=state),
@@ -94,12 +102,12 @@ def privacy_option_labels(platform, user_id, lang, actions):
 FOUNDAY_DEFAULT_TIME = (6, 0)
 
 _WIKI_URL_RE = re.compile(r"^https?://[^\s/$.?#][^\s]*$", re.IGNORECASE)
-_FOUNDAY_DT_RE = re.compile(r"^\s*(\d{1,2})-(\d{1,2})-(\d{4})(?:[\s,]+(\d{1,2})(?::(\d{2}))?)?\s*$")
 _FOUNDAY_TIME_RE = re.compile(r"^\s*(\d{1,2})(?::(\d{2}))?\s*$")
 
 def normalize_wiki_url(raw):
     """Accept a wiki link with or without the scheme; returns the canonical
-    https form used as the per-guild key, or None when it is not a link."""
+    https form the Olympiad stores a candidate under, or None when it is not
+    a link."""
     url = (raw or "").strip()
     if not url:
         return None
@@ -108,20 +116,10 @@ def normalize_wiki_url(raw):
     url = url.rstrip("/")
     return url if _WIKI_URL_RE.match(url) else None
 
-def parse_founday_datetime(text):
-    """'MM-DD-YYYY' or 'MM-DD-YYYY HH[:MM]' in UTC. Without a time the wiki
-    counts as founded at midnight. Raises ValueError on bad input."""
-    m = _FOUNDAY_DT_RE.match(text or "")
-    if not m:
-        raise ValueError("invalid_founday_date")
-    month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    hour, minute = int(m.group(4) or 0), int(m.group(5) or 0)
-    if not (0 <= hour <= 23 and 0 <= minute <= 59):
-        raise ValueError("invalid_founday_date")
-    return datetime(year, month, day, hour, minute, tzinfo=timezone.utc)
-
 def parse_founday_time(text, default=FOUNDAY_DEFAULT_TIME):
-    """'HH:MM' or bare 'HH' in UTC. Raises ValueError on bad input."""
+    """'HH:MM' or bare 'HH'. Raises ValueError on bad input. Named after the
+    retired wiki anniversaries that introduced it; /server logs and /server tasks
+    read their posting time through it."""
     if text is None or not str(text).strip():
         return default
     m = _FOUNDAY_TIME_RE.match(str(text))
@@ -133,14 +131,25 @@ def parse_founday_time(text, default=FOUNDAY_DEFAULT_TIME):
     return hour, minute
 
 def utc_from_epoch(ts):
-    """datetime.fromtimestamp refuses negative values on Windows; wikis founded
-    before 1970 are absurd, but the arithmetic form costs nothing."""
+    """A Unix timestamp as an aware UTC datetime. datetime.fromtimestamp
+    refuses negative values on Windows; wikis founded before 1970 are absurd,
+    but the arithmetic form costs nothing."""
     return datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=int(ts))
 
+def format_date(moment, lang, with_year=True):
+    """A date in words for people — '9 июля 2026', 'July 9, 2026' — from a
+    Unix timestamp or a date; without the year for a calendar line."""
+    if isinstance(moment, (int, float)):
+        moment = utc_from_epoch(moment)
+    month = localized(f"month_gen_{moment.month}", lang)
+    return localized("date_long" if with_year else "date_day_month", lang,
+                     day=moment.day, month=month, year=moment.year)
+
 def plural_category(lang, n):
-    """CLDR plural category of `n` for the languages the bot speaks."""
+    """CLDR plural category of `n` for the languages the bot speaks, and for
+    Belarusian, which a wiki birthday greeting may be written in."""
     n = abs(int(n))
-    if lang in ("ru", "uk"):
+    if lang in ("ru", "uk", "be"):
         if n % 10 == 1 and n % 100 != 11:
             return "one"
         if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
@@ -154,28 +163,21 @@ def plural_category(lang, n):
         return "many"
     return "one" if n == 1 else "other"
 
-def is_founday_today(founded, now):
-    """Whether `now` falls on the wiki's anniversary. A 29 February wiki is
-    congratulated on 28 February in common years."""
-    if founded.month == 2 and founded.day == 29 and not calendar.isleap(now.year):
-        return (now.month, now.day) == (2, 28)
-    return (now.month, now.day) == (founded.month, founded.day)
-
-def founday_line(lang, name, years, past):
-    """One greeting line for a wiki, in one language."""
-    tense = "past" if past else "future"
-    return localized(f"founday_{tense}_{plural_category(lang, years)}", lang, name=name, n=years)
-
-def founday_message(server_lang, wiki_lang, name, years, url, past):
-    """The anniversary post. When the wiki speaks another language than the
-    chat, its own greeting follows on a second line and the wiki's flag marks
-    both."""
-    first = founday_line(server_lang, name, years, past)
-    if wiki_lang == server_lang:
-        return f"{first}\n{url}"
-    flag = localized("lang_flag", wiki_lang)
-    second = founday_line(wiki_lang, name, years, past)
-    return f"{first} {flag}\n{flag}{second}\n{url}"
+def parse_union_names(text):
+    """'en=Name | ru=Название | uk=-' as {lang: name or None}: a name to set,
+    or None where '-' asks to remove the name in that language. Returns None
+    when any part is not 'code=value' with one of the six codes."""
+    names = {}
+    for chunk in (text or "").split("|"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        key, sep, value = chunk.partition("=")
+        key, value = key.strip().lower(), value.strip()
+        if not sep or key not in SUPPORTED_LANGS or not value:
+            return None
+        names[key] = None if value == "-" else value[:100]
+    return names or None
 
 _TZ_RE = re.compile(r"^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$", re.IGNORECASE)
 
@@ -276,6 +278,82 @@ def find_close_names(query, candidates, n=5, cutoff=0.5):
             out.append(item)
     return out
 
+_ROLE_REF_RE = re.compile(r"^<@&(\d+)>$|^(\d{5,25})$")
+
+def parse_role_ids(text):
+    """The Discord role ids in `text` — mentions (`<@&123>`) or bare ids,
+    separated by commas or spaces — as ints in the order given, or None when
+    any piece is neither."""
+    ids = []
+    for piece in (text or "").replace(",", " ").split():
+        m = _ROLE_REF_RE.match(piece)
+        if not m:
+            return None
+        value = int(m.group(1) or m.group(2))
+        if value not in ids:
+            ids.append(value)
+    return ids
+
+def apply_party_roles(union_code, action, role_ids):
+    """Carry out `/union parties <union> <action> [roles]` on the stored
+    settings — the part both halves share. `action` is enable, disable, add
+    or remove. Returns (reply key, the roles now allowed, whether parties
+    are on); the key is an error key when nothing was changed.
+
+    `enable` with roles replaces the list, and without them keeps the list
+    the union already has — it needs one either way, or nobody could found
+    a party. `add` and `remove` change single roles and leave parties on or
+    off as they were; removing the last role of an enabled union is allowed
+    and said in the reply."""
+    enabled, current = db.get_party_settings(union_code)
+    if action == "disable":
+        db.set_parties_enabled(union_code, False)
+        return "allow_parties_disabled", sorted(current), False
+    if action == "enable":
+        roles = list(role_ids) or sorted(current)
+        if not roles:
+            return "allow_parties_need_roles", [], enabled
+        db.set_parties_enabled(union_code, True, roles)
+        return "allow_parties_enabled", roles, True
+    if action not in ("add", "remove"):
+        return "allow_parties_usage", sorted(current), enabled
+    if not role_ids:
+        return "allow_parties_need_roles", sorted(current), enabled
+    roles = (current | set(role_ids)) if action == "add" else (current - set(role_ids))
+    db.set_party_roles(union_code, roles)
+    if enabled and not roles:
+        return "allow_parties_no_roles_left", [], enabled
+    return "allow_parties_roles_set", sorted(roles), enabled
+
+def search_by_name(query, items, labels, limit=5, cutoff=0.6):
+    """(the item `query` names exactly, or None; the items it resembles) —
+    how `/party info` and `/union info` find what somebody typed.
+
+    `labels(item)` gives every string an item is known by: its code and its
+    names. A label equal to the query, ignoring case, wins outright.
+    Otherwise an item resembles the query when one of its labels contains
+    it (three characters or more) or difflib rates the two at `cutoff` or
+    better; the best `limit` come back, closest first. A query that
+    resembles nothing finds nothing — there is no fallback to unrelated
+    items, which used to answer gibberish with three random parties."""
+    q = (query or "").strip().lower()
+    if not q:
+        return None, []
+    scored = []
+    for item in items:
+        names = [str(label).lower() for label in labels(item) if label]
+        if q in names:
+            return item, []
+        best = 0.0
+        for name in names:
+            if len(q) >= 3 and q in name:
+                best = max(best, 0.9)
+            best = max(best, difflib.SequenceMatcher(None, q, name).ratio())
+        if best >= cutoff:
+            scored.append((best, item))
+    scored.sort(key=lambda pair: -pair[0])
+    return None, [item for _score, item in scored[:limit]]
+
 def format_stored_user(viewer_platform, platform, user_id, display_name):
     """Render a stored (platform, user_id, name) for a viewer on some platform.
 
@@ -290,8 +368,8 @@ def format_stored_user(viewer_platform, platform, user_id, display_name):
 
 def is_verified(platform, user_id):
     """Whether the user may use the Fandom-activity commands. Discord users
-    verify with /verify; Telegram users by linking to a verified Discord
-    account with /add-discord + /add-telegram. Verification is global."""
+    verify with /account verify; Telegram users by linking to a verified Discord
+    account with /account_discord + /account telegram. Verification is global."""
     if platform == "discord":
         return db.is_discord_verified(str(user_id))
     if platform == "telegram":
@@ -375,13 +453,28 @@ LANGUAGE_NAMES = {
     "en": "English",
     "es": "Español",
     "pt": "Português",
+    "be": "Беларуская",
 }
 
 LANG_ORDER = ["ru", "uk", "pl", "en", "es", "pt"]
 
+LANGUAGE_FLAGS = {
+    "be": "🇧🇾",
+}
+
 def language_name(code):
-    """A language's own name for its code, falling back to the bare code."""
+    """A language's own name for its code, falling back to the bare code.
+    Besides the six the bot speaks, LANGUAGE_NAMES knows the languages its
+    union wikis are written in (Belarusian)."""
     return LANGUAGE_NAMES.get(code, code)
+
+def language_flag(code):
+    """The flag a language is marked with: the six languages' own
+    (`lang_flag`), a wiki language's from LANGUAGE_FLAGS, a globe for any
+    other."""
+    if code in SUPPORTED_LANGS:
+        return localized("lang_flag", code)
+    return LANGUAGE_FLAGS.get(code, "🌐")
 
 def available_locales():
     """Languages that have an i18n file, in display order."""
@@ -450,8 +543,107 @@ def compare_reply(key):
             out[L] = (_LOCALE_STATUS.get(key, {}).get(L, "unverified"), text)
     return out
 
+COMMAND_GROUPS = {
+    "account": ("privacy",),
+    "admin": ("add", "remove"),
+    "bank": ("add", "info", "leader", "transfer", "edit", "open", "balance", "pay", "earn",
+             "fine", "emit", "transactions", "treaty", "rate", "convert", "rates", "wage",
+             "profession", "earn-info"),
+    "birthday": ("set", "channel"),
+    "bot": ("chats", "leave", "backup"),
+    "enterprise": ("add", "info", "edit", "join", "leave", "kick", "position", "assign",
+                   "salary", "sell", "export", "autoexport", "transit"),
+    "good": ("add", "info", "craft", "autocraft", "autosend", "inventory", "sell", "give", "top"),
+    "govt": ("add", "info"),
+    "locale": ("info", "compare", "suggest", "reply"),
+    "localizer": ("add", "remove"),
+    "olympiad": ("set", "contest-add", "contest-edit", "vote"),
+    "party": ("add", "info", "edit", "edit-admin", "rules", "join", "leave", "kick", "dues"),
+    "quiz": ("take", "stop", "clear", "compare", "previous"),
+    "server": ("setup", "info", "edit", "lang", "lang-channel", "logs", "tasks"),
+    "sponsor": ("info", "limit"),
+    "union": ("add", "info", "edit", "parties"),
+    "wiki": ("add", "remove", "founded"),
+}
+_command_platform = contextvars.ContextVar("dem_command_platform", default="discord")
+_UNDERSCORED_COMMAND_RE = re.compile(r"(?<![\w/\\])/[a-z]+(?:_[a-z]+)+")
+_TELEGRAM_COMMAND_RE = re.compile(r"(?<![\w/])/(" + "|".join(sorted(
+    (re.escape(f"{group} {action}") for group, actions in COMMAND_GROUPS.items()
+     for action in actions), key=len, reverse=True)) + r")(?![\w-])")
+
+def set_command_platform(platform):
+    """Spell the commands in every text produced from here on, in this task,
+    for `platform` ('discord' or 'telegram').
+
+    A context variable rather than an argument because a reply is produced by
+    hundreds of `localized()` calls, all of which would have to be told. The
+    Telegram half sets it once per update in an outer middleware
+    (telegram_bot/client.py); asyncio copies the context into each task, so
+    it stays with the update and never leaks into a Discord one."""
+    _command_platform.set(platform)
+
+def command_spelling(text, platform=None):
+    """`text` with every command written as `platform` spells it.
+
+    On Discord related commands are subcommands of one group, `/bank pay`
+    (discord_bot/groups.py); a Telegram command cannot contain a space, so
+    there the same action is `/bank_pay`. The texts are written once, in the
+    Discord spelling, and this turns `/<group> <action>` into
+    `/<group>_<action>` (a hyphen in the action becomes an underscore too)
+    when the reader is on Telegram.
+
+    COMMAND_GROUPS lists only the actions that exist on both platforms, so a
+    Discord-only one (`/account verify`, `/wiki channel`, `/birthday role`,
+    `/find with`, `/olympiad accept`) keeps its space and still reads as the
+    Discord command it is. A Telegram-only one (`/account_discord`) is written
+    with its underscore in the texts and needs nothing. A text that asks a
+    Telegram reader to run a shared command *on Discord* writes the space as a
+    no-break space (U+00A0), which this leaves alone.
+    discord_bot/groups.py: register warns when a group gains an action this
+    table does not know.
+
+    Read on Discord, a Telegram spelling has its underscores escaped
+    instead: Discord's markdown takes an underscore for the start of
+    italics, and one `/account_discord` in a help page used to turn the
+    whole rest of the page italic."""
+    if not isinstance(text, str):
+        return text
+    if (platform or _command_platform.get()) != "telegram":
+        return _UNDERSCORED_COMMAND_RE.sub(lambda m: m.group(0).replace("_", "\\_"), text)
+    return _TELEGRAM_COMMAND_RE.sub(
+        lambda m: "/" + m.group(1).replace(" ", "_").replace("-", "_"), text)
+
+_NAME_FORMS = ("nom_pl", "gen_pl", "nom", "gen", "dat", "acc", "ins", "loc", "sg", "pl")
+
+class _TextValues(dict):
+    """The values of one localized text, adapted to its reader's language.
+
+    A value that can write itself for a language (economy/names.py: Money,
+    an amount) is written that way. A placeholder `{<value>_<form>}` that
+    was not passed — `{name_loc}`, `{name_ins}` — is the form of value
+    `<value>` (economy/names.py: CurrencyName answers its declined forms),
+    or the value itself when it has no forms, so a call site that passes a
+    plain name still produces a whole sentence."""
+
+    def __init__(self, values, locale):
+        """Adapt `values` to `locale`."""
+        super().__init__({key: value.for_lang(locale) if hasattr(value, "for_lang") else value
+                          for key, value in values.items()})
+        self._raw, self._locale = values, locale
+
+    def __missing__(self, key):
+        """A form of a value that was passed under its own name."""
+        for form in _NAME_FORMS:
+            base = key[:-len(form) - 1]
+            if key.endswith("_" + form) and base in self._raw:
+                value = self._raw[base]
+                return value.form(self._locale, form) if hasattr(value, "form") else value
+        raise KeyError(key)
+
 def localized(_key, locale, **kwargs):
-    """Generic flat-key accessor (used everywhere a reply is produced)."""
+    """Generic flat-key accessor (used everywhere a reply is produced).
+    Amounts and currency names among the values are written for `locale`
+    (`_TextValues`)."""
     table = _LOCALE.get(_key)
     if table is None:
         _i18n_logging.getLogger("dem.i18n").warning(
@@ -460,9 +652,10 @@ def localized(_key, locale, **kwargs):
         table = {}
     template = table.get(locale, table.get(DEFAULT_LANG, _key))
     if isinstance(template, (list, tuple)):
-        return template
+        return [command_spelling(item) for item in template]
+    template = command_spelling(template)
     try:
-        return template.format(**kwargs)
+        return template.format_map(_TextValues(kwargs, locale))
     except Exception:
         return template
 
@@ -489,7 +682,7 @@ def localized_help(event_key, lang, **kwargs):
     keys live under their own prefix and a missing one should show the key rather
     than an empty line."""
     table = _LOCALE.get("help", {}).get(event_key, {})
-    template = table.get(lang, table.get(DEFAULT_LANG, event_key))
+    template = command_spelling(table.get(lang, table.get(DEFAULT_LANG, event_key)))
     try:
         return template.format(**kwargs)
     except Exception:
@@ -532,8 +725,8 @@ def _normalize_service_chat_key(platform, raw_key):
     return None, None
 
 async def send_service_event(event_key, **kwargs):
-    """Post a localized service notice (bot start/stop, /setup, /add-unia,
-    /allow-parties, /add-party results) to every SERVICE_CHATS entry. Lives here
+    """Post a localized service notice (bot start/stop, /server setup, /union add,
+    /union parties, /party add results) to every SERVICE_CHATS entry. Lives here
     so both bots can call it without re-importing main."""
     from telegram_bot import bot as tg
     from discord_bot import bot as dc

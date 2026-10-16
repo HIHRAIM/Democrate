@@ -1,7 +1,7 @@
 """The party commands on Telegram: founding, editing, the card, and the whole
 membership path from a join request to a kick.
 
-`/add_party` is a dialog here as it is on Discord, but the waiting works
+`/party_add` is a dialog here as it is on Discord, but the waiting works
 differently — see telegram_bot/dialogs.py. Approving a join request is an
 inline keyboard whose token lives in `_pending_consents`, not a persistent view:
 Telegram keyboards survive a restart as *buttons*, but their meaning does not,
@@ -36,7 +36,7 @@ from telegram_bot.parties import (
 
 async def _has_party_role(union_code, telegram_id):
     """Whether a Telegram user clears the Discord-role requirement
-    `/allow-parties` sets for a union.
+    `/union_parties` sets for a union.
 
     The requirement is a set of *Discord* role ids, so it can only be asked of
     somebody who has a Discord account linked to theirs: the answer is looked
@@ -75,13 +75,13 @@ async def _has_party_role(union_code, telegram_id):
             return True
     return False
 
-@router.message(Command("add_party", "add-party"))
+@router.message(Command("party_add", "party-add", "add_party", "add-party"))
 async def add_party_tg(message: Message):
     """Found a party through a dialog: name, code, logo.
 
     What a founder needs is a Fandom account the bot knows about, and there are
-    two ways to have one: `/verify` on a Discord account linked to this
-    Telegram one, or an Olympiad reviewer's `/accepted … remember`, which is
+    two ways to have one: `/account verify` on a Discord account linked to this
+    Telegram one, or an Olympiad reviewer's `/olympiad accept … remember`, which is
     how somebody with no Discord account at all gets one. `db.known_fandom_name`
     answers both at once — this command deliberately does not use
     `_require_verified_tg`, which knows only the first.
@@ -145,7 +145,7 @@ async def add_party_tg(message: Message):
     await send_service_event("party_created", name=name, party=code, union=union,
                              user=_tg_user_label(message.from_user))
 
-@router.message(Command("edit_party_admin", "edit-party-admin"))
+@router.message(Command("party_edit_admin", "party-edit-admin", "edit_party_admin", "edit-party-admin"))
 async def edit_party_admin_tg(message: Message):
     """Edit any party of any union by code or exact name (Bot Admins).
 
@@ -177,7 +177,7 @@ async def edit_party_admin_tg(message: Message):
         return
     await _edit_party_option_tg(message, party, lang, int(value), admin=True)
 
-@router.message(Command("edit_party", "edit-party"))
+@router.message(Command("party_edit", "party-edit", "edit_party", "edit-party"))
 async def edit_party_tg(message: Message):
     """Manage your party through a numbered menu (founders and party
     leaders)."""
@@ -203,7 +203,7 @@ async def edit_party_tg(message: Message):
         return
     await _edit_party_option_tg(message, party, lang, option)
 
-@router.message(Command("edit_rules", "edit-rules"))
+@router.message(Command("party_rules", "party-rules", "edit_rules", "edit-rules"))
 async def edit_rules_tg(message: Message):
     """Manage your party's rules (founders and party leaders)."""
     lang = get_chat_lang(_chat_key(message))
@@ -235,10 +235,10 @@ async def edit_rules_tg(message: Message):
     else:
         await message.reply(localized("edit_invalid_option", lang))
 
-@router.message(Command("party"))
+@router.message(Command("party_info", "party-info", "party"))
 async def party_tg(message: Message):
-    """Show a party of this union, falling back to near matches and then to a
-    few random parties."""
+    """Show a party of this union, falling back to a numbered choice of near
+    matches; a query that resembles no party is answered with "not found"."""
     lang = get_chat_lang(_chat_key(message))
     union = await _resolve_party_union_tg(message, lang)
     if union is None:

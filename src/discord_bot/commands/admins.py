@@ -1,7 +1,7 @@
 """Delegating rights, and the one command that hands out the database:
-`/setadmin`, `/remadmin`, `/localizer-add`, `/localizer-rem`, `/backup`.
+`/admin add`, `/admin remove`, `/localizer add`, `/localizer remove`, `/bot backup`.
 
-`/backup` lives here rather than beside the backup loop because it is the
+`/bot backup` lives here rather than beside the backup loop because it is the
 manual form of the same bot-admin privilege; the encryption and the automatic
 12-hour send are in discord_bot/client.py and backup_crypto.py. The file it
 sends is always encrypted — a deployment without BACKUP_KEY gets an error
@@ -25,8 +25,9 @@ from utils import get_chat_lang, is_admin, localized
 
 from discord_bot.client import _chat_key, bot, logger
 from discord_bot.dialogs import USER_REF_RE
+from discord_bot.groups import admin_group, bot_group, localizer_group
 
-@bot.tree.command(name="setadmin", description="delegate bot server-admin rights to a user (bot admins)")
+@admin_group.command(name="add", description="delegate bot server-admin rights to a user (bot admins)")
 @app_commands.describe(user="User to make a server admin: ping or ID")
 async def setadmin_cmd(interaction: discord.Interaction, user: str):
     """Delegate server-admin rights to a user in this server (Bot Admins).
@@ -68,7 +69,7 @@ async def setadmin_cmd(interaction: discord.Interaction, user: str):
     except Exception:
         pass
 
-@bot.tree.command(name="remadmin", description="revoke bot server-admin rights from a user (bot admins)")
+@admin_group.command(name="remove", description="revoke bot server-admin rights from a user (bot admins)")
 @app_commands.describe(user="User to demote: ping or ID")
 async def remadmin_cmd(interaction: discord.Interaction, user: str):
     """Revoke a delegated server-admin grant (Bot Admins).
@@ -117,7 +118,7 @@ async def _resolve_user_ref(guild, identifier):
             pass
     return None
 
-@bot.tree.command(name="localizer-add", description="grant Localizer status: lets the user edit this bot's localization in the control panel (bot admins)")
+@localizer_group.command(name="add", description="grant Localizer status: lets the user edit this bot's localization in the control panel (bot admins)")
 @app_commands.describe(user="User to make a localizer: ping, ID or username")
 async def localizer_add_cmd(interaction: discord.Interaction, user: str):
     """Grant Localizer status, letting the user edit this bot's localization
@@ -156,7 +157,7 @@ async def localizer_add_cmd(interaction: discord.Interaction, user: str):
     except Exception:
         pass
 
-@bot.tree.command(name="localizer-rem", description="revoke a delegated Localizer status (bot admins)")
+@localizer_group.command(name="remove", description="revoke a delegated Localizer status (bot admins)")
 @app_commands.describe(user="User to demote: ping, ID or username")
 async def localizer_rem_cmd(interaction: discord.Interaction, user: str):
     """Revoke a delegated Localizer status (Bot Admins).
@@ -180,9 +181,7 @@ async def localizer_rem_cmd(interaction: discord.Interaction, user: str):
 
     await interaction.response.send_message(localized("localizer_rem_done", lang, user_id=uid))
 
-@bot.tree.command(name="backup", description="get a database backup (bot admins)")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.allowed_installs(guilds=True, users=True)
+@bot_group.command(name="backup", description="get a database backup (bot admins)")
 async def backup_discord_cmd(interaction: discord.Interaction):
     """Send the caller an encrypted database snapshot (Bot Admins).
 

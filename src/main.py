@@ -11,18 +11,18 @@ trusting the clock they woke up on. That is what makes a bot which was down
 through a scheduled minute do the work when it comes back, and a bot restarted
 three times in an hour do it once. The economy ticks compare a UTC period label
 in `bot_settings`, the scheduled channel posts compare a per-row `last_marker`,
-and the wiki anniversaries compare a year.
+the celebrations compare the local date a greeting last went out on, and the
+wiki refresh compares the time of the last one (`wiki_refreshed_at`).
 
 `economy_loop`'s ordering is load-bearing twice over: consumption runs before
 the FX recompute inside the daily tick, and the autoproduction advance is
 measured against a monotonic clock rather than the loop's nominal hour, so a
 slow tick does not silently produce less.
 
-The three loops that live on the Discord client instead — presence, backups and
-the anniversary check — are in discord_bot/client.py, because they need the
-client to be ready first.
+The two loops that live on the Discord client instead — presence and backups —
+are in discord_bot/client.py, because they need the client to be ready first.
 
-`main` starts the nine tasks and stops on the first one to end, rather than
+`main` starts its tasks and stops on the first one to end, rather than
 waiting for all of them: see its docstring for why a `gather` there turned every
 `systemctl stop` into a SIGKILL.
 """
@@ -49,6 +49,8 @@ from utils import send_service_event, localized, format_stored_user, good_displa
 db.init()
 for _chat in db.all_chats():
     db.ensure_neutral_enterprise(_chat["platform"], _chat["chat_id"], _chat["title"])
+db.repair_neutral_names()
+db.merge_all_linked_economies()
 db.rule_since()
 
 async def retention_loop():
@@ -67,6 +69,7 @@ async def retention_loop():
             db.cleanup_old_server_production()
             db.cleanup_old_server_consumption()
             db.cleanup_old_neutral_activity()
+            db.cleanup_old_earn_stats()
             db.cleanup_old_server_tasks()
             db.cleanup_old_shipments()
             db.cleanup_old_dm_langs()
@@ -90,7 +93,7 @@ async def olympiad_loop():
 
 async def _broadcast_fx_update():
     """After the daily FX recompute: post each union's new currency values to
-    every server that configured an economic log channel with /setlogs."""
+    every server that configured an economic log channel with /server logs."""
     for row in db.all_chat_channels("logs"):
         try:
             chat = db.get_chat(row["server_id"])
@@ -109,8 +112,8 @@ async def _broadcast_fx_update():
 def _run_due_economy_ticks():
     """Fire the daily, weekly and monthly economy ticks when their UTC period
     rolls over. The last-run markers live in bot_settings so a restart never
-    double-runs a period nor skips one it missed while the bot was down (mirrors
-    the wiki founday loop's last_sent_year bookkeeping). Returns whether the
+    double-runs a period nor skips one it missed while the bot was down (the
+    celebrations keep their greeting dates the same way). Returns whether the
     daily tick ran (the FX broadcast follows it)."""
     now = datetime.now(timezone.utc)
     daily_ran = False
@@ -163,7 +166,7 @@ async def _send_progress_dm(platform, user_id, text):
     Only ever called about the result of a run they started themselves, which
     is the whole rule for these messages: the bot opens an account for anyone
     who merely talks in an earning channel, and that person has not asked the
-    bot for anything and must not be written to. `/craft` is asking."""
+    bot for anything and must not be written to. `/good craft` is asking."""
     try:
         if platform == "discord":
             from discord_bot import bot as dc
@@ -279,8 +282,8 @@ def _due_channel_posts(now_utc):
             yield row["kind"], row, marker
 
 async def channel_post_loop():
-    """Per-server scheduled posts: the weekly statistics into the /setlogs
-    channel, the monthly task into the /settasks channel."""
+    """Per-server scheduled posts: the weekly statistics into the /server logs
+    channel, the monthly task into the /server tasks channel."""
     while True:
         try:
             now_utc = datetime.now(timezone.utc)
@@ -306,7 +309,7 @@ async def channel_post_loop():
 
 async def setup_deadline_loop():
     """Daily wrapper around setup_deadline.setup_deadline_pass: leaves the
-    communities whose seven days ran out without a `/setup`, and reports each
+    communities whose seven days ran out without a `/server setup`, and reports each
     departure to the service chats.
 
     Waits for the Discord client first — the sweep reads `Guild.me.joined_at`
@@ -334,14 +337,98 @@ async def sponsor_loop():
             logger.exception("Sponsor role reconciliation failed")
         await asyncio.sleep(3600)
 
+WIKI_REFRESH_SECONDS = 12 * 3600
+
+async def celebration_loop():
+    """Once a minute: the wiki birthday posts, the birthday greetings on both
+    platforms and the birthday role; hourly, the wiki representative role.
+
+    What is due is decided by the stored local date of each greeting, not by
+    the minute the loop woke up in, so a bot that was down at ten o'clock
+    still greets when it is back that day and a restart does not greet twice.
+    Waits for the Discord client, whose member lists the passes read."""
+    from discord_bot import daily_pass, rep_role_pass
+    from telegram_bot import birthday_pass
+
+    await discord_bot.wait_until_ready()
+    last_rep = 0.0
+    while True:
+        now = datetime.now(timezone.utc)
+        try:
+            await daily_pass(now)
+        except Exception:
+            logger.exception("Discord celebrations failed")
+        try:
+            await birthday_pass(now)
+        except Exception:
+            logger.exception("Telegram birthday greetings failed")
+        if time.monotonic() - last_rep >= 3600:
+            last_rep = time.monotonic()
+            try:
+                await rep_role_pass()
+            except Exception:
+                logger.exception("Representative role pass failed")
+        await asyncio.sleep(60)
+
+async def audit_loop():
+    """Post the banks' queued administrative events to their audit channels
+    every thirty seconds (economy/audit.py). The economy queues them from
+    synchronous code — a payroll run cannot await a platform — and an event
+    waits in `audit_outbox` across a restart rather than being lost."""
+    await discord_bot.wait_until_ready()
+    while True:
+        try:
+            await economy.flush_audits()
+        except Exception:
+            logger.exception("Audit posting failed")
+        await asyncio.sleep(30)
+
+async def community_title_loop():
+    """Learn the current name of every bound community at start and then
+    once a day: a Discord server from the client's cache, a Telegram group
+    from the API. The names go to `chats.title`, which is what lists print
+    instead of a bare id, and a neutral enterprise still carrying the bot's
+    own name is renamed with its community (db/enterprises.py:
+    rename_auto_neutral)."""
+    await discord_bot.wait_until_ready()
+    while True:
+        try:
+            await stats.refresh_union_titles()
+        except Exception:
+            logger.exception("Community name refresh failed")
+        await asyncio.sleep(24 * 3600)
+
+async def wiki_refresh_loop():
+    """Re-read every union wiki's name, language and administration twice a
+    day, then bring the representative roles up to date.
+
+    The time of the last refresh is kept in `bot_settings` and written before
+    the refresh starts, so frequent restarts do not multiply the requests to
+    the wikis and a refresh that crashes is not retried within the hour."""
+    import wikis
+    from discord_bot import rep_role_pass
+
+    await discord_bot.wait_until_ready()
+    while True:
+        try:
+            last = int(db.get_setting("wiki_refreshed_at") or 0)
+            if time.time() - last >= WIKI_REFRESH_SECONDS:
+                db.set_setting("wiki_refreshed_at", str(int(time.time())))
+                count = await wikis.refresh_all()
+                logger.info("Wiki refresh: %d wiki(s) read", count)
+                await rep_role_pass()
+        except Exception:
+            logger.exception("Wiki refresh failed")
+        await asyncio.sleep(600)
+
 async def main():
     """Start both bots and every cross-platform loop, then wait for whichever
     of them ends first and take the others down with it.
 
     Waiting for *all* of them is what a `gather` would do, and it is wrong
     here. aiogram installs its own SIGINT/SIGTERM handler and answers the
-    signal by stopping the polling neatly — at which point the other eight
-    tasks know nothing about it, and the seven loops sitting in an
+    signal by stopping the polling neatly — at which point the other tasks
+    know nothing about it, and the loops sitting in an
     `asyncio.sleep` of up to a day hold the process open. A service manager
     waiting for it to exit runs out of patience and sends SIGKILL: an orderly
     stop becomes a killing in the middle of whatever the economy was writing
@@ -367,6 +454,10 @@ async def main():
         asyncio.create_task(olympiad_loop(), name="olympiad"),
         asyncio.create_task(setup_deadline_loop(), name="setup-deadline"),
         asyncio.create_task(sponsor_loop(), name="sponsors"),
+        asyncio.create_task(celebration_loop(), name="celebrations"),
+        asyncio.create_task(wiki_refresh_loop(), name="wiki-refresh"),
+        asyncio.create_task(community_title_loop(), name="community-titles"),
+        asyncio.create_task(audit_loop(), name="audit"),
     ]
 
     await asyncio.sleep(5)

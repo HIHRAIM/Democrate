@@ -43,7 +43,7 @@ def get_auto_exports(from_ent=None):
 
 def remove_auto_export(from_ent, to_ent, good_code):
     """Cancel a contract, identified the way the user named it rather than by
-    id. Returns whether one existed, so `/auto-export off` can say which."""
+    id. Returns whether one existed, so `/enterprise autoexport off` can say which."""
     c = cur.execute(
         "DELETE FROM auto_exports WHERE from_ent=? AND to_ent=? AND good_code=?",
         (from_ent, to_ent, good_code))

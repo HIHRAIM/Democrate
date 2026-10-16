@@ -2,7 +2,7 @@
 link, and the two questions the rest of the bot asks about identity.
 
 Verification is global and one-directional. A Discord user verifies against
-their Fandom profile (/verify, fandom.py); a Telegram user is verified only
+their Fandom profile (/account verify, fandom.py); a Telegram user is verified only
 by being linked to an already-verified Discord account. The link itself is a
 handshake with a thirty-minute window: each side names the other's username
 (`pending_links`), and `register_link_attempt` completes it the moment the
@@ -46,7 +46,7 @@ def get_fandom_verification(discord_id):
     ).fetchone()
 
 def is_discord_verified(discord_id):
-    """Whether this Discord account passed `/verify`. Verification is global,
+    """Whether this Discord account passed `/account verify`. Verification is global,
     not per server: the gate is about the person, not about where they are."""
     return get_fandom_verification(discord_id) is not None
 
@@ -132,7 +132,7 @@ def _name_eq(a, b):
 
 def user_identities(platform, user_id):
     """Every (platform, user_id) pair that is the same person: the caller plus
-    the account they linked with /add-discord + /add-telegram. Quiz results are
+    the account they linked with /account_discord + /account telegram. Quiz results are
     stored per platform but read through this set, so a linked user sees one
     shared history on both platforms."""
     ids = [(platform, str(user_id))]
@@ -147,10 +147,17 @@ def user_identities(platform, user_id):
     return ids
 
 def register_link_attempt(platform, user_id, username, claimed_other):
-    """Record the caller's half of the /add-discord + /add-telegram handshake and
+    """Record the caller's half of the /account_discord + /account telegram handshake and
     link the accounts when the matching half already exists (each side names the
     other's username and is itself named by it). Returns
-    ('linked', discord_id, telegram_id) or ('pending', None, None)."""
+    ('linked', discord_id, telegram_id), ('pending', None, None), or
+    ('waiting', name, None) when the other side already named the caller under
+    a different name than the caller named it — the usual slip of typing one's
+    own nickname on both sides — so the command can say which name to use.
+
+    Linking merges the Telegram account's economy into the Discord one
+    (`merge_linked_economy`), since from now on only the Discord side is
+    addressed."""
     from db.quizzes import prune_quiz_results
 
     add_pending_link(platform, str(user_id), username, claimed_other)
@@ -163,7 +170,11 @@ def register_link_attempt(platform, user_id, username, claimed_other):
             remove_pending_link(platform, str(user_id))
             remove_pending_link(other, p["user_id"])
             prune_quiz_results("discord", discord_id)
+            merge_linked_economy(discord_id, telegram_id)
             return "linked", discord_id, telegram_id
+    for p in get_pending_links(other):
+        if _name_eq(p["claimed_other"], username):
+            return "waiting", p["username"], None
     return "pending", None, None
 
 def canonical_user(platform, user_id):
@@ -177,3 +188,48 @@ def canonical_user(platform, user_id):
             return "user", "discord", str(row["discord_id"])
         return "user", "telegram", uid
     return "user", "discord", uid
+
+def merge_linked_economy(discord_id, telegram_id):
+    """Fold a linked Telegram account's money, energy, goods, mastery and
+    standing orders into its Discord account. Everything economic is keyed by
+    `canonical_user`, which answers with the Discord account once the two are
+    linked — without this, whatever the Telegram account had earned before
+    would stay behind under an owner nobody addresses any more, and both
+    would appear on the leaderboards. Returns how many accounts moved."""
+    from db.banks import merge_owner_accounts
+    from db.goods import merge_owner_goods
+    old = ("user", "telegram", str(telegram_id))
+    new = ("user", "discord", str(discord_id))
+    moved = merge_owner_accounts(old, new)
+    merge_owner_goods(old, new)
+    return moved
+
+def merge_all_linked_economies():
+    """Run `merge_linked_economy` for every existing link — once per start,
+    for the links made before linking merged anything. A pair with nothing
+    left on the Telegram side costs a few empty queries. Returns how many
+    accounts moved in total."""
+    moved = 0
+    for row in cur.execute("SELECT discord_id, telegram_id FROM account_links").fetchall():
+        if row["discord_id"] and row["telegram_id"]:
+            moved += merge_linked_economy(row["discord_id"], row["telegram_id"])
+    return moved
+
+def set_leaderboard_hidden(platform, user_id, hidden):
+    """Hide a person from the /good top boards, or show them again, across their
+    linked accounts."""
+    for p, uid in user_identities(platform, user_id):
+        cur.execute("DELETE FROM leaderboard_hidden WHERE platform=? AND user_id=?", (p, str(uid)))
+    if hidden:
+        cur.execute("INSERT INTO leaderboard_hidden (platform, user_id, set_at) VALUES (?,?,?)",
+                    (platform, str(user_id), int(time.time())))
+    conn.commit()
+
+def is_leaderboard_hidden(platform, user_id):
+    """Whether this person, under any of their linked accounts, asked to be
+    left off the /good top boards."""
+    for p, uid in user_identities(platform, user_id):
+        if cur.execute("SELECT 1 FROM leaderboard_hidden WHERE platform=? AND user_id=?",
+                       (p, str(uid))).fetchone():
+            return True
+    return False

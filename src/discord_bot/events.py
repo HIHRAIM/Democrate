@@ -1,4 +1,4 @@
-"""All three @bot.event handlers and nothing else — the dispatcher into
+"""All four @bot.event handlers and nothing else — the dispatcher into
 everything the Discord half does without being asked.
 
 `on_guild_join` records the arrival and tells the service chats, because a Bot
@@ -7,6 +7,10 @@ record rather than the clock, since the sweep reads Discord's own
 `Guild.me.joined_at`. `on_guild_remove` forgets the setup deadline. Sponsored
 bindings stay until verified retention cleanup; operator bindings are removed
 on departure.
+
+`on_guild_role_delete` takes a deleted role out of every union's list of
+roles that may found a party (`/union parties`) and tells the service chats,
+so a list never points at a role nobody can hold.
 
 `on_message` is message earning and nothing else. It is independent of the
 `wait_for` dialogs and of the slash commands — discord.py dispatches those
@@ -33,7 +37,7 @@ from discord_bot.client import _earn_keys, bot, logger
 async def on_guild_join(guild: discord.Guild):
     """The bot was added to a server: record the join and tell the service
     chats, since a Bot Admin now has seven days to bind it to a union with
-    `/setup` (setup_deadline.py).
+    `/server setup` (setup_deadline.py).
 
     The row is a record, not the clock — the sweep reads Discord's own
     `Guild.me.joined_at`, so a missed event costs nothing but this notice."""
@@ -59,10 +63,20 @@ async def on_guild_remove(guild: discord.Guild):
     db.forget_deadline("discord", guild.id)
 
 @bot.event
+async def on_guild_role_delete(role: discord.Role):
+    """A role was deleted: if any union let its holders found parties, take
+    it off that list and say so in the service chats. A role deleted while
+    the bot was offline is not noticed this way; it then simply matches
+    nobody."""
+    for code in db.drop_party_role(role.id):
+        await send_service_event("party_role_deleted", code=code, role=role.name,
+                                 role_id=role.id, server=role.guild.name)
+
+@bot.event
 async def on_message(message: discord.Message):
     """Message earning. Independent of the wait_for dialogs and slash commands
     (those are dispatched separately), so counting a message here never disturbs
-    them. A message earns only when the channel is a /set-earn earning channel,
+    them. A message earns only when the channel is a /bank earn earning channel,
     the author is a verified human, and the anti-abuse gate (min length, per-user
     cooldown, hourly cap) lets it through — see economy.earn_from_message."""
     try:
@@ -76,6 +90,6 @@ async def on_message(message: discord.Message):
             return
         economy.earn_from_message("discord", message.author.id, str(message.author),
                                   earn["bank_code"], len(content), earn["rate"],
-                                  server_id=message.guild.id)
+                                  server_id=message.guild.id, chan_key=earn["chan_key"])
     except Exception as e:
         logger.warning("on_message earning error: %s", e)

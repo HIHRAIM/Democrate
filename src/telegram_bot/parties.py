@@ -10,8 +10,8 @@ Merging the two into one platform-neutral renderer is explicitly not wanted:
 the difference is the whole reason there are two files.
 
 `_edit_party_option_tg` is the one place a party field is validated and written
-on this side, reached from `/edit_party`, `/edit_rules` and
-`/edit_party_admin` with different rights and different menus but the same
+on this side, reached from `/party_edit`, `/party_rules` and
+`/party_edit_admin` with different rights and different menus but the same
 writes.
 
 Not this module's zone: the commands (telegram_bot/commands/parties.py), the
@@ -208,7 +208,7 @@ async def _edit_party_option_tg(message, party, lang, option, admin=False):
     """Run one numbered option of the edit menus.
 
     The Telegram side's single place a party field is validated and written,
-    reached from `/edit_party`, `/edit_rules` and `/edit_party_admin`; `admin`
+    reached from `/party_edit`, `/party_rules` and `/party_edit_admin`; `admin`
     unlocks the three options only a Bot Admin gets."""
     if option == 1:
         m = await _dialog_text_tg(message, lang, localized("edit_ask_name", lang))

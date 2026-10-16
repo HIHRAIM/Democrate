@@ -1,11 +1,13 @@
-"""The four @router.callback_query handlers: every inline button the Telegram
+"""The six @router.callback_query handlers: every inline button the Telegram
 half ever sends comes back here.
 
 They are kept together, and in this order, because aiogram dispatches
 callback queries in registration order too, and because each of them is the
 *second half* of a dialog whose first half is elsewhere: a party leadership
-offer (`pc:`), a quiz option (`qb:`), a bank/enterprise/export offer (`ec:`)
-and an Olympiad button (`ob:`). The prefix in the callback data is what routes
+offer (`pc:`), a quiz option (`qb:`), a bank/enterprise/export offer (`ec:`),
+a union's full list (`ul:`), the calendar (`cal:`) and an Olympiad button
+(`ob:`). The union list and the calendar are the ones without a registry:
+their buttons carry everything they need, so they have nothing to forget. The prefix in the callback data is what routes
 them apart, and it is also what makes a stale button from before a restart
 harmless: the token is no longer in its registry and the handler says so
 instead of acting.
@@ -154,7 +156,8 @@ async def handle_quiz_button(query: CallbackQuery):
 @router.callback_query(lambda c: c.data and c.data.startswith("ec:"))
 async def handle_econ_consent(query: CallbackQuery):
     """Answer an economy button ('ec:'): bank and enterprise leadership,
-    treaties, pegs, join requests, sales and export offers.
+    treaties, pegs, join requests, sales and export offers, and the transfer
+    of a union to another sponsor.
 
     The longest handler in the half, because every economy decision that needs
     somebody else's agreement lands here. Who may press depends on the action — the
@@ -182,7 +185,7 @@ async def handle_econ_consent(query: CallbackQuery):
     lang = pend["lang"]
     user = query.from_user
     action = pend["action"]
-    if action in ("bank_leader", "bank_transfer", "ent_leader", "ent_transfer"):
+    if action in ("bank_leader", "bank_transfer", "ent_leader", "ent_transfer", "union_owner"):
         if pend["target_kind"] == "id":
             allowed = user is not None and user.id == int(pend["target"])
         else:
@@ -228,6 +231,7 @@ async def handle_econ_consent(query: CallbackQuery):
         if bank and accepted:
             db.add_bank_leader(bank["code"], "telegram", user.id, display)
             text = localized("bank_leader_added", lang, user=display, name=bank["currency_name"])
+            economy.record_audit(bank["code"], "leader_added", user=display)
         else:
             text = localized("bank_leader_declined", lang)
     elif action == "bank_transfer":
@@ -235,6 +239,7 @@ async def handle_econ_consent(query: CallbackQuery):
         if bank and accepted:
             db.set_bank_leader(bank["code"], "telegram", user.id, display)
             text = localized("bank_transfer_done", lang, user=display, name=bank["currency_name"])
+            economy.record_audit(bank["code"], "leader_transfer", user=display)
         else:
             text = localized("bank_transfer_declined", lang)
     elif action == "treaty":
@@ -301,8 +306,11 @@ async def handle_econ_consent(query: CallbackQuery):
             if good:
                 seller = tuple(pend["seller"])
                 buyer = tuple(pend["buyer_owner"])
+                chat = query.message.chat if query.message else None
+                server = (("telegram", str(chat.id))
+                          if chat and chat.type in ("group", "supergroup") else None)
                 status, info = economy.sell(seller, buyer, good, pend["qty"],
-                                            pend["price"], pend["bank"])
+                                            pend["price"], pend["bank"], server)
                 bank = db.get_bank(pend["bank"]) if pend["bank"] else None
                 emoji = f"{good['emoji']} " if good["emoji"] else ""
                 if status == "ok":
@@ -311,11 +319,26 @@ async def handle_econ_consent(query: CallbackQuery):
                         name=good_display_name(good, lang), buyer=pend["buyer_name"],
                         total=economy.format_money(info["total"], bank) if bank
                         else localized("export_free", lang))
+                    taxes = economy.taxes_line(info.get("taxes"), bank, lang) if bank else ""
+                    if taxes:
+                        text += "\n" + taxes
                 else:
                     text = localized(f"sell_{status}", lang,
                                      name=good_display_name(good, lang))
         else:
             text = localized("sell_declined", lang)
+    elif action == "union_owner":
+        import sponsors
+        reason = await sponsors.can_receive_union(pend["owner"], pend["union"]) if accepted else None
+        if not accepted:
+            text = localized("edit_union_owner_declined", lang)
+        elif db.union_owner(pend["union"]) != str(pend["from"]) or reason:
+            text = localized(reason or "edit_union_owner_stale", lang)
+        else:
+            db.set_union_owner(pend["union"], pend["owner"])
+            text = localized("edit_union_owner_done", lang, union=pend["union"], user=display)
+            await send_service_event("union_owner_changed", code=pend["union"],
+                                     owner=pend["owner"], user=pend["by"])
     elif action == "auto_export":
         if accepted:
             db.remove_auto_export(pend["from"], pend["ent"], pend["good"])
@@ -340,6 +363,67 @@ async def handle_econ_consent(query: CallbackQuery):
             await query.message.reply(text)
         except Exception:
             pass
+
+@router.callback_query(lambda c: c.data and c.data.startswith("ul:"))
+async def handle_union_list(query: CallbackQuery):
+    """Answer a union list button ('ul:<code>:<kind>:<page>:<n|e>'): a button
+    under a /union_info profile sends the list's first page as a new message
+    ('n'), an arrow under a list redraws that message on another page ('e').
+
+    Anyone may press — the lists are as public as the profile — and the data
+    carries everything, so a button from before a restart still works. A new
+    list per person is rate-limited like /union_info itself."""
+    from telegram_bot.commands.unions import union_list_message
+    from utils import get_chat_lang, rate_limit_ok
+    import stats
+
+    try:
+        _, code, kind, page, mode = query.data.split(":")
+        page = int(page)
+    except Exception:
+        await query.answer()
+        return
+    if kind not in stats.UNION_LISTS or query.message is None or not db.union_exists(code):
+        await query.answer()
+        return
+    who = query.from_user.id if query.from_user else 0
+    if mode == "n" and not rate_limit_ok(("union-list", "telegram", who), limit=10,
+                                         window_seconds=60):
+        await query.answer()
+        return
+    chat_key = f"{query.message.chat.id}:{query.message.message_thread_id or 0}"
+    if kind == "enterprises" and mode == "n":
+        await stats.refresh_union_titles(code)
+    text, keyboard = union_list_message(code, kind, page, get_chat_lang(chat_key))
+    await query.answer()
+    try:
+        if mode == "e":
+            await query.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard,
+                                          disable_web_page_preview=True)
+        else:
+            await query.message.reply(text, parse_mode="HTML", reply_markup=keyboard,
+                                      disable_web_page_preview=True)
+    except Exception:
+        pass
+
+@router.callback_query(lambda c: c.data and c.data.startswith("cal:"))
+async def handle_calendar(query: CallbackQuery):
+    """Answer a calendar button ('cal:<state>'): redraw the calendar in the
+    state the button carries. Anyone may press — a calendar is as public as
+    the message it is in."""
+    from telegram_bot.commands.birthdays import calendar_message
+    from utils import get_chat_lang
+
+    await query.answer()
+    if query.message is None:
+        return
+    chat_key = f"{query.message.chat.id}:{query.message.message_thread_id or 0}"
+    text, keyboard = await calendar_message(query.message.chat, get_chat_lang(chat_key),
+                                            query.data[4:])
+    try:
+        await query.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+    except Exception:
+        pass
 
 @router.callback_query(lambda c: c.data and c.data.startswith("ob:"))
 async def handle_olympiad_button(query: CallbackQuery):

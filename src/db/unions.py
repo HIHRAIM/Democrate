@@ -1,10 +1,12 @@
 """Unions, their localized names, the chats bound to them, and the shared
 code namespace all of that lives in.
 
-A union is a bare code plus a name per language; a chat is one Discord server
-or Telegram group, keyed by its bare id, and `/setup` is what binds the two.
-Removing a chat forgets everything scoped to that server, which is why
-`remove_chat` deletes language rows, wiki anniversaries and log channels too.
+A union is a bare code plus a name per language, with a language of its own
+(English until /union edit sets another) and an optional logo; a chat is one
+Discord server or Telegram group, keyed by its bare id, and `/server setup` is what
+binds the two. Removing a chat forgets everything scoped to that server, which
+is why `remove_chat` deletes language rows, log channels and the celebration
+settings too.
 
 The second half of this module is the namespace: union, party, currency, good
 and enterprise codes are checked against each other by `code_taken`, so the
@@ -25,7 +27,7 @@ from db import conn, cur
 def add_union(code, names, owner_id=None):
     """Create a union with its localized names ({lang: name} dict).
     Returns False if the union already exists. The program ships with no
-    unions — every union is created at runtime with /add-unia."""
+    unions — every union is created at runtime with /union add."""
     if union_exists(code):
         return False
     cur.execute(
@@ -53,7 +55,7 @@ def union_exists(code):
     return cur.execute("SELECT 1 FROM unions WHERE code=?", (code,)).fetchone() is not None
 
 def get_union_codes():
-    """Every union code, sorted — the list `/setup` prints when it is given one
+    """Every union code, sorted — the list `/server setup` prints when it is given one
     it does not know."""
     return [r["code"] for r in cur.execute("SELECT code FROM unions ORDER BY code").fetchall()]
 
@@ -75,12 +77,79 @@ def get_union_name(code, lang, fallback="en"):
 
 def get_union_names(code):
     """All of a union's names as {lang: name}, for the languages it actually
-    has one in — `/add-unia` accepts any subset of the six, so a union may be
+    has one in — `/union add` accepts any subset of the six, so a union may be
     named in one language and unnamed in five."""
     return {
         r["lang"]: r["name"]
         for r in cur.execute("SELECT lang, name FROM union_names WHERE code=?", (code,)).fetchall()
     }
+
+def get_union(code):
+    """The unions row (created_at, lang, logo, logo_mime), or None."""
+    return cur.execute("SELECT * FROM unions WHERE code=?", (code,)).fetchone()
+
+def union_lang(code):
+    """The union's own language, which the wiki greetings speak first.
+    English until /union edit sets another."""
+    row = get_union(code)
+    return (row["lang"] if row and row["lang"] else None) or "en"
+
+def set_union_created(code, created_at):
+    """Set the moment a union counts as founded — its birthday in /calendar
+    and the date its profile shows."""
+    cur.execute("UPDATE unions SET created_at=? WHERE code=?", (int(created_at), code))
+    conn.commit()
+
+def set_union_lang(code, lang):
+    """Set the union's language."""
+    cur.execute("UPDATE unions SET lang=? WHERE code=?", (lang, code))
+    conn.commit()
+
+def set_union_logo(code, logo, logo_mime):
+    """Replace the union's logo, stored in the row like a party's."""
+    cur.execute("UPDATE unions SET logo=?, logo_mime=? WHERE code=?", (logo, logo_mime, code))
+    conn.commit()
+
+def set_union_names(code, names):
+    """Apply {lang: name or None} to a union's names: a name replaces the one
+    in that language, None removes it. Refuses (returns False) to leave the
+    union with no name at all."""
+    current = get_union_names(code)
+    for lang, name in names.items():
+        if name:
+            current[lang] = name
+        else:
+            current.pop(lang, None)
+    if not current:
+        return False
+    for lang, name in names.items():
+        if name:
+            cur.execute("INSERT INTO union_names (code, lang, name) VALUES (?,?,?)"
+                        " ON CONFLICT(code, lang) DO UPDATE SET name=excluded.name",
+                        (code, lang, name))
+        else:
+            cur.execute("DELETE FROM union_names WHERE code=? AND lang=?", (code, lang))
+    conn.commit()
+    return True
+
+def union_community_counts(code):
+    """How many Discord servers and Telegram groups a union holds, as
+    {'discord': n, 'telegram': m}."""
+    rows = cur.execute("SELECT platform, COUNT(*) AS n FROM chats WHERE union_code=?"
+                       " GROUP BY platform", (code,)).fetchall()
+    counts = {"discord": 0, "telegram": 0}
+    counts.update({r["platform"]: r["n"] for r in rows})
+    return counts
+
+def get_union_enterprises(code):
+    """Every enterprise based in one of the union's communities, the
+    communities' neutral enterprises included: the ordinary ones first, each
+    group by name."""
+    return cur.execute(
+        "SELECT e.* FROM enterprises e JOIN chats c"
+        " ON c.chat_id=e.server_id AND c.platform=e.platform"
+        " WHERE c.union_code=? ORDER BY e.neutral, e.name COLLATE NOCASE, e.code",
+        (code,)).fetchall()
 
 def setup_chat(platform, prefix, union_code, setup_by, title=None):
     """Register a Discord server / Telegram group (its bare prefix id) in a union.
@@ -88,7 +157,7 @@ def setup_chat(platform, prefix, union_code, setup_by, title=None):
     `title` is the community's own name, remembered so that anything printing a
     server — a bank's central chat, a service event — has something to say when
     the bot cannot see the place at that moment. A call without one leaves any
-    name already stored alone, so re-running `/setup` never blanks it."""
+    name already stored alone, so re-running `/server setup` never blanks it."""
     cur.execute(
         "INSERT INTO chats (platform, chat_id, union_code, setup_by, title, created_at)"
         " VALUES (?,?,?,?,?,?)"
@@ -98,19 +167,25 @@ def setup_chat(platform, prefix, union_code, setup_by, title=None):
         (platform, str(prefix), union_code, str(setup_by), title, int(time.time()))
     )
     conn.commit()
-    from db.enterprises import ensure_neutral_enterprise
+    from db.enterprises import ensure_neutral_enterprise, rename_auto_neutral
     ensure_neutral_enterprise(platform, prefix, title)
+    rename_auto_neutral(platform, prefix, title)
 
 def set_chat_title(prefix, title):
     """Remember a community's current name, if it is bound to a union at all.
 
     Cheap enough to call whenever the bot happens to see the place: it touches
-    one row and never creates one, so a chat nobody has `/setup` yet stays
-    absent rather than half-registered."""
+    one row and never creates one, so a chat nobody has `/server setup` yet stays
+    absent rather than half-registered. The community's neutral enterprise
+    takes the new name with it while its name is still the bot's own."""
     if not title:
         return
     cur.execute("UPDATE chats SET title=? WHERE chat_id=?", (str(title)[:200], str(prefix)))
     conn.commit()
+    row = get_chat(prefix)
+    if row is not None:
+        from db.enterprises import rename_auto_neutral
+        rename_auto_neutral(row["platform"], prefix, row["title"])
 
 def chat_title(prefix):
     """The stored name of a server/group, or None."""
@@ -119,7 +194,7 @@ def chat_title(prefix):
 
 def get_chat(prefix):
     """The chats row of a server/group by its bare id, or None when it was
-    never `/setup`-bound.
+    never `/server setup`-bound.
 
     `prefix` is the community id and never a channel or topic key: this is the
     row that answers "which union is this?", and almost every public command
@@ -139,8 +214,10 @@ def get_union_chats(union_code):
     ).fetchall()
 
 def remove_chat(prefix):
-    """Forget a server/group: its union binding, every language setting, any
-    wiki anniversaries scheduled in it and its economic log/tasks channels."""
+    """Forget a server/group: its union binding, every language setting, its
+    economic log/tasks channels, its celebration settings and the roles the
+    bot handed out in it, and any rows of the retired per-server wiki
+    anniversaries."""
     prefix = str(prefix)
     from db.enterprises import delete_enterprise
     for neutral in cur.execute(
@@ -155,6 +232,8 @@ def remove_chat(prefix):
     )
     cur.execute("DELETE FROM wiki_foundays WHERE guild_id=?", (prefix,))
     cur.execute("DELETE FROM chat_channels WHERE server_id=?", (prefix,))
+    for table in ("community_settings", "wiki_greeting_off", "role_grants"):
+        cur.execute(f"DELETE FROM {table} WHERE server_id=?", (prefix,))
     conn.commit()
 
 def get_telegram_group_ids():

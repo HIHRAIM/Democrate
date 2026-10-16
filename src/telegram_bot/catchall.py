@@ -55,7 +55,7 @@ def _earn_keys_tg(message: Message):
     forum topic first, then the group itself.
 
     A topic of a forum group has a key of its own ('chat:thread'), so a message
-    in one used to match nothing that was set on the group — `/set-earn` in the
+    in one used to match nothing that was set on the group — `/bank_earn` in the
     General topic left every other topic earning nothing. The group's key comes
     second, so a topic that names its own currency still wins."""
     keys = [_chat_key(message)]
@@ -67,7 +67,7 @@ def _earn_keys_tg(message: Message):
 def _try_earn_tg(message: Message):
     """Message earning on Telegram. Runs from the catch-all (the last handler),
     so it sees ordinary group chatter without disturbing command handlers or the
-    wait_for dialogs. Earns only in /set-earn earning topics, for humans (the
+    wait_for dialogs. Earns only in /bank_earn earning topics, for humans (the
     economy needs no verification, so bots are skipped explicitly, as on
     Discord), subject to the same anti-abuse gate as Discord."""
     try:
@@ -84,6 +84,6 @@ def _try_earn_tg(message: Message):
         economy.earn_from_message("telegram", message.from_user.id,
                                   _tg_user_label(message.from_user),
                                   earn["bank_code"], len(text), earn["rate"],
-                                  server_id=message.chat.id)
+                                  server_id=message.chat.id, chan_key=earn["chan_key"])
     except Exception as e:
         logger.warning("telegram earning error: %s", e)

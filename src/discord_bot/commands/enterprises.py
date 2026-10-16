@@ -1,4 +1,4 @@
-"""Enterprises: founding one, its card, the `/edit-enterprise` menu, its
+"""Enterprises: founding one, its card, the `/enterprise edit` menu, its
 workers and positions, and everything it sells or exports.
 
 An enterprise is a party with a warehouse and a payroll, and the commands
@@ -36,6 +36,7 @@ from discord_bot.dialogs import (
     _econ_embed, _ereply, _extract_logo, _numbered_choice, _parse_user_ref,
     _say, _wait_message,
 )
+from discord_bot.groups import enterprise_group
 from discord_bot.parties import _party_code_validator
 
 def _fmt_eta(seconds):
@@ -81,7 +82,7 @@ async def _resolve_led_enterprise(interaction, lang, query=None):
     return await _numbered_choice(interaction, lang, localized("ent_choose", lang),
                                   ents, _ent_line)
 
-@bot.tree.command(name="add-enterprise", description="found an enterprise on this server (interactive dialog)")
+@enterprise_group.command(name="add", description="found an enterprise on this server (interactive dialog)")
 async def add_enterprise_cmd(interaction: discord.Interaction):
     """Found an enterprise on this server through a dialog: name, code,
     description, logo.
@@ -147,20 +148,23 @@ def _build_enterprise_embed(ent, lang, viewer_platform="discord"):
     not resolve."""
     embed = discord.Embed(title=f"{ent['name']} [{ent['code']}]",
                           color=discord.Color(DEFAULT_EMBED_COLOR))
+    own = db.own_description(ent)
     if ent["neutral"]:
-        embed.add_field(name=localized("ent_neutral_title", lang),
-                        value=localized("ent_neutral_description", lang), inline=False)
-    if ent["description"]:
-        embed.description = ent["description"][:2000]
-    guild = bot.get_guild(int(ent["server_id"])) if ent["platform"] == "discord" else None
-    embed.add_field(name=localized("ent_field_server", lang),
-                    value=(guild.name if guild else str(ent["server_id"])), inline=True)
-    leaders = db.get_enterprise_leaders(ent["code"])
-    embed.add_field(
-        name=localized("ent_field_leaders", lang),
-        value=", ".join(format_stored_user(viewer_platform, l["platform"], l["user_id"],
-                                           l["display_name"]) for l in leaders) or "—",
-        inline=False)
+        intro = (f"**{localized('ent_neutral_title', lang)}.** "
+                 f"{localized('ent_neutral_description', lang)}")
+        embed.description = (f"{own}\n\n{intro}" if own else intro)[:4000]
+    elif own:
+        embed.description = own[:2000]
+    community = _community_name(ent)
+    if community:
+        embed.add_field(name=localized("ent_field_server", lang), value=community, inline=True)
+    if not ent["neutral"]:
+        leaders = db.get_enterprise_leaders(ent["code"])
+        embed.add_field(
+            name=localized("ent_field_leaders", lang),
+            value=", ".join(format_stored_user(viewer_platform, l["platform"], l["user_id"],
+                                               l["display_name"]) for l in leaders) or "—",
+            inline=False)
     members = db.get_enterprise_members(ent["code"])
     if members:
         lines = []
@@ -177,14 +181,15 @@ def _build_enterprise_embed(ent, lang, viewer_platform="discord"):
     for acc in db.get_owner_accounts(*db.enterprise_owner(ent["code"])):
         bank = db.get_bank(acc["bank_code"])
         if bank:
-            balances.append(economy.format_money(acc["balance"], bank))
+            balances.append(economy.format_money(acc["balance"], bank, lang))
     if balances:
         embed.add_field(name=localized("ent_field_balance", lang),
                         value="\n".join(balances)[:1024], inline=True)
-    period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
-    salary_bank = ent["salary_bank"] or "—"
-    embed.add_field(name=localized("ent_field_salary", lang),
-                    value=f"{period} · {salary_bank}", inline=True)
+    if not ent["neutral"]:
+        period = localized(f"salary_period_{ent['salary_period'] or 'monthly'}", lang)
+        currency = db.salary_currency_label(ent) or localized("ent_salary_no_currency", lang)
+        embed.add_field(name=localized("ent_field_salary", lang),
+                        value=f"{period} · {currency}", inline=True)
     positions = db.get_enterprise_positions(ent["code"])
     if positions:
         plines = []
@@ -213,6 +218,16 @@ def _build_enterprise_embed(ent, lang, viewer_platform="discord"):
                         inline=False)
     return embed
 
+def _community_name(ent):
+    """The name of the community an enterprise belongs to — the Discord
+    server's own name when the bot sees it, else the stored one — or None.
+    Never the id: a card prints names."""
+    if ent["platform"] == "discord":
+        guild = bot.get_guild(int(ent["server_id"]))
+        if guild is not None and guild.name:
+            return guild.name
+    return db.chat_title(ent["server_id"])
+
 def _transit_lines(ent_code, shipments, lang):
     """Render in-transit shipments from the point of view of `ent_code`: a ➡️
     line for cargo it is sending, a ⬅️ line for cargo coming in."""
@@ -233,7 +248,7 @@ def _transit_lines(ent_code, shipments, lang):
                                other=label, eta=eta))
     return lines
 
-@bot.tree.command(name="enterprise", description="an enterprise's card, or this server's enterprises")
+@enterprise_group.command(name="info", description="an enterprise's card, or this server's enterprises")
 @app_commands.describe(query="Enterprise code or name (omit to list this server's enterprises)")
 async def enterprise_cmd(interaction: discord.Interaction, query: str = None):
     """Show an enterprise's card, or list this server's enterprises."""
@@ -264,7 +279,7 @@ async def enterprise_cmd(interaction: discord.Interaction, query: str = None):
 _EDIT_ENT_OPTIONS = ("name", "description", "logo", "add_leader", "transfer",
                      "salary_bank", "salary_period", "delete")
 
-@bot.tree.command(name="edit-enterprise", description="manage your enterprise (founder and leaders)")
+@enterprise_group.command(name="edit", description="manage your enterprise (founder and leaders)")
 @app_commands.describe(option="Menu item number", enterprise="Enterprise code (when you lead several)")
 async def edit_enterprise_cmd(interaction: discord.Interaction, option: int = None,
                               enterprise: str = None):
@@ -386,7 +401,7 @@ async def edit_enterprise_cmd(interaction: discord.Interaction, option: int = No
         await send_service_event("enterprise_deleted", name=ent["name"], code=ent["code"],
                                  user=str(interaction.user))
 
-@bot.tree.command(name="ent-join", description="ask to join an enterprise (its leaders approve)")
+@enterprise_group.command(name="join", description="ask to join an enterprise (its leaders approve)")
 @app_commands.describe(code="Enterprise code or name")
 async def ent_join_cmd(interaction: discord.Interaction, code: str):
     """Ask to join an enterprise; a leader approves with the consent
@@ -418,7 +433,7 @@ async def ent_join_cmd(interaction: discord.Interaction, code: str):
                   name=ent["name"], code=ent["code"])),
         view=_EntConsentView(lang, ent["code"], on_accept, on_decline))
 
-@bot.tree.command(name="ent-leave", description="leave an enterprise you work at")
+@enterprise_group.command(name="leave", description="leave an enterprise you work at")
 @app_commands.describe(code="Enterprise code (when you work at several)")
 async def ent_leave_cmd(interaction: discord.Interaction, code: str = None):
     """Leave an enterprise you work at.
@@ -442,7 +457,7 @@ async def ent_leave_cmd(interaction: discord.Interaction, code: str = None):
     db.remove_enterprise_member(ent["code"], "discord", interaction.user.id)
     await _ereply(interaction, "ent_leave_done", lang, ephemeral=False, name=ent["name"])
 
-@bot.tree.command(name="ent-kick", description="remove a worker from your enterprise (leaders)")
+@enterprise_group.command(name="kick", description="remove a worker from your enterprise (leaders)")
 @app_commands.describe(user="Worker ID or mention", enterprise="Enterprise code (when you lead several)")
 async def ent_kick_cmd(interaction: discord.Interaction, user: str, enterprise: str = None):
     """Dismiss a worker from your enterprise (leaders)."""
@@ -467,7 +482,7 @@ def _salary_display(kind, value, lang):
         return localized("salary_percent", lang, percent=f"{value:g}")
     return economy.format_amount(value)
 
-@bot.tree.command(name="ent-position", description="create a position and its salary in your enterprise (leaders)")
+@enterprise_group.command(name="position", description="create a position and its salary in your enterprise (leaders)")
 @app_commands.describe(position="Position name", salary="Amount (12.34), percent of sales (5%), or 0 to remove",
                        enterprise="Enterprise code (when you lead several)")
 async def ent_position_cmd(interaction: discord.Interaction, position: str, salary: str,
@@ -497,7 +512,7 @@ async def ent_position_cmd(interaction: discord.Interaction, position: str, sala
     await _ereply(interaction, "ent_position_done", lang, ephemeral=False, position=pos,
                   salary=_salary_display(kind, value, lang))
 
-@bot.tree.command(name="ent-assign", description="assign a worker to a position (leaders)")
+@enterprise_group.command(name="assign", description="assign a worker to a position (leaders)")
 @app_commands.describe(user="Worker ID or mention", position="Position name ('-' clears)",
                        enterprise="Enterprise code (when you lead several)")
 async def ent_assign_cmd(interaction: discord.Interaction, user: str, position: str,
@@ -527,7 +542,7 @@ async def ent_assign_cmd(interaction: discord.Interaction, user: str, position: 
     await _ereply(interaction, "ent_assign_done", lang, ephemeral=False,
                   user=f"<@{target_id}>", position=pos)
 
-@bot.tree.command(name="ent-salary", description="set a worker's personal salary (leaders)")
+@enterprise_group.command(name="salary", description="set a worker's personal salary (leaders)")
 @app_commands.describe(user="Worker ID or mention", salary="Amount (12.34), percent of sales (5%), or 0 to remove",
                        enterprise="Enterprise code (when you lead several)")
 async def ent_salary_cmd(interaction: discord.Interaction, user: str, salary: str,
@@ -563,7 +578,7 @@ async def ent_salary_cmd(interaction: discord.Interaction, user: str, salary: st
     await _ereply(interaction, "ent_salary_done", lang, ephemeral=False,
                   user=f"<@{target_id}>", salary=_salary_display(kind, value, lang))
 
-@bot.tree.command(name="ent-sell", description="sell your enterprise's goods to a member or another enterprise (leaders)")
+@enterprise_group.command(name="sell", description="sell your enterprise's goods to a member or another enterprise (leaders)")
 @app_commands.describe(good_code="Good code",
                        buyer="Buyer: a user ID/mention or an enterprise code",
                        qty="How many (default: all)",
@@ -578,7 +593,7 @@ async def ent_sell_cmd(interaction: discord.Interaction, good_code: str, buyer: 
     to accept it. The proceeds count into the period sales that percentage
     salaries are taken from, but only when they land in the enterprise's own
     salary currency. Sending stock to another enterprise without a buyer on the
-    other end is `/export` instead.
+    other end is `/enterprise export` instead.
 
     The two helpers come from commands/goods.py at the call site: a personal
     sale and an enterprise's sale are the same offer with a different seller,
@@ -658,7 +673,7 @@ async def _run_export(interaction, lang, source, target, good, qty, price, bank)
         view=_EntConsentView(lang, target["code"], on_accept, on_decline))
 
 def _resolve_export_args(lang, target_query, price_s, currency, source):
-    """(target, price, bank, error_key_or_None) shared by /export and /auto-export."""
+    """(target, price, bank, error_key_or_None) shared by /enterprise export and /enterprise autoexport."""
     target = db.find_enterprise(target_query)
     if not target:
         return None, None, None, "export_bad_target"
@@ -676,7 +691,7 @@ def _resolve_export_args(lang, target_query, price_s, currency, source):
             return None, None, None, "export_need_currency"
     return target, price, bank, None
 
-@bot.tree.command(name="export", description="export your enterprise's goods to another enterprise (leaders)")
+@enterprise_group.command(name="export", description="export your enterprise's goods to another enterprise (leaders)")
 @app_commands.describe(good_code="Good code", qty="How many units",
                        target="Receiving enterprise code or name",
                        price="Total price (the buyer pays on acceptance)",
@@ -706,7 +721,7 @@ async def export_cmd(interaction: discord.Interaction, good_code: str, qty: int,
         return
     await _run_export(interaction, lang, source, tgt, good, qty, price_minor, bank)
 
-@bot.tree.command(name="auto-export", description="export goods to another enterprise every week (leaders)")
+@enterprise_group.command(name="autoexport", description="export goods to another enterprise every week (leaders)")
 @app_commands.describe(good_code="Good code", qty="Units per week, or 'off' to cancel",
                        target="Receiving enterprise code or name",
                        price="Total price per delivery", currency="Currency code of the price",
@@ -768,7 +783,7 @@ async def auto_export_cmd(interaction: discord.Interaction, good_code: str, qty:
                   qty=qty_n, emoji=emoji, name=name, price=price_disp)),
         view=_EntConsentView(lang, tgt["code"], on_accept, on_decline))
 
-@bot.tree.command(name="transit", description="an enterprise's goods in transit")
+@enterprise_group.command(name="transit", description="an enterprise's goods in transit")
 @app_commands.describe(enterprise="Enterprise code or name (omit for the one you lead)")
 async def transit_cmd(interaction: discord.Interaction, enterprise: str = None):
     """List an enterprise's cargo still on the way, with arrival times."""

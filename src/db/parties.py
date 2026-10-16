@@ -4,7 +4,7 @@ requests waiting for a leader's answer.
 
 Deletion is the sharp edge here. `delete_party` removes the party together
 with its leaders, members, alliances, open join requests, monthly dues, its
-bank accounts and any /autosend order pointing at it — the party's money goes
+bank accounts and any /good autosend order pointing at it — the party's money goes
 with it and nothing brings it back. Suspension is the reversible alternative:
 the row stays, the card is marked, and joining is refused.
 
@@ -24,7 +24,7 @@ from db.unions import code_taken
 
 def set_parties_enabled(union_code, enabled, role_ids=None):
     """Enable/disable parties in a union. role_ids: iterable of Discord role IDs
-    whose holders may use /add-party (stored comma-separated)."""
+    whose holders may use /party add (stored comma-separated)."""
     roles_str = ",".join(str(r) for r in role_ids) if role_ids else None
     cur.execute(
         "INSERT INTO union_party_settings (union_code, enabled, role_ids) VALUES (?,?,?)"
@@ -33,6 +33,33 @@ def set_parties_enabled(union_code, enabled, role_ids=None):
         (union_code, 1 if enabled else 0, roles_str)
     )
     conn.commit()
+
+def set_party_roles(union_code, role_ids):
+    """Replace the Discord roles whose holders may found a party in a union,
+    leaving whether parties are on as it was (off for a union that had no
+    settings yet)."""
+    roles_str = ",".join(str(r) for r in sorted({int(r) for r in role_ids})) or None
+    cur.execute(
+        "INSERT INTO union_party_settings (union_code, enabled, role_ids) VALUES (?,0,?)"
+        " ON CONFLICT(union_code) DO UPDATE SET role_ids=excluded.role_ids",
+        (union_code, roles_str)
+    )
+    conn.commit()
+
+def drop_party_role(role_id):
+    """Take a deleted Discord role out of every union's party-founding list.
+    Returns the codes of the unions that had it."""
+    changed = []
+    for row in cur.execute("SELECT union_code, role_ids FROM union_party_settings"
+                           " WHERE role_ids IS NOT NULL").fetchall():
+        roles = [r.strip() for r in row["role_ids"].split(",") if r.strip()]
+        if str(int(role_id)) in roles:
+            changed.append(row["union_code"])
+            rest = ",".join(r for r in roles if r != str(int(role_id))) or None
+            cur.execute("UPDATE union_party_settings SET role_ids=? WHERE union_code=?",
+                        (rest, row["union_code"]))
+    conn.commit()
+    return changed
 
 def get_party_settings(union_code):
     """Returns (enabled: bool, role_ids: set[int]). Parties are off by default."""
@@ -80,27 +107,16 @@ def get_party(code):
     return cur.execute("SELECT * FROM parties WHERE code=?", (code,)).fetchone()
 
 def get_union_parties(union_code):
-    """Every party of a union, by name — the list `/party` searches and the
+    """Every party of a union, by name — the list `/party info` searches and the
     menus number."""
     return cur.execute(
         "SELECT * FROM parties WHERE union_code=? ORDER BY name",
         (union_code,)
     ).fetchall()
 
-def get_random_union_parties(union_code, limit=3):
-    """A random handful of a union's parties.
-
-    Used to suggest what exists when someone searched for a party and found
-    nothing: random rather than alphabetical, so the same three are not always the
-    ones newcomers see."""
-    return cur.execute(
-        "SELECT * FROM parties WHERE union_code=? ORDER BY RANDOM() LIMIT ?",
-        (union_code, limit)
-    ).fetchall()
-
 def find_party(query):
     """Any party of any union matched exactly (case-insensitively) by code or
-    name — what /edit-party-admin resolves its argument with."""
+    name — what /party edit-admin resolves its argument with."""
     q = (query or "").strip()
     if not q:
         return None
@@ -345,7 +361,7 @@ def get_open_join_requests():
 
 def has_open_join_request(party_code, requester_platform, requester_id):
     """Whether this person already has a request pending at this party — what
-    stops `/party-join` from filling a leader's DMs."""
+    stops `/party join` from filling a leader's DMs."""
     return cur.execute(
         "SELECT 1 FROM join_requests WHERE party_code=? AND requester_platform=? AND requester_id=?",
         (party_code, requester_platform, str(requester_id))
