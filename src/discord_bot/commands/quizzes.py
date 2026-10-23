@@ -206,7 +206,7 @@ async def _run_quiz_discord(interaction: discord.Interaction, quiz_id):
                                                       allow_prev, n), view=view)
             outcome, answer = await _wait_message_or_view(
                 channel.id, user_id, view, session["stop"])
-            if outcome == "stop":
+            if outcome in ("stop", "replaced"):
                 db.save_quiz_progress("discord", user_id, quiz_id, lang, qindex,
                                       json.dumps(orders),
                                       json.dumps(answers, ensure_ascii=False))

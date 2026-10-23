@@ -105,21 +105,31 @@ def _chunks(text, limit=2000):
     return pieces
 
 async def _wiki_greeting(row, today, now):
-    """Post one server's wiki birthday message for `today`. Returns whether
-    the day is settled — posted, nothing to post, or a channel that cannot
-    take it — as opposed to a failure worth retrying next minute."""
+    """Post one server's wiki birthday message for `today`: the wikis of its
+    union, then the union's communities whose founding day it is. Returns
+    whether the day is settled — posted, nothing to post, or a channel that
+    cannot take it — as opposed to a failure worth retrying next minute."""
     chat = db.get_chat(row["server_id"])
     if chat is None:
         return True
     off = db.greeting_off_wikis("discord", row["server_id"])
     rows = [w for w in db.get_union_wikis(chat["union_code"]) if w["id"] not in off]
-    entries = celebrations.wiki_anniversaries(rows, date.fromisoformat(today), now)
-    if not entries:
+    local = date.fromisoformat(today)
+    entries = celebrations.wiki_anniversaries(rows, local, now)
+    servers = celebrations.server_anniversaries(db.community_birthdays(chat["union_code"]),
+                                                local, now)
+    if not entries and not servers:
         return True
     channel = await _channel(row["wiki_channel"])
     if channel is None or not hasattr(channel, "send"):
         return True
-    text = celebrations.wiki_greeting(entries, db.union_lang(chat["union_code"]))
+    language = db.union_lang(chat["union_code"])
+    parts = []
+    if entries:
+        parts.append(celebrations.wiki_greeting(entries, language))
+    if servers:
+        parts.append(celebrations.server_greeting(servers, language))
+    text = "\n\n".join(parts)
     try:
         for piece in _chunks(text):
             await channel.send(piece, allowed_mentions=discord.AllowedMentions.none())

@@ -129,9 +129,13 @@ async def convert_cmd(interaction: discord.Interaction, amount: str, from_code: 
         await _ereply(interaction, "bank_not_found", lang)
         return
     owner = db.canonical_user("discord", interaction.user.id)
-    status, info = economy.convert(owner, fb["code"], tb["code"], minor)
+    status, info = economy.convert(owner, fb["code"], tb["code"], minor,
+                                   place=("discord", interaction.guild_id))
     keymap = {"same": "convert_same", "not_convertible": "convert_not_convertible",
               "too_small": "convert_too_small", "no_funds": "convert_no_funds"}
+    if status == "off":
+        await _ereply(interaction, info["refusal"][0], lang, **info["refusal"][1])
+        return
     if status != "ok":
         await _ereply(interaction, keymap.get(status, "convert_not_convertible"), lang)
         return

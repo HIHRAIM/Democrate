@@ -5,6 +5,11 @@ Importing this module creates `bot`, `dp` and `router`. Nothing else here
 registers a command — the @router decorators live in the modules below, and
 this one is imported first because they all need `router`.
 
+Every request the bot makes passes through one session middleware that takes
+the custom emoji of Discord servers out of the text it sends (a currency's
+emoji may be one, and the bank is shared by both platforms); see
+`_without_discord_emoji`.
+
 `my_chat_member_update` is here rather than in an events module because it is
 the only event Telegram gives this bot, and because it is really about the
 client's own membership: it is the one moment the bot can learn it has been
@@ -26,7 +31,7 @@ from aiogram.types import ChatMemberUpdated, Message
 
 import db
 from config import TELEGRAM_TOKEN
-from utils import is_admin, send_service_event, set_command_platform
+from utils import is_admin, send_service_event, set_command_platform, strip_discord_emoji
 
 logger = logging.getLogger("dem.telegram")
 
@@ -34,6 +39,27 @@ bot = Bot(TELEGRAM_TOKEN)
 dp = Dispatcher()
 router = Router()
 dp.include_router(router)
+
+async def _without_discord_emoji(make_request, session_bot, method):
+    """Take Discord's custom emoji (`<:name:id>`) out of the `text` or
+    `caption` of every request before it is sent.
+
+    Telegram cannot show them, and they reach it through every path that
+    writes a currency or a good: replies, edited messages, photo captions,
+    the scheduled posts, the service notices. One request middleware covers
+    them all; stripping line by line would miss the next line somebody adds.
+    It runs after the bot has escaped its HTML, which is why
+    utils.strip_discord_emoji knows the escaped form too. A text that would
+    be left empty is sent as it was."""
+    for field in ("text", "caption"):
+        value = getattr(method, field, None)
+        if isinstance(value, str):
+            cleaned = strip_discord_emoji(value)
+            if cleaned != value and cleaned.strip():
+                setattr(method, field, cleaned)
+    return await make_request(session_bot, method)
+
+bot.session.middleware(_without_discord_emoji)
 
 @dp.update.outer_middleware()
 async def _telegram_spelling(handler, event, data):

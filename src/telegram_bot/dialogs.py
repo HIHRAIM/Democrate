@@ -34,7 +34,7 @@ import time
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from message_relay import telegram_entities_to_discord
-from utils import is_verified, localized
+from utils import DIALOGS, dialog_end, is_verified, localized
 
 from telegram_bot.client import bot
 
@@ -47,7 +47,14 @@ _pending_inputs = {}
 _pending_consents = {}
 
 async def _wait_user_message(chat_id, user_id, timeout=DIALOG_TIMEOUT):
-    """Wait up to 30 minutes for the user's next non-command message in the chat."""
+    """Wait up to 30 minutes for the user's next non-command message in the chat.
+
+    Returns None on timeout, and at once when a newer dialog of the same
+    person in the same chat has replaced this one (utils.DIALOGS): without
+    the claim, an older dialog reaching its next question took the place
+    back from the newer one."""
+    if not DIALOGS.claim(("telegram", chat_id, user_id)):
+        return None
     key = (chat_id, user_id)
     old = _pending_inputs.pop(key, None)
     if old and not old.done():
@@ -64,7 +71,10 @@ async def _wait_user_message(chat_id, user_id, timeout=DIALOG_TIMEOUT):
 
 async def _wait_user_message_or_stop(chat_id, user_id, stop_event, timeout=DIALOG_TIMEOUT):
     """Race the taker's next message against a /quiz_stop. Returns
-    ('message', msg), ('stop', None) or ('timeout', None)."""
+    ('message', msg), ('stop', None), ('timeout', None) or ('replaced', None)
+    when a newer dialog took this chat (utils.DIALOGS)."""
+    if not DIALOGS.claim(("telegram", chat_id, user_id)):
+        return "replaced", None
     key = (chat_id, user_id)
     old = _pending_inputs.pop(key, None)
     if old and not old.done():
@@ -79,6 +89,8 @@ async def _wait_user_message_or_stop(chat_id, user_id, stop_event, timeout=DIALO
             task.cancel()
         if stop_task in done:
             return "stop", None
+        if fut in done and fut.cancelled():
+            return "replaced", None
         if fut in done:
             try:
                 return "message", fut.result()
@@ -97,7 +109,7 @@ async def _dialog_text_tg(message, lang, prompt, *, validator=None, error_key=No
     for _ in range(attempts):
         m = await _wait_user_message(message.chat.id, message.from_user.id)
         if m is None:
-            await message.reply(localized("dialog_timeout", lang))
+            await message.reply(dialog_end(lang))
             return None
         if validator is None:
             return m
@@ -140,7 +152,7 @@ async def _dialog_logo_tg(message, lang, prompt, attempts=5):
     for _ in range(attempts):
         m = await _wait_user_message(message.chat.id, message.from_user.id)
         if m is None:
-            await message.reply(localized("dialog_timeout", lang))
+            await message.reply(dialog_end(lang))
             return None
         logo = await _extract_logo_tg(m)
         if logo:

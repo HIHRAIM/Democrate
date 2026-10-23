@@ -187,6 +187,16 @@ def set_chat_title(prefix, title):
         from db.enterprises import rename_auto_neutral
         rename_auto_neutral(row["platform"], prefix, row["title"])
 
+def union_central_chat(union_code):
+    """The id of the community that counts as a union's centre: the one
+    bound to the union first, by `chats.created_at`, which a repeated
+    /server setup keeps. The daily currency post shows every currency of
+    the union there (main.py: _broadcast_fx_update). None for a union with
+    no community."""
+    row = cur.execute("SELECT chat_id FROM chats WHERE union_code=?"
+                      " ORDER BY created_at, chat_id LIMIT 1", (union_code,)).fetchone()
+    return row["chat_id"] if row else None
+
 def chat_title(prefix):
     """The stored name of a server/group, or None."""
     row = get_chat(prefix)

@@ -34,6 +34,7 @@ import time
 
 import db
 from economy.money import _cat_cfg, _cfg, craft_cost, mastery_level, unit_value
+from economy.switches import production_refusal
 
 def category_time_mult(category):
     """How much longer (or shorter) a production run takes for this good's
@@ -219,10 +220,13 @@ def run_autoproduce(hours=1.0):
     parallel lines — five goods at once advance at a fifth of the speed each, so
     breadth costs tempo rather than being free. Fractional units carry over
     between runs (capped below one unit so downtime cannot bank a burst), and a
-    unit is only produced while the worker's energy covers its craft cost."""
+    unit is only produced while the worker's energy covers its craft cost.
+
+    A line the community or the currency froze (economy/switches.py) stands
+    still with its carry kept, and only the lines that run share the tempo."""
     produced_total = 0
     cap = int(_cfg("autocraft_cap", 50))
-    lines_per_owner = {}
+    lines, lines_per_owner = [], {}
     for row in db.get_autocraft_all():
         good = db.get_good(row["good_code"])
         if not good:
@@ -234,8 +238,11 @@ def run_autoproduce(hours=1.0):
             worker = owner
         else:
             continue
-        if owner not in lines_per_owner:
-            lines_per_owner[owner] = max(db.count_autocraft(owner), 1)
+        if production_refusal(good, owner, (row["server_platform"], row["server_id"])):
+            continue
+        lines.append((row, good, owner, worker))
+        lines_per_owner[owner] = lines_per_owner.get(owner, 0) + 1
+    for row, good, owner, worker in lines:
         streams = lines_per_owner[owner]
         m = db.get_produced(worker, good["code"])
         dur, qty_run = produce_params(good, m)

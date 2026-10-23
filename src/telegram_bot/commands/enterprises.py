@@ -24,7 +24,7 @@ import db
 import economy
 from message_relay import clean_display_name, escape_html
 from utils import (
-    format_stored_user, get_chat_lang, good_display_name, is_admin,
+    dialog_end, format_stored_user, get_chat_lang, good_display_name, is_admin,
     localized, rate_limit_ok, send_service_event,
 )
 
@@ -93,6 +93,11 @@ async def add_enterprise_tg(message: Message):
     if not db.is_setup(str(message.chat.id)):
         await message.reply(localized("chat_not_setup", lang))
         return
+    here = ("telegram", message.chat.id)
+    found = economy.econ_refusal(here, "enterprises", here)
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
+        return
     if not rate_limit_ok(f"addent|telegram|{message.from_user.id}", 3, 86400):
         await message.reply(localized("rate_limited", lang))
         return
@@ -115,7 +120,7 @@ async def add_enterprise_tg(message: Message):
     for _ in range(5):
         m = await _wait_user_message(message.chat.id, message.from_user.id)
         if m is None:
-            await message.reply(localized("dialog_timeout", lang))
+            await message.reply(dialog_end(lang))
             return
         if (m.text or "").strip() == "-":
             break
@@ -375,6 +380,10 @@ async def ent_join_tg(message: Message):
     if db.is_enterprise_worker(ent["code"], "telegram", message.from_user.id):
         await message.reply(localized("ent_join_already", lang))
         return
+    found = economy.enterprise_refusal(ent, _here_tg(message))
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
+        return
     display = _tg_user_label(message.from_user)
     token = _register_econ_consent({
         "action": "ent_join", "ent": ent["code"], "requester_id": message.from_user.id,
@@ -594,6 +603,18 @@ async def ent_sell_tg(message: Message):
     await offer_sale_tg(message, lang, db.enterprise_owner(ent["code"]), good, qty,
                         parts[1], price)
 
+def _here_tg(message):
+    """The group a command is run in, as economy/switches.py names places, or
+    None in a private chat."""
+    return ("telegram", message.chat.id) if message.chat.type in GROUP_CHAT_TYPES else None
+
+def _export_refusal_tg(message, source, target, good, price, bank):
+    """Why an export between two enterprises may not be offered — a part of
+    the economy switched off (economy/switches.py) — or None."""
+    return economy.deal_refusal(
+        (db.enterprise_owner(source["code"]), db.enterprise_owner(target["code"])),
+        good, bank["code"] if bank else None, price, None, _here_tg(message))
+
 def _resolve_export_args_tg(target_query, price_s, currency, source):
     """(target, price, bank, error_key_or_None) — Telegram mirror."""
     target = db.find_enterprise(target_query)
@@ -640,6 +661,10 @@ async def export_tg(message: Message):
         parts[4] if len(parts) > 4 else None, source)
     if err:
         await message.reply(localized(err, lang))
+        return
+    found = _export_refusal_tg(message, source, tgt, good, price, bank)
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
         return
     emoji = f"{good['emoji']} " if good["emoji"] else ""
     name = good_display_name(good, lang)
@@ -691,6 +716,10 @@ async def auto_export_tg(message: Message):
         parts[4] if len(parts) > 4 else None, source)
     if err:
         await message.reply(localized(err, lang))
+        return
+    found = _export_refusal_tg(message, source, tgt, good, price, bank)
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
         return
     emoji = f"{good['emoji']} " if good["emoji"] else ""
     name = good_display_name(good, lang)

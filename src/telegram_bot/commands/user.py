@@ -97,6 +97,7 @@ async def help_cmd(message: Message):
         escape_html(localized_help("cmd_settasks", lang)),
         escape_html(localized_help("cmd_birthday_channel_tg", lang)),
         escape_html(localized_help("cmd_edit_server_tg", lang)),
+        escape_html(localized_help("cmd_server_birthday_tg", lang)),
     ])
 
     bot_admins_lines = "\n".join([

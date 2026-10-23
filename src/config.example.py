@@ -112,18 +112,16 @@ ECONOMY = {
     # once produce the same total as one, in five streams.
     "parallel_production": 5,
 
-    # ── Foreign exchange (daily recompute) ──
+    # ── Foreign exchange (daily recompute and at startup) ──
     # value(bank) = max(goods_target, activity_target, fx_min_value), where
-    #   goods_target = period_goods_value / money_supply
-    #                  * (1 + fx_activity_weight * ln(1 + period_energy))
-    #   activity_target = fx_activity_weight
-    #                     * ln(1 + accepted earning messages in the last 30 days)
-    # The published value may move at most ±fx_daily_clamp per day.
-    "fx_daily_clamp": 0.10,     # ±10 % per day
+    #   activity_target = fx_activity_weight * ln(1 + activity score)
+    #   goods_target = (priced goods produced per day) / money_supply
+    #                  * (1 + fx_activity_weight * ln(1 + energy earned per day))
+    # A day's activity is the sum over the people who earned the currency that
+    # day of sqrt(their accepted messages); every day fades by 1/30 a day.
+    # The value is published as computed; a new currency is worth fx_min_value.
     "fx_activity_weight": 0.10,
     "fx_min_value": 0.01,
-    # Starting value of a freshly created currency.
-    "fx_initial_value": 1.0,
     # Conversion spread taken as a sink on /convert (2 %).
     "convert_fee": 0.02,
 

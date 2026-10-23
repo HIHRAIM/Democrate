@@ -168,7 +168,7 @@ def _calendar_embed(guild, lang, scope, kinds, page):
     start, end = celebrations.calendar_window(page)
     people = _calendar_people(guild, scope, start, end) if "person" in kinds else []
     events = celebrations.calendar_events(chat["union_code"] if scope == "l" else None,
-                                          kinds, people)
+                                          kinds, people, "discord")
     title, lines = celebrations.calendar_lines(events, page, lang)
     embed = discord.Embed(title=title, description="\n".join(lines)[:4096],
                           color=discord.Color(DEFAULT_EMBED_COLOR))
@@ -194,7 +194,7 @@ class _CalendarView(ui.View):
         self.clear_items()
         self._add("◀", ButtonStyle.secondary, lambda: self._turn(-1))
         self._add("▶", ButtonStyle.secondary, lambda: self._turn(1))
-        for kind in celebrations.CALENDAR_KINDS:
+        for kind in celebrations.CALENDAR_ORDER:
             on = kind in self.kinds
             self._add(localized(f"calendar_btn_{kind}", self.lang),
                       ButtonStyle.success if on else ButtonStyle.secondary,

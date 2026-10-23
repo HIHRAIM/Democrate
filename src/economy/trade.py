@@ -10,11 +10,13 @@ its enterprises (economy/consumption.py), and those two are the only sources
 there are. Base goods carry no market value and are handed over rather than
 sold.
 
-`recompute_value` is run once a day, per bank. It compares the goods produced
-in the previous period against the money supply and also gives independent
-weight to accepted earning messages from the last 30 days. The result is
-floored and clamped to a maximum daily move, so a quiet day cannot collapse a
-currency and a busy one cannot spike it.
+`recompute_value` is run once a day, per bank, and at startup, and publishes
+its result as it is. A currency is worth the activity of the people who earn
+it: a new one is worth fx_min_value, it grows as people write in its earning
+channels — more for many people than for one person writing a lot — and as
+priced goods are produced in it, and every day of that activity fades by a
+thirtieth a day, so a currency nobody uses loses value slowly instead of
+collapsing.
 
 A conversion rate is simply value(from) / value(to). The manual peg overrides
 it, and `can_manual_peg` is narrow on purpose: two banks may fix their rate
@@ -26,10 +28,12 @@ Not this module's zone: the treaty rows and the pegged rate itself
 """
 import math
 import time
+from datetime import date, datetime, timezone
 
 import db
 from config import ECONOMY
 from economy.money import _minor, unit_value
+from economy.switches import convert_refusal, deal_refusal
 
 def asking_price(owner, good, qty):
     """What `qty` units are worth at the seller's own quality: the price
@@ -53,11 +57,16 @@ def sell(seller, buyer, good, qty, price, bank_code, server=None):
     percent-of-sales salaries. Base-category goods carry no market value and are
     given away rather than sold (`/good give`). The seller pays the taxes of
     the community the sale was made in (`server`) and of the currency out of
-    what it received (economy/taxes.py). Returns (status, info)."""
+    what it received (economy/taxes.py). A sale that touches a part of the
+    economy switched off answers "off" with the refusal
+    (economy/switches.py). Returns (status, info)."""
     if db.is_base_good(good["code"]):
         return "not_sellable", {}
     if seller == buyer:
         return "self", {}
+    found = deal_refusal((seller, buyer), good, bank_code, price, server, server)
+    if found:
+        return "off", {"refusal": found}
     have = db.get_inventory_qty(seller, good["code"])
     qty = min(int(qty), have)
     if qty <= 0:
@@ -203,9 +212,11 @@ def _pay_convert_fee(bank_code, amount, reason="convert_fee"):
                 part, reason, display_name=leader["display_name"])
     return len(leaders)
 
-def convert(owner, from_code, to_code, amount, fee_reason="convert_fee"):
+def convert(owner, from_code, to_code, amount, fee_reason="convert_fee", place=None):
     """Convert between the owner's own accounts at the current rate, taking the
-    spread the source bank charges. Returns (status, info).
+    spread the source bank charges. Exchange switched off in the community it
+    is asked in (`place`) or in either currency answers "off" with the
+    refusal (economy/switches.py). Returns (status, info).
 
     The fee is charged in the source currency and paid to that bank's leaders,
     so only the principal actually crosses into the other currency: the source
@@ -214,6 +225,9 @@ def convert(owner, from_code, to_code, amount, fee_reason="convert_fee"):
     just often enough to be invisible."""
     if from_code == to_code:
         return "same", {}
+    found = convert_refusal(from_code, to_code, place)
+    if found:
+        return "off", {"refusal": found}
     r = rate(from_code, to_code)
     if r is None:
         return "not_convertible", {}
@@ -230,29 +244,82 @@ def convert(owner, from_code, to_code, amount, fee_reason="convert_fee"):
     return "ok", {"credited": credited, "rate": r, "fee": fee,
                   "fee_rate": fee_rate, "fee_paid_to": paid}
 
-def recompute_value(bank):
-    """Price recent participation even when the bank has no crafted goods.
+FX_FADE_DAYS = 30
+FX_HISTORY_DAYS = 180
 
-        backing  = period_goods_value / max(money_supply, minor_units)
-        goods_target = backing * (1 + weight * ln(1 + period_energy))
-        activity_target = weight * ln(1 + earning_messages_last_30_days)
-        value = clamp(max(goods_target, activity_target, fx_min_value))
+def _today(now=None):
+    """The current UTC date."""
+    return datetime.fromtimestamp(now or time.time(), timezone.utc).date()
 
-    The old multiplication made activity worth exactly zero whenever no
-    non-base goods had been produced. The rolling message count is the
-    independent source of value, while the former goods calculation remains
-    unchanged for banks that do produce priced goods.
-    """
+def activity_by_day(code, since):
+    """{UTC day: (people, messages, activity)} of a currency since the
+    timestamp `since`. A day's activity is the sum over the people who earned
+    that day of the square root of their accepted messages: ten people
+    writing three messages each are worth 17, one person writing a hundred
+    is worth 10, so the currency rewards a community talking rather than one
+    member writing a lot."""
+    days = {}
+    for row in db.bank_earners_since(code, since):
+        people, messages, activity = days.get(row["day"], (0, 0, 0.0))
+        days[row["day"]] = (people + 1, messages + row["n"], activity + math.sqrt(row["n"]))
+    return days
+
+def recompute_value(bank, now=None):
+    """A currency's value, computed from the activity behind it and from
+    nothing else:
+
+        fade(day)       = (1 - 1/30) ** (days since that day)
+        score           = sum of activity(day) * fade(day)
+        goods_per_day   = sum of goods_value(day) * fade(day) / 30
+        energy_per_day  = sum of energy(day) * fade(day) / 30
+        activity_target = weight * ln(1 + score)
+        goods_target    = goods_per_day / max(money_supply, one unit)
+                          * (1 + weight * ln(1 + energy_per_day))
+        value           = max(goods_target, activity_target, fx_min_value)
+
+    `activity` is `activity_by_day`'s; the goods and energy days are
+    db/banks.py: bank_days. The fading weights of every day ever add up to
+    thirty, so steady activity is priced like thirty days of it, while
+    every day's part fades instead of dropping out at once: a currency whose
+    people fall silent loses about a thirtieth of its score a day, and its
+    value falls slower still. A currency with no activity yet — a new one —
+    is worth fx_min_value, and it grows from there as people use it.
+
+    The result is published as it is. The value used to approach a target
+    by at most a tenth a day from the value before, which kept the published
+    value and every rate built on it wrong for weeks after any change."""
     code = bank["code"]
-    supply = max(db.bank_money_supply(code), _minor())
-    backing = bank["period_goods_value"] / supply
+    now = now or time.time()
+    today = _today(now)
+    fade = 1 - 1 / FX_FADE_DAYS
+    weight_of = lambda day: fade ** max((today - date.fromisoformat(day)).days, 0)
+    since = now - FX_HISTORY_DAYS * 86400
+    score = sum(activity * weight_of(day)
+                for day, (_people, _messages, activity) in activity_by_day(code, since).items())
+    goods_per_day = energy_per_day = 0.0
+    for row in db.bank_days_since(code, since):
+        goods_per_day += row["goods_value"] * weight_of(row["day"]) / FX_FADE_DAYS
+        energy_per_day += row["energy"] * weight_of(row["day"]) / FX_FADE_DAYS
     weight = ECONOMY["fx_activity_weight"]
-    goods_multiplier = 1 + weight * math.log1p(max(bank["period_energy"], 0))
-    recent_messages = db.bank_recent_earning_messages(code, time.time() - 30 * 86400)
-    activity_target = weight * math.log1p(recent_messages)
-    target = max(backing * goods_multiplier, activity_target, ECONOMY["fx_min_value"])
-    prev = bank["value"] or ECONOMY["fx_initial_value"]
-    clamp = ECONOMY["fx_daily_clamp"]
-    lo, hi = prev * (1 - clamp), prev * (1 + clamp)
-    value = max(min(target, hi), lo, ECONOMY["fx_min_value"])
-    return value
+    supply = max(db.bank_money_supply(code), _minor())
+    goods_target = goods_per_day / supply * (1 + weight * math.log1p(energy_per_day))
+    activity_target = weight * math.log1p(score)
+    return max(goods_target, activity_target, ECONOMY["fx_min_value"])
+
+def yesterday_activity(code, now=None):
+    """(people, messages) of a currency on the UTC day before today — what the
+    daily FX post shows beside the new value."""
+    day = _today(now).toordinal() - 1
+    since = datetime.combine(date.fromordinal(day), datetime.min.time(),
+                             timezone.utc).timestamp()
+    people, messages, _activity = activity_by_day(code, since).get(
+        date.fromordinal(day).isoformat(), (0, 0, 0.0))
+    return people, messages
+
+def reprice_all():
+    """Set every currency to its value now, leaving the day-over-day record
+    of the economic log alone. main.py: main calls it when the bot starts,
+    so a value left behind by an older formula does not outlive the restart
+    that brings a new one."""
+    for bank in db.get_all_banks():
+        db.set_bank_value(bank["code"], recompute_value(bank))

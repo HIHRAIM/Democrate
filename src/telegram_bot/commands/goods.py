@@ -29,7 +29,9 @@ import db
 import economy
 import stats
 from message_relay import clean_display_name, escape_html
-from utils import category_label, get_chat_lang, good_display_name, is_admin, localized
+from utils import (
+    category_label, get_chat_lang, good_display_name, is_admin, localized, parse_emoji,
+)
 
 from telegram_bot.client import GROUP_CHAT_TYPES, _chat_key, _tg_user_label, router
 from telegram_bot.dialogs import _quiz_target_label_tg, _resolve_tg_target
@@ -105,7 +107,11 @@ async def create_good_tg(message: Message):
     if base is None or energy_cost <= 0:
         await message.reply(localized("create_good_bad", lang))
         return
-    emoji = fields[3].split()[0][:16] if len(fields) > 3 and fields[3].split() else ""
+    found = economy.new_good_refusal(bank["code"], owner, ("telegram", message.chat.id))
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
+        return
+    emoji = parse_emoji(fields[3]) if len(fields) > 3 else ""
     gcode = db.create_good(bank["code"], name, base, energy_cost, emoji,
                            owner=owner, category=cat)
     await message.reply(localized("create_good_created", lang, name=name, code=gcode,
@@ -119,6 +125,11 @@ def _fmt_duration(seconds):
     """mm:ss for a production wait."""
     seconds = max(int(seconds), 0)
     return f"{seconds // 60}:{seconds % 60:02d}"
+
+def _here_tg(message):
+    """The group a command is run in, as economy/switches.py names places, or
+    None in a private chat."""
+    return ("telegram", message.chat.id) if message.chat.type in GROUP_CHAT_TYPES else None
 
 def _resolve_production_target_tg(message, enterprise_query):
     """(owner, server, error_key) of a production request — Telegram mirror."""
@@ -152,6 +163,10 @@ async def craft_tg(message: Message):
         message, parts[2] if len(parts) > 2 else None)
     if err:
         await message.reply(localized(err, lang))
+        return
+    found = economy.production_refusal(good, owner, server, _here_tg(message))
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
         return
     worker = db.canonical_user("telegram", message.from_user.id)
     notify = ("telegram", _chat_key(message))
@@ -260,6 +275,12 @@ async def offer_sale_tg(message, lang, seller, good, want, target_arg, price_arg
     if price > 0 and not bank:
         await message.reply(localized("sell_no_bank", lang))
         return
+    here = _here_tg(message)
+    found = economy.deal_refusal((seller, buyer), good, bank["code"] if bank else None,
+                                 price, here, here)
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
+        return
     emoji = f"{good['emoji']} " if good["emoji"] else ""
     token = _register_econ_consent({
         "action": "sell", "seller": list(seller), "buyer_owner": list(buyer),
@@ -316,6 +337,10 @@ async def autocraft_tg(message: Message):
         return
     worker = db.canonical_user("telegram", message.from_user.id)
     on = parts[2].strip().lower() in ("on", "enable", "1", "true", "yes")
+    found = on and economy.production_refusal(good, owner, server, _here_tg(message))
+    if found:
+        await message.reply(economy.refusal_text(found, lang))
+        return
     others, limit = economy.autocraft_slots(owner, good["code"])
     if on and others >= limit:
         await message.reply(localized("autocraft_too_many", lang, limit=limit))

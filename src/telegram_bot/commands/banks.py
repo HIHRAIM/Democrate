@@ -23,7 +23,7 @@ import stats
 from message_relay import clean_display_name, escape_html
 from utils import (
     LANG_ORDER, format_stored_user, get_chat_lang, is_admin, language_name, localized,
-    send_service_event,
+    parse_emoji, send_service_event,
 )
 
 from telegram_bot.client import (
@@ -102,8 +102,7 @@ async def create_bank_tg(message: Message):
     m = await _dialog_text_tg(message, lang, localized("create_bank_ask_emoji", lang))
     if m is None:
         return
-    parts = (m.text or "").strip().split()
-    emoji = parts[0][:16] if parts else ""
+    emoji = parse_emoji(m.text)
 
     db.create_bank(code, union, chat["chat_id"], currency_name, emoji,
                    "telegram", message.from_user.id, _tg_user_label(message.from_user))
@@ -114,7 +113,8 @@ async def create_bank_tg(message: Message):
 
 def _bank_card_tg(bank, lang, central=None):
     """The bank card as HTML: currency, central server, leaders, published
-    value, money supply, debt and account count.
+    value, money supply, debt, account count and the parts of the economy
+    switched off for the currency.
 
     `central` is the central server's name, resolved by the caller because
     naming a Telegram group is an API call and this function is not async. It
@@ -142,6 +142,10 @@ def _bank_card_tg(bank, lang, central=None):
     if bank["tax_percent"]:
         lines.append(f"<b>{escape_html(localized('bank_field_tax', lang))}:</b> "
                      f"{economy.format_percent(bank['tax_percent'])}")
+    off = economy.parts_text(economy.bank_off(bank["code"]), lang)
+    if off:
+        lines.append(f"<b>{escape_html(localized('bank_field_econ_off', lang))}:</b> "
+                     f"{escape_html(off)}")
     return "\n".join(lines)
 
 @router.message(Command("bank_info", "bank-info", "bank"))
@@ -222,7 +226,7 @@ async def bank_transfer_tg(message: Message):
     await _bank_leadership_tg(message, transfer=True)
 
 _EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "fee", "add_leader",
-                      "transfer", "delete", "tax", "audit", "forms")
+                      "transfer", "delete", "tax", "audit", "forms", "econ")
 
 def _forms_lang(value):
     """One of the six language codes, or None so the dialog asks again."""
@@ -294,8 +298,7 @@ async def edit_bank_tg(message: Message):
         m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_emoji", lang))
         if m is None:
             return
-        chunks = (m.text or "").strip().split()
-        db.update_bank_field(bank["code"], "emoji", chunks[0][:16] if chunks else "")
+        db.update_bank_field(bank["code"], "emoji", parse_emoji(m.text))
         await message.reply(localized("edit_bank_done", lang))
     elif action == "code":
         m = await _dialog_text_tg(message, lang, localized("edit_bank_ask_code", lang))
@@ -353,6 +356,18 @@ async def edit_bank_tg(message: Message):
                                       percent=economy.format_percent(rate)))
         economy.record_audit(bank["code"], "tax", percent=economy.format_percent(rate),
                              by=_tg_user_label(message.from_user))
+    elif action == "econ":
+        off = economy.bank_off(bank["code"])
+        label = f"{bank['currency_name']} [{bank['code']}]"
+        part = await _numbered_choice_tg(
+            message, lang, localized("econ_menu_bank", lang, bank=label),
+            list(economy.ECON_BANK_PARTS), lambda p: economy.part_line(p, off, lang))
+        if part is None:
+            return
+        economy.set_bank_part(bank["code"], part, part not in off)
+        await message.reply(economy.switched_text(part, part not in off, lang, bank=label))
+        economy.record_audit(bank["code"], "econ_on" if part in off else "econ_off",
+                             part=part, by=_tg_user_label(message.from_user))
     elif action == "forms":
         filled = ", ".join(f"{localized('lang_flag', l)} {l}"
                            for l in db.currency_form_langs(bank["code"])) or "—"

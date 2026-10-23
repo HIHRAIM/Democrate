@@ -58,7 +58,7 @@ Active sponsors can use `/sponsor limit` on Discord or their linked Telegram acc
      - `SERVICE_CHATS` — chats that receive startup/shutdown and administrative events. Telegram format: `"-1000000000000:0"` (chat_id:thread_id); Discord format: numeric channel ID.
      - `BACKUP_CHATS` — chats that receive encrypted database backups every 12 hours. Same format.
      - `SUPPORT_CHATS` — chats that receive localization suggestions from `/locale suggest`. Same format.
-     - `ECONOMY` — the economy's tuning constants (documented inline): message-earning anti-abuse knobs (`min_chars`, `cooldown`, `sqrt_cap`, `hourly_activity_cap`, `currency_per_activity`, `energy_per_activity`, `starter_energy`), crafting-mastery curve (`alpha`, `mastery_cost_weight`, `mastery_max_level`, `mastery_scale`, `autocraft_cap`, `parallel_production`), foreign-exchange behavior (`fx_daily_clamp`, `fx_activity_weight`, `fx_min_value`, `fx_initial_value`, `convert_fee`), timed-production balance (`base_good_energy`, `produce_base_sec`, `produce_min_sec`, `produce_max_sec`, `produce_level_time`, `produce_level_yield`, `auto_efficiency`, `lucky_batch_chance`, `lucky_batch_multiplier`, `category_time_mult`, `category_yield`), the provision model (`prov_units_per_person`, `prov_daily_units_per_person`, `prov_quality_bonus`, `prov_max_score`, `prov_task_bonus`, `prov_category_weight`), monthly-task generation (`task_growth`, `task_min_qty`, `task_optional_goods`) and export logistics (`transport_local_sec`, `transport_cross_server_sec`, `transport_cross_union_sec`, `transport_per_unit_sec`, `transport_perish_chance`, `transport_perish_max_share`).
+     - `ECONOMY` — the economy's tuning constants (documented inline): message-earning anti-abuse knobs (`min_chars`, `cooldown`, `sqrt_cap`, `hourly_activity_cap`, `currency_per_activity`, `energy_per_activity`, `starter_energy`), crafting-mastery curve (`alpha`, `mastery_cost_weight`, `mastery_max_level`, `mastery_scale`, `autocraft_cap`, `parallel_production`), foreign-exchange behavior (`fx_activity_weight`, `fx_min_value`, `convert_fee`), timed-production balance (`base_good_energy`, `produce_base_sec`, `produce_min_sec`, `produce_max_sec`, `produce_level_time`, `produce_level_yield`, `auto_efficiency`, `lucky_batch_chance`, `lucky_batch_multiplier`, `category_time_mult`, `category_yield`), the provision model (`prov_units_per_person`, `prov_daily_units_per_person`, `prov_quality_bonus`, `prov_max_score`, `prov_task_bonus`, `prov_category_weight`), monthly-task generation (`task_growth`, `task_min_qty`, `task_optional_goods`) and export logistics (`transport_local_sec`, `transport_cross_server_sec`, `transport_cross_union_sec`, `transport_per_unit_sec`, `transport_perish_chance`, `transport_perish_max_share`).
 
    > **Message Content intent:** message earning, the interactive dialogs and the numbered menus read ordinary messages, which requires the privileged **Message Content Intent** — enable it for the bot in the Discord Developer Portal, otherwise the bot will not start.
 
@@ -199,9 +199,9 @@ Permission roles used below:
 | `/quiz take` | Take an ideology quiz (works in DMs too) | ✅ | ✅ | ✅ |
 | `/quiz stop` · `/quiz clear` · `/quiz compare <user>` · `/quiz previous [n]` | Pause a quiz / delete stored results / compare with another user / compare with your previous attempt | ✅ | ✅ | ✅ |
 | `/union info [code\|name]` | A union's public profile, found by its code or a name in any of its languages (near matches are offered; a query resembling nothing finds nothing): language, creation date, communities per platform, wikis and the size of their administrations, parties and governing bodies, banks, accounts, enterprises, goods — with buttons for the full, numbered lists and the union's economic summary | ✅ | ✅ | ✅ |
-| `/server info` | This server's profile: union, language, timezone, its banks, the currencies in use, accounts, enterprises, community and bank taxes | ✅ | ✅ | ✅ |
+| `/server info` | This server's profile: union, language, timezone, founding day if added, its banks, the currencies in use, accounts, enterprises, the parts of the economy switched off here, community and bank taxes | ✅ | ✅ | ✅ |
 | `/birthday set [day] [month] [clear]` | Set, show or forget your birthday (day and month; linked accounts share it) | ✅ | ✅ | ✅ |
-| `/calendar` | The coming month of union and wiki founding days and members' birthdays; buttons turn the page by a month, hide a kind of event, or switch between this community and every community | ✅ | ✅ | ✅ |
+| `/calendar` | The coming month of the founding days of unions, of communities that added theirs and of wikis, and members' birthdays; buttons turn the page by a month, hide a kind of event, or switch between this community and every community | ✅ | ✅ | ✅ |
 | `/locale info [code]` · `/locale compare <code>` · `/locale suggest <lang> <code> <text>` | Localization status / cross-language comparison / suggestions | ✅ | ✅ | ✅ |
 | `/help` | Paged command reference | ✅ | ✅ | ✅ |
 | `/sponsor info` · `/sponsor limit` | Your subscription, its unions and community slots / today's usage (sponsors) | ✅ | ✅ | ✅ |
@@ -209,7 +209,8 @@ Permission roles used below:
 | `/find with` · `/find without <channel> <period> <keywords>` | Reply-mention authors of messages (not) containing keywords (verified) | ❌ | ✅ | ✅ |
 | `/server logs [channel] [day] [HH:MM] [tz]` | Economic log channel: daily FX updates + weekly server statistics (`off` unbinds) | ❌ | ✅ | ✅ |
 | `/server tasks [channel] [HH:MM] [tz]` | Channel for the monthly production task, posted on the 1st (`off` unbinds) | ❌ | ✅ | ✅ |
-| `/server edit [option]` | Numbered menu: the community tax and the server's timezone | ❌ | ✅ | ✅ |
+| `/server edit [option]` | Numbered menu: the community tax, the server's timezone and the parts of the economy switched off here | ❌ | ✅ | ✅ |
+| `/server birthday [date\|auto\|off] [link]` | Add the server's founding day (typed, or `auto` for the day Discord created it) and an optional invitation to the union's calendar and wiki birthday posts; `off` removes both, a link of `-` removes the invitation; without arguments, shows what is set | ❌ | ✅ | ✅ |
 | `/birthday channel [channel\|off] [tz]` | Channel where members are congratulated on their birthday at 10:00 server time | ❌ | ✅ | ✅ |
 | `/birthday role <role\|off> [tz]` | Role members hold through their birthday | ❌ | ✅ | ✅ |
 | `/admin add <user>` · `/admin remove <user>` | Grant/revoke delegated Server Admin rights (ping or ID) | ❌ | ❌ | ✅ |
@@ -249,7 +250,7 @@ Only `/olympiad set` is always present. The rest are added to the `/olympiad` gr
 | `/bank info <code>` | A bank's card: currency, union, central server, leaders, money supply, accounts, debt, value | Everyone |
 | `/bank leader <code> <user>` | Offer co-leadership of a bank (consent buttons; Bot Admins appoint directly) | Bank Leaders / Bot Admins |
 | `/bank transfer <code> <user>` | Offer the bank's leadership (consent buttons; Bot Admins appoint directly) | Bank Leaders / Bot Admins |
-| `/bank edit [option] [code]` | Numbered management menu: currency name, emoji, 4-char code, central server, conversion fees, leaders, transfer, deletion, bank tax, audit channel, forms of the currency name per language. Bot Admins may edit any bank, leaders only their own | Bank Leaders / Bot Admins |
+| `/bank edit [option] [code]` | Numbered management menu: currency name, emoji, 4-char code, central server, conversion fees, leaders, transfer, deletion, bank tax, audit channel, forms of the currency name per language, parts of the economy switched off for the currency. Bot Admins may edit any bank, leaders only their own | Bank Leaders / Bot Admins |
 | `/bank emit <target> <amount> <code> [reason]` | Issue the currency to a person, or to a party or enterprise of the union by code; leaders within a monthly limit | Bank Leaders / Bot Admins |
 | `/bank open <code>` | Open an account (also opened automatically on first earning) | Everyone |
 | `/bank balance [code]` | Your money, energy, profession and place on the leaderboard — all banks, or one | Everyone |
@@ -311,6 +312,7 @@ Telegram has the same actions under the same groups, written with an underscore 
 | `/account verify`, `/account telegram`, `/find with`, `/find without`, `/wiki channel`, `/wiki greeting`, `/wiki rep-role`, `/birthday role` | Discord-only (Fandom verification and the commands that operate on Discord channels and roles) |
 | `/birthday_set [DD.MM\|off]` | The date is one argument, e.g. `/birthday_set 25.12`; in a group the answer clears itself after a minute |
 | `/birthday_channel [off] [tz]` | Run it in the group or topic that should receive the greetings |
+| `/server_birthday [DD.MM.YYYY\|off] [invitation\|-]` | The date is always typed — Telegram does not tell bots when a group was created — and the arguments may come in any order. Wiki birthday posts exist on Discord only, so the group is congratulated in the wiki birthday channels of its union's Discord servers |
 | `/calendar` | The same calendar with inline buttons; a community's members are the group's members |
 | `/union_edit [code] [option]` | The new owner is named by Discord account ID; a sponsor's offer is accepted by the Telegram account linked to it (otherwise offer it on Discord) |
 | `/olympiad_set`, `/olympiad_contest_add`, `/olympiad_contest_edit`, `/olympiad_vote` | Work as on Discord (`/olympiad_vote` in the private chat with the bot only). Telegram has no published command list, so these are hidden by being left out of `/help` and refused while no Olympiad runs |
@@ -357,7 +359,7 @@ The economy adds cross-community currencies with a real production cycle behind 
 
 #### Banks and currencies
 
-`/bank add` (Bot/Server Admins, interactive dialog) creates a **bank**: it is anchored to a **central server** (which must be `/server setup`-bound) and thereby to that server's union. A server or union can host any number of banks. The currency has an English name, a 4-character code — unique across the shared namespace of union, party, currency **and** good codes — and an emoji. The creator becomes the bank's first leader; leadership works like party leadership (consent-button offers and transfers, `/bank leader`, `/bank transfer`), except that Bot Admins may appoint leaders anywhere directly. A bank leader does not need to be any kind of admin.
+`/bank add` (Bot/Server Admins, interactive dialog) creates a **bank**: it is anchored to a **central server** (which must be `/server setup`-bound) and thereby to that server's union. A server or union can host any number of banks. The currency has an English name, a 4-character code — unique across the shared namespace of union, party, currency **and** good codes — and an emoji — an ordinary one or a custom emoji of a Discord server (`<:name:id>`, `<a:name:id>` when animated), stored whole by `utils.parse_emoji`. Telegram cannot show a Discord server's emoji, so everything the Telegram bot sends has them taken out, with the space they leave (`12.34 <:name:id> STAR` reads `12.34 STAR`). The creator becomes the bank's first leader; leadership works like party leadership (consent-button offers and transfers, `/bank leader`, `/bank transfer`), except that Bot Admins may appoint leaders anywhere directly. A bank leader does not need to be any kind of admin.
 
 #### Names of currencies
 
@@ -465,7 +467,7 @@ While only base goods feed a category its score is capped at **1.0** — base pr
 
 Because the score is coverage rather than output, **stock matters**: goods sitting in a warehouse feed the server, and a category nobody supplies drags the whole average down however busy the chat is. The weekly statistics mark each category that ended the week short.
 
-`/server logs` names the server's **economic log channel** and its posting schedule (weekday, time, timezone as a UTC offset). The bot posts there the daily FX update (each union currency's value with its day-over-day change) and the weekly statistics: provision by category, goods produced, **GDP** (the week's production value, weighted by each currency's published value), the server's banks and the running task progress.
+`/server logs` names the server's **economic log channel** and its posting schedule (weekday, time, timezone as a UTC offset). The bot posts there the daily FX update — each currency's value with its day-over-day change — and the weekly statistics. The FX update lists every currency of the union on the union's central community, the server or group bound to the union first, and elsewhere only the currencies used there: the banks whose central server it is and the currencies its channels earn, as `/server info` lists them; a community that uses none gets no FX update. The weekly statistics are provision by category, goods produced, **GDP** (the week's production value, weighted by each currency's published value), the server's banks and the running task progress.
 
 #### Monthly tasks
 
@@ -488,9 +490,22 @@ Two taxes can be withheld from whoever receives money, after it arrives — the 
 
 Wages, salaries, party dues, fines, conversions and emissions are not taxed. `/server info` and the bank card show the rates.
 
+#### Switching parts of the economy off
+
+A community may switch off parts of the economy on its own ground, and a bank's leaders may switch off parts of it for their currency everywhere. Both are a numbered list in a menu — `/server edit` → *Parts of the economy* for Bot Admins and Server Admins, `/bank edit` → *Parts of the economy* for the bank's leaders and Bot Admins — where each number turns its part off or back on; nothing else changes, and switching a part back on resumes everything as it was. `/server info` and the bank card list what is off, and a bank's audit channel is told when its leaders change it.
+
+| Part | Switched off in a community | Switched off for a currency |
+|---|---|---|
+| **Enterprises** | The enterprises founded there are frozen: they produce nothing (by hand or on 24/7 lines), pay no salaries, are not drawn by the daily consumption, and neither sell, buy nor ship; no enterprise can be founded there and nobody can join one of them. Warehouses, members and settings stay. The neutral enterprise's minimum supply is not a warehouse and keeps feeding the community | — |
+| **Trade with other servers** | Every sale or shipment that touches the community and another server is refused. A deal touches the community it is made in and the home of every enterprise taking part; two places make it trade between servers. Sales between people inside the community go on | Sales and shipments between servers priced in the currency are refused; free shipments and sales inside one server are not affected |
+| **Currency exchange** | `/bank convert` is refused there | The currency can be neither exchanged for another nor obtained by exchange, anywhere |
+| **Own goods** | Every good except the five base goods can be neither created, produced nor sold there, nor by the community's enterprises anywhere, and the daily consumption stops buying them from its warehouses | The same for the goods denominated in the currency, everywhere |
+
+Base goods are never affected — they are what keeps a server fed. Goods already produced stay with their owners. An offer accepted after a part was switched off is refused when it is accepted, and a weekly export contract simply waits the weeks out, like a week without stock. The refusal names what is off and where: in this community, in another community by its name, or for which currency.
+
 #### Audit channel and history
 
-A bank's leaders may choose an audit channel in `/bank edit` (any Discord channel or Telegram group/topic). The bot posts there the bank's administrative operations: fines, emissions, the monthly wages and party dues paid in the currency, changes of conversion fees and of the bank tax, and changes of leadership. Payments, sales and earnings are not posted. Everyone can read their own movements with `/bank transactions`; nobody else can.
+A bank's leaders may choose an audit channel in `/bank edit` (any Discord channel or Telegram group/topic). The bot posts there the bank's administrative operations: fines, emissions, the monthly wages and party dues paid in the currency, changes of conversion fees and of the bank tax, parts of the economy switched off or back on for the currency, and changes of leadership. Payments, sales and earnings are not posted. Everyone can read their own movements with `/bank transactions`; nobody else can.
 
 #### Economy summary and leaderboards
 
@@ -498,16 +513,20 @@ The **Economy** button under `/union info` shows, for each of the union's curren
 
 #### Currency exchange
 
-`/bank treaty <code>` proposes a conversion treaty between two banks; a leader of the other bank accepts through consent buttons, making A↔B convertible. Each day the scheduler recomputes every currency's **value** from goods backing, money supply and accepted message activity:
+`/bank treaty <code>` proposes a conversion treaty between two banks; a leader of the other bank accepts through consent buttons, making A↔B convertible. Each day, and whenever the bot starts, every currency's **value** is computed from the activity of the people who earn it:
 
 ```
-backing         = period_goods_value / max(money_supply, 1 unit)
-goods_target    = backing × (1 + fx_activity_weight × ln(1 + period_energy))
-activity_target = fx_activity_weight × ln(1 + eligible earning messages in the last 30 days)
-value           = clamp(max(goods_target, activity_target, fx_min_value))
+activity(day)   = Σ over the people who earned it that day of √(their accepted messages)
+fade(day)       = (1 − 1/30) ^ (days since that day)
+score           = Σ activity(day) × fade(day)
+activity_target = fx_activity_weight × ln(1 + score)
+goods_target    = goods_per_day / max(money_supply, 1 unit) × (1 + fx_activity_weight × ln(1 + energy_per_day))
+value           = max(goods_target, activity_target, fx_min_value)
 ```
 
-The 30-day activity component gives a community's currency value even before its first priced good is crafted. Only messages that pass the normal earning checks count. The published value still moves at most `fx_daily_clamp` per day; currencies already at the minimum recover gradually rather than jumping in one update.
+`goods_per_day` and `energy_per_day` are the priced goods produced in the currency and the energy earned in it per day, faded the same way. Only messages that pass the normal earning checks count, and a linked Discord and Telegram account is one person.
+
+A new currency is worth nothing (`fx_min_value`) and grows as people use it: ten people writing three messages a day bring a new currency to about 0.29 on the first day, 0.47 in a week and 0.58 in a month. The square root makes a community talking worth more than one member writing a lot — a hundred people with one message each add as much as one person with ten thousand. Every day's activity fades by a thirtieth a day instead of dropping out at once, so a currency whose people fall silent loses value slowly — a quarter to a third in a month, never more than about two percent in a day — and a deleted channel or one the bot can no longer read only stops adding to it. The value is published exactly as computed, with no daily limit and no starting value. The daily FX post shows beside each value how many people earned the currency on the day that ended and with how many messages.
 
 The rate A→B = value(A) / value(B). **Manual peg:** if two banks are each other's **only** treaty partner, their leaders may fix the rate by mutual consent with `/bank rate`, overriding the computed one; as soon as a bank has two or more partners only computed rates apply (protecting triangle consistency). `/bank convert` exchanges between your own accounts at the current rate, minus the source bank's spread; `/bank rates` shows values and rates.
 
@@ -521,7 +540,7 @@ Parties hold accounts like users; their balances appear in `/party info`. `/part
 
 #### Scheduler
 
-By the pattern of the retention/backup loops: a **daily** tick (consumption, then the FX recompute — in that order, so the money paid for the day's meal is already in the supply the recompute prices against — period-window reset, autosend, task evaluation), a **weekly** tick (weekly enterprise payroll, recurring export shipments) and a **monthly** tick (wages, party dues, monthly enterprise payroll). Last-run markers are stored in `bot_settings`, so restarts never skip or double-run a period. Alongside them run an hourly **autoproduction** advance, a 20-second loop that completes due production runs, a 20-second loop that delivers **arrived shipments**, and a per-minute loop that delivers each server's weekly statistics and monthly task at the schedule (and in the timezone) that server configured — a post missed while the bot was down goes out as soon as it is back.
+By the pattern of the retention/backup loops: a **daily** tick (consumption, then the FX recompute — in that order, so the money paid for the day's meal is already in the supply the recompute prices against — autosend, task evaluation), a **weekly** tick (weekly enterprise payroll, recurring export shipments) and a **monthly** tick (wages, party dues, monthly enterprise payroll). Last-run markers are stored in `bot_settings`, so restarts never skip or double-run a period. Alongside them run an hourly **autoproduction** advance, a 20-second loop that completes due production runs, a 20-second loop that delivers **arrived shipments**, and a per-minute loop that delivers each server's weekly statistics and monthly task at the schedule (and in the timezone) that server configured — a post missed while the bot was down goes out as soon as it is back.
 
 ### Quizzes
 
@@ -553,6 +572,8 @@ Twice a day the bot reads every attached wiki again — name, language, administ
 
 All wikis with a birthday that day share one message. A wiki whose founding moment has already come round that day "turned" its age; one whose moment is still ahead "turns" it, and a message with both says so ("Today D Wiki turned 10 years old, while E Wiki turns 2 years old!"). The first line is written in the union's language. Each wiki in another of the bot's six languages, or in Belarusian, adds its flag to that line and gets a line of its own in its language below it; the main page links follow. A wiki in any other language is named in the first line only and marked 🌐 wherever its language is shown. The Belarusian phrases live in `src/i18n/wiki_greetings/be.json` (editable in the control panel); another wiki language is added the same way, with its name and flag in `utils.py: LANGUAGE_NAMES` and `LANGUAGE_FLAGS`. A wiki founded on 29 February is congratulated on the 28th in common years, and a wiki in its first year is not congratulated. `/wiki greeting <link> false` stops greeting one wiki in this server only; `true` brings it back.
 
+A Discord server or a Telegram group of the union can join these posts with its own founding day. Its Server Admins (or a Bot Admin) add it with `/server birthday` — that is the community's consent to being named; nothing is shown about a community that did not add one. On Discord the date is typed or taken from the day Discord created the server (`auto`); on Telegram it is typed. An invitation to the server or group may be added — only `discord.gg/…`, `discord.com/invite/…` and `t.me/…` links are accepted — and goes on its own line under the community's line. On the day, every Discord server of the union with a wiki birthday channel adds a line in the union's language, for example "Today the server “Alpha” turned 3 years old!", after the wikis or alone when no wiki has a birthday; a community in its first year is not congratulated, and a date of 29 February is celebrated on the 28th in common years. `/server birthday off` removes the date and the invitation, and the community's founding day then disappears from the calendar as well.
+
 ### Personal birthdays
 
 Anyone can save a birthday — day and month only — with `/birthday set`; a linked Discord and Telegram account share one date, and `/birthday set` with `clear` (Telegram: `/birthday_set off`) forgets it. The name the person goes by on that platform is stored with the date, for the calendar.
@@ -563,7 +584,7 @@ Anyone can save a birthday — day and month only — with `/birthday set`; a li
 
 ### Calendar
 
-`/calendar` (everyone, both platforms) lists what comes round in the coming month, one date per line in words — `1 January — 📚🇷🇺 A Wiki`, `2 January — 👤 A Name`: the founding days of unions (✨) and of their wikis (📚), each with the flag of its language, and members' birthdays (👤). A page is one calendar month from today's day of the month — 13 October to 12 November, then 13 November to 12 December — and ◀ and ▶ move by a page; three buttons hide or show each kind of event; one button switches between this community — its union, that union's wikis and the birthdays of its members, named as the platform names them here — and every community: all unions, all union wikis and everyone who saved a birthday, named by the name stored with the date. A page is cut to what one message holds and says how many events did not fit. Outside a community bound to a union, only the second view exists. On Discord only the person who opened the calendar may press its buttons, for as long as an ordinary dialog lasts; on Telegram anyone in the chat may, and because each button carries the calendar's whole state they keep working after a restart.
+`/calendar` (everyone, both platforms) lists what comes round in the coming month, one date per line in words — `1 January — 📚🇷🇺 A Wiki`, `2 January — 👤 A Name`: the founding days of unions (✨), of the communities that added theirs with `/server birthday` (on Discord, the Discord or Telegram logo set in `config.py` as `DISCORD_EMOJI` / `TELEGRAM_EMOJI`; 💬 on Telegram or when no logo is set) and of their wikis (📚), each with the flag of its language, and members' birthdays (👤). A page is one calendar month from today's day of the month — 13 October to 12 November, then 13 November to 12 December — and ◀ and ▶ move by a page; four buttons hide or show each kind of event; one button switches between this community — its union, that union's communities and wikis and the birthdays of its members, named as the platform names them here — and every community: all unions, every community that added its founding day, all union wikis and everyone who saved a birthday, named by the name stored with the date. A page is cut to what one message holds and says how many events did not fit. Outside a community bound to a union, only the second view exists. On Discord only the person who opened the calendar may press its buttons, for as long as an ordinary dialog lasts; on Telegram anyone in the chat may, and because each button carries the calendar's whole state they keep working after a restart.
 
 ### Wiki representatives
 

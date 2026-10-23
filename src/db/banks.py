@@ -24,6 +24,7 @@ treaties, rates, wages and dues (db/trade.py), and every formula
 (economy/).
 """
 import json
+import time
 
 from db import conn, cur, _db_lock, _now
 
@@ -49,9 +50,10 @@ def create_bank(code, union_code, central_chat, currency_name, emoji,
                 leader_platform, leader_id, leader_name):
     """Found a bank and make its creator the first leader, in one transaction.
 
-    The initial published value comes from `ECONOMY['fx_initial_value']` rather
-    than from any calculation — there is nothing to price yet, no goods and no
-    supply — and the daily recompute takes over from the next tick. `code` must
+    The initial published value is `ECONOMY['fx_min_value']`, which is what
+    economy/trade.py: recompute_value gives a currency with no messages and
+    no goods yet — the value is correct from the first moment, and the daily
+    recompute follows the currency's activity from there. `code` must
     already have been checked against the shared namespace by the caller."""
     from config import ECONOMY
     with _db_lock:
@@ -60,7 +62,7 @@ def create_bank(code, union_code, central_chat, currency_name, emoji,
             " value, period_goods_value, period_energy, created_at)"
             " VALUES (?,?,?,?,?,?,0,0,?)",
             (code, union_code, str(central_chat), currency_name, emoji,
-             float(ECONOMY["fx_initial_value"]), _now()))
+             float(ECONOMY["fx_min_value"]), _now()))
         cur.execute(
             "INSERT OR REPLACE INTO bank_leaders (bank_code, platform, user_id, display_name)"
             " VALUES (?,?,?,?)",
@@ -107,39 +109,61 @@ def get_banks_in_chat(chat_id):
 def set_bank_value(code, value):
     """Publish a currency's new value.
 
-    Written once a day by the FX recompute and by nothing else: the value is the
-    denominator of every conversion rate, so an ad-hoc write here would move every
-    rate in the union at once."""
+    Written by the daily FX recompute and, at startup, by
+    economy/trade.py: reprice_all, both with recompute_value's result and
+    nothing else: the value is the denominator of every conversion rate, so an
+    ad-hoc write here would move every rate in the union at once."""
     cur.execute("UPDATE banks SET value=? WHERE code=?", (float(value), code))
     conn.commit()
 
-def add_period_energy(code, delta):
-    """Add message energy to the current FX period's counter.
-
-    Called on every counted message. The counter is one of the three inputs to the
-    daily recompute (the "activity" term) and is zeroed by `reset_bank_periods`
-    right after it is read."""
-    cur.execute("UPDATE banks SET period_energy=period_energy+? WHERE code=?",
-                (int(delta), code))
+def _add_bank_day(code, column, delta):
+    """Add to one column of the currency's row for today (UTC) in
+    `bank_days`."""
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    cur.execute(
+        f"INSERT INTO bank_days (bank_code, day, {column}) VALUES (?,?,?)"
+        f" ON CONFLICT(bank_code, day) DO UPDATE SET {column}={column}+excluded.{column}",
+        (code, day, int(delta)))
     conn.commit()
+
+def add_period_energy(code, delta):
+    """Count message energy earned in a currency today — the energy term of
+    the FX recompute, averaged over thirty days."""
+    _add_bank_day(code, "energy", delta)
 
 def add_period_goods_value(code, delta):
-    """Add produced goods value to the current FX period's counter — the
-    "backing" term of the daily recompute, in minor units."""
-    cur.execute("UPDATE banks SET period_goods_value=period_goods_value+? WHERE code=?",
-                (int(delta), code))
+    """Count the value of priced goods produced in a currency today, in
+    minor units — the backing term of the FX recompute, averaged over thirty
+    days."""
+    _add_bank_day(code, "goods_value", delta)
+
+def bank_days_since(code, since):
+    """(day, goods value, energy) of a currency for every UTC day from the
+    one holding the timestamp `since` up to today that has a row."""
+    first = time.strftime("%Y-%m-%d", time.gmtime(since))
+    return cur.execute("SELECT day, goods_value, energy FROM bank_days"
+                       " WHERE bank_code=? AND day>=?", (code, first)).fetchall()
+
+def bank_earners_since(code, since):
+    """(day, owner platform, owner id, messages) of a currency: how many
+    accepted earning messages each person had on each UTC day since the
+    timestamp `since`. A `message` entry exists in the journal only after the
+    earning gates and cooldowns accepted the message, and it is written to
+    the canonical owner, so a linked pair of accounts is one person."""
+    return cur.execute(
+        "SELECT date(created_at,'unixepoch') AS day, to_platform, to_id, COUNT(*) AS n"
+        " FROM transactions WHERE bank_code=? AND reason='message' AND created_at>=?"
+        " GROUP BY day, to_type, to_platform, to_id",
+        (str(code), int(since))).fetchall()
+
+def cleanup_old_bank_days(days=180):
+    """Keep the days whose weight in the FX recompute still counts — after
+    half a year a day's weight has faded to a quarter of a percent."""
+    first = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
+    cur.execute("DELETE FROM bank_days WHERE day<?", (first,))
     conn.commit()
 
-def reset_bank_periods(code):
-    """Zero both FX period counters after the daily recompute has read them.
-
-    Called immediately after `set_bank_value` in the same tick; the two together
-    are what makes each day's value depend on that day's activity rather than on
-    all history."""
-    cur.execute("UPDATE banks SET period_goods_value=0, period_energy=0 WHERE code=?", (code,))
-    conn.commit()
-
-BANK_EDITABLE_FIELDS = ("currency_name", "emoji")
+BANK_EDITABLE_FIELDS = ("currency_name", "emoji", "econ_off")
 
 _BANK_CODE_COLUMNS = (
     ("bank_leaders", "bank_code"),
@@ -159,6 +183,7 @@ _BANK_CODE_COLUMNS = (
     ("treaties", "bank_b"),
     ("bank_convert_fees", "bank_code"),
     ("bank_convert_fees", "target_code"),
+    ("bank_days", "bank_code"),
 )
 
 def update_bank_field(code, field, value):
@@ -247,7 +272,7 @@ def delete_bank(code):
         cur.execute("DELETE FROM goods WHERE bank_code=?", (code,))
         for table in ("bank_leaders", "accounts", "transactions", "professions",
                       "earn_channels", "wages", "party_dues", "auto_exports",
-                      "currency_forms"):
+                      "currency_forms", "bank_days"):
             cur.execute(f"DELETE FROM {table} WHERE bank_code=?", (code,))
         cur.execute("DELETE FROM treaties WHERE bank_a=? OR bank_b=?", (code, code))
         cur.execute("DELETE FROM bank_convert_fees WHERE bank_code=? OR target_code=?",
@@ -428,20 +453,6 @@ def bank_money_supply(bank_code):
         "SELECT COALESCE(SUM(balance),0) AS s FROM accounts WHERE bank_code=?",
         (bank_code,)).fetchone()
     return row["s"] or 0
-
-def bank_recent_earning_messages(bank_code, since):
-    """Count accepted earning messages in the rolling FX activity window.
-
-    A `message` journal entry exists only after the normal earning gates and
-    cooldowns accepted the message. Reading the journal avoids inventing a
-    second activity counter and lets a quiet day retain the recent activity
-    of a community instead of treating every overnight lull as zero demand.
-    """
-    return cur.execute(
-        "SELECT COUNT(*) FROM transactions WHERE bank_code=?"
-        " AND reason='message' AND created_at>=?",
-        (str(bank_code), int(since)),
-    ).fetchone()[0]
 
 def bank_debt(bank_code):
     """Total of all negative balances, as a positive number."""

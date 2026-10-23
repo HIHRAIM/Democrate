@@ -31,6 +31,7 @@ import time
 
 import db
 from economy.money import _cfg
+from economy.switches import deal_refusal
 
 def enterprise_union(ent):
     """The union of an enterprise's home server/group, or None."""
@@ -100,12 +101,17 @@ def dispatch_shipment(from_code, to_code, good, qty, price, bank_code, notify, l
     """Send `qty` units of `good` from one enterprise to another. The cargo
     leaves the seller's warehouse now; a priced sale escrows the buyer's payment
     now (no funds, no dispatch). The goods (and the escrow) settle when the
-    shipment arrives. Returns (status, info)."""
+    shipment arrives. A shipment that touches a part of the economy switched
+    off answers "off" with the refusal (economy/switches.py); a weekly
+    contract waits it out like a week without stock. Returns (status, info)."""
     seller = db.enterprise_owner(from_code)
     buyer = db.enterprise_owner(to_code)
     from_ent, to_ent = db.get_enterprise(from_code), db.get_enterprise(to_code)
     if not from_ent or not to_ent:
         return "bad_target", {}
+    found = deal_refusal((seller, buyer), good, bank_code, price)
+    if found:
+        return "off", {"refusal": found}
     have = db.get_inventory_qty(seller, good["code"])
     qty = min(int(qty), have)
     if qty <= 0:

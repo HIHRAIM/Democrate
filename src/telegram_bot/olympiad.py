@@ -28,8 +28,8 @@ from aiogram.types import Message
 import db
 import olympiad
 from utils import (
-    DEFAULT_LANG, available_locales, get_chat_lang, is_admin, language_name,
-    localized, set_chat_lang,
+    DIALOGS, DEFAULT_LANG, available_locales, dialog_end, get_chat_lang, is_admin,
+    language_name, localized, set_chat_lang,
 )
 
 from discord_bot import post_olympiad_vote, sync_olympiad_commands
@@ -41,7 +41,11 @@ from telegram_bot.dialogs import (
 
 async def _wait_reply_or_button_tg(chat_id, user_id, token, fut, timeout=DIALOG_TIMEOUT):
     """Race the caller's next message against a press on the inline keyboard.
-    Returns ('text', message), ('button', value) or ('timeout', None)."""
+    Returns ('text', message), ('button', value), ('timeout', None) or
+    ('replaced', None) when a newer dialog took this chat (utils.DIALOGS)."""
+    if not DIALOGS.claim(("telegram", chat_id, user_id)):
+        _pending_oly_buttons.pop(token, None)
+        return "replaced", None
     key = (chat_id, user_id)
     old = _pending_inputs.pop(key, None)
     if old and not old.done():
@@ -53,6 +57,8 @@ async def _wait_reply_or_button_tg(chat_id, user_id, token, fut, timeout=DIALOG_
                                             return_when=asyncio.FIRST_COMPLETED)
         if fut in done:
             return "button", fut.result()
+        if msg_fut in done and msg_fut.cancelled():
+            return "replaced", None
         if msg_fut in done:
             try:
                 return "text", msg_fut.result()
@@ -101,7 +107,7 @@ class _OlyDialogTg:
                     return None
                 return "button", payload
             if kind != "text":
-                await self.send(localized("dialog_timeout", self.lang))
+                await self.send(dialog_end(self.lang))
                 return None
             value = (payload.text or payload.caption or "").strip()
             if validator is None:

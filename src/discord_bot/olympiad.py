@@ -34,7 +34,7 @@ import db
 import olympiad
 from utils import (
     DEFAULT_EMBED_COLOR, DEFAULT_LANG, SUPPORTED_LANGS, available_locales,
-    get_chat_lang, is_admin, language_name, localized, set_chat_lang,
+    DIALOGS, dialog_end, get_chat_lang, is_admin, language_name, localized, set_chat_lang,
 )
 
 from discord_bot.client import _chat_key, bot, logger
@@ -107,17 +107,31 @@ async def _dm_channel(interaction: discord.Interaction):
 
 async def _wait_reply_or_button(channel_id, user_id, view, timeout=DIALOG_TIMEOUT):
     """Race the caller's next message against a press on `view`. Returns
-    ('text', message), ('button', value) or ('timeout', None)."""
+    ('text', message), ('button', value), ('timeout', None) or
+    ('replaced', None) when a newer dialog took this chat (utils.DIALOGS)."""
+    key = ("discord", channel_id, user_id)
+    if not DIALOGS.claim(key):
+        return "replaced", None
+    me = asyncio.current_task()
+
     def check(m):
         """Accept the awaited person's next message in their private chat with
-        the bot."""
-        return m.author.id == user_id and m.channel.id == channel_id
+        the bot, while this dialog is still theirs there."""
+        return (m.author.id == user_id and m.channel.id == channel_id
+                and DIALOGS.owns(key, me))
     msg_task = asyncio.ensure_future(bot.wait_for("message", check=check))
     btn_task = asyncio.ensure_future(view.wait_value())
-    done, pending = await asyncio.wait({msg_task, btn_task}, timeout=timeout,
-                                       return_when=asyncio.FIRST_COMPLETED)
+    DIALOGS.watch(key, msg_task)
+    try:
+        await asyncio.sleep(0)
+        done, pending = await asyncio.wait({msg_task, btn_task}, timeout=timeout,
+                                           return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        DIALOGS.release(key, msg_task)
     for task in pending:
         task.cancel()
+    if msg_task in done and msg_task.cancelled():
+        return "replaced", None
     if btn_task in done:
         return "button", btn_task.result()
     if msg_task in done:
@@ -223,7 +237,7 @@ class _OlyDialog:
                     return None
                 return "button", value
             if kind != "text":
-                await self.send(localized("dialog_timeout", self.lang))
+                await self.send(dialog_end(self.lang))
                 return None
             value = (payload.content or "").strip()
             if validator is None:

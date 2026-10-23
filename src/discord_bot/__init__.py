@@ -181,7 +181,7 @@ from discord_bot.commands.wikis import (
     wiki_greeting_cmd,
     wiki_rep_role_cmd,
 )
-from discord_bot.commands.servers import edit_server_cmd, server_cmd
+from discord_bot.commands.servers import edit_server_cmd, server_birthday_cmd, server_cmd
 from discord_bot.commands.birthdays import (
     birthday_channel_cmd,
     birthday_cmd,

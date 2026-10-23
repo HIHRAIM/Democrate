@@ -23,11 +23,14 @@ Not this module's zone: anything that knows about a platform. Nothing here
 imports discord or aiogram, which is what lets both halves and the background
 loops share it.
 """
+import asyncio
+import contextlib
 import contextvars
 import difflib
 import logging
 import re
 import time
+import weakref
 from datetime import datetime, timedelta, timezone
 
 from config import ADMINS, SERVICE_CHATS
@@ -277,6 +280,144 @@ def find_close_names(query, candidates, n=5, cutoff=0.5):
         if item not in out:
             out.append(item)
     return out
+
+class DialogOwners:
+    """Which dialog a person is answering in a chat: one at a time.
+
+    A dialog is the asyncio task of the command that asks the questions, and
+    every wait for the person's next message claims its place first. A newer
+    dialog of the same person in the same chat takes the place over: the
+    older one's pending wait is cancelled (the future it handed to `watch`),
+    and `claim` refuses the older task from then on, so its next question
+    returns at once instead of competing for the same answer. Before this,
+    Discord handed one message to every dialog waiting in the channel, so a
+    single reply answered all of them, and on Telegram an older dialog could
+    take the place back from a newer one at its next question.
+
+    Keys are (platform, chat, user): dialogs in different chats do not touch
+    each other. `replaced()` tells a dialog that has just been given nothing
+    why, so it can say so (`dialog_end`). One instance, DIALOGS, serves both
+    halves."""
+
+    def __init__(self):
+        """Nobody is in a dialog yet."""
+        self._owners = {}
+        self._waits = {}
+        self._replaced = weakref.WeakSet()
+
+    def claim(self, key):
+        """Make the current task the dialog at `key`, replacing a different
+        one that is still running. Returns False when the current task has
+        itself been replaced there, or anywhere — its dialog is over."""
+        task = asyncio.current_task()
+        if task is None:
+            return True
+        if task in self._replaced:
+            return False
+        ref = self._owners.get(key)
+        owner = ref() if ref is not None else None
+        if owner is not None and owner is not task and not owner.done():
+            self._replaced.add(owner)
+            pending = self._waits.pop(key, None)
+            if pending is not None and not pending.done():
+                pending.cancel()
+        self._owners[key] = weakref.ref(task)
+        return True
+
+    def owns(self, key, task):
+        """Whether `task` is still the dialog at `key`. Discord asks this in
+        the filter of every wait: cancelling a replaced wait takes effect a
+        step of the event loop later, and a message arriving in between must
+        not reach the replaced dialog."""
+        ref = self._owners.get(key)
+        return ref is not None and ref() is task
+
+    def watch(self, key, future):
+        """The future the dialog at `key` is waiting on — what a newer
+        dialog cancels."""
+        self._waits[key] = future
+
+    def release(self, key, future):
+        """The wait on `future` is over."""
+        if self._waits.get(key) is future:
+            self._waits.pop(key, None)
+
+    def replaced(self):
+        """Whether the current task's dialog was replaced by a newer one."""
+        task = asyncio.current_task()
+        return task is not None and task in self._replaced
+
+DIALOGS = DialogOwners()
+
+def dialog_end(lang):
+    """What a dialog says when it ends without an answer: that a newer
+    dialog replaced it, or that time ran out."""
+    return localized("dialog_replaced" if DIALOGS.replaced() else "dialog_timeout", lang)
+
+EMOJI_MAX = 32
+_DISCORD_EMOJI = r"a?:[A-Za-z0-9_]{2,32}:[0-9]{17,20}"
+_DISCORD_EMOJI_RE = re.compile(rf"<{_DISCORD_EMOJI}>")
+_DISCORD_EMOJI_ANYWHERE_RE = re.compile(rf"<{_DISCORD_EMOJI}>|&lt;{_DISCORD_EMOJI}&gt;")
+_CLOSING_PUNCTUATION = ",.;:!?)]}"
+
+def parse_emoji(text):
+    """The emoji somebody typed for a currency or a good, ready to store.
+
+    A custom emoji of a Discord server arrives as `<:name:id>` (`<a:name:id>`
+    when animated): up to 32 characters of name and 17 to 20 digits of id, 57
+    characters at most. It is returned whole, even when text follows it
+    without a space. Anything else that starts with `<` is not an emoji — a
+    custom emoji cut short, or markup — and gives an empty string, so no
+    fragment is ever stored. Otherwise the first word is taken, at most
+    EMOJI_MAX characters: that is long enough for the longest composed emoji
+    (flags, ZWJ sequences, skin tones), and a word that is longer is not an
+    emoji, so a joiner left dangling by the cut is dropped.
+
+    Discord's own emoji mean nothing in Telegram; strip_discord_emoji takes
+    them off what goes there."""
+    text = (text or "").strip()
+    found = _DISCORD_EMOJI_RE.match(text)
+    if found:
+        return found.group(0)
+    if not text or text.startswith("<"):
+        return ""
+    return text.split(None, 1)[0][:EMOJI_MAX].rstrip("\u200d")
+
+def strip_discord_emoji(text):
+    """`text` without the custom emoji of Discord servers, which Telegram
+    cannot show, and without the space they leave behind: '12.34 <:s:1…> STAR'
+    becomes '12.34 STAR'.
+
+    What is left of the spacing is decided by what stands on each side of the
+    gap. Two spaces become one; a space is dropped where it would end a line
+    or stand before a closing mark ('STAR <:s:1…>' → 'STAR', 'x <:s:1…>,' →
+    'x,') and where it would begin a line ('<:s:1…> STAR' → 'STAR'); a gap
+    with a space on one side only, or none, is just closed ('Bank <:s:1…>Star'
+    → 'Bank Star'), so two words are never glued together by the removal.
+
+    Finds the emoji both raw and HTML-escaped (`&lt;…&gt;`), because by the
+    time a message reaches Telegram the bot has usually escaped it — which is
+    why the one place that calls this is the Telegram client's request
+    middleware (telegram_bot/client.py) and not each line of output."""
+    if not isinstance(text, str) or ":" not in text:
+        return text
+    segments = _DISCORD_EMOJI_ANYWHERE_RE.split(text)
+    if len(segments) == 1:
+        return text
+    result = segments[0]
+    last = len(segments) - 1
+    for index, segment in enumerate(segments[1:], 1):
+        if not segment and index != last:
+            continue
+        left, right = result[-1:], segment[:1]
+        if left in (" ", "\t") and right in (" ", "\t"):
+            segment = segment[1:]
+        elif left in (" ", "\t") and (not right or right == "\n" or right in _CLOSING_PUNCTUATION):
+            result = result[:-1]
+        elif left in ("", "\n") and right in (" ", "\t"):
+            segment = segment[1:]
+        result += segment
+    return result
 
 _ROLE_REF_RE = re.compile(r"^<@&(\d+)>$|^(\d{5,25})$")
 
@@ -560,7 +701,7 @@ COMMAND_GROUPS = {
     "olympiad": ("set", "contest-add", "contest-edit", "vote"),
     "party": ("add", "info", "edit", "edit-admin", "rules", "join", "leave", "kick", "dues"),
     "quiz": ("take", "stop", "clear", "compare", "previous"),
-    "server": ("setup", "info", "edit", "lang", "lang-channel", "logs", "tasks"),
+    "server": ("setup", "info", "edit", "birthday", "lang", "lang-channel", "logs", "tasks"),
     "sponsor": ("info", "limit"),
     "union": ("add", "info", "edit", "parties"),
     "wiki": ("add", "remove", "founded"),
@@ -581,6 +722,22 @@ def set_command_platform(platform):
     (telegram_bot/client.py); asyncio copies the context into each task, so
     it stays with the update and never leaks into a Discord one."""
     _command_platform.set(platform)
+
+@contextlib.contextmanager
+def command_platform(platform):
+    """Spell the commands of every text produced inside the block for
+    `platform`, then put the previous setting back.
+
+    The spelling belongs to the reader, and the middleware only knows the
+    reader of the update being handled. Anything that writes for somebody
+    else — a service notice sent to chats on both platforms, a message
+    handed to the other messenger — decides at the point where it knows who
+    will read, with this."""
+    token = _command_platform.set(platform)
+    try:
+        yield
+    finally:
+        _command_platform.reset(token)
 
 def command_spelling(text, platform=None):
     """`text` with every command written as `platform` spells it.
@@ -689,9 +846,10 @@ def localized_help(event_key, lang, **kwargs):
         return template
 
 def localized_service_event(event_key, lang, **kwargs):
-    """The wording of one service event in the operator's language."""
+    """The wording of one service event in the operator's language, with its
+    commands spelled for the platform in force (`command_platform`)."""
     table = _LOCALE.get("service_event", {}).get(event_key, {})
-    template = table.get(lang, table.get(DEFAULT_LANG, event_key))
+    template = command_spelling(table.get(lang, table.get(DEFAULT_LANG, event_key)))
     try:
         return template.format(**kwargs)
     except Exception:
@@ -737,7 +895,8 @@ async def send_service_event(event_key, **kwargs):
             if chat_id is None:
                 continue
             lang = get_chat_lang(f"{chat_id}:{thread}")
-            text = localized_service_event(event_key, lang, **kwargs)
+            with command_platform("telegram"):
+                text = localized_service_event(event_key, lang, **kwargs)
             await tg.send_message(
                 int(chat_id),
                 text,
@@ -762,7 +921,8 @@ async def send_service_event(event_key, **kwargs):
                 effective_guild_id = ch.guild.id
             lang_key = f"{effective_guild_id}:{channel_id}" if effective_guild_id is not None else str(channel_id)
             lang = get_chat_lang(lang_key)
-            text = localized_service_event(event_key, lang, **kwargs)
+            with command_platform("discord"):
+                text = localized_service_event(event_key, lang, **kwargs)
             if ch:
                 await ch.send(text)
         except Exception as e:

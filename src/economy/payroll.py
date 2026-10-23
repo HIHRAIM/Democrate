@@ -3,8 +3,8 @@ monthly ticks, wages, party dues and enterprise salaries.
 
 The order inside the daily tick is load-bearing: consumption runs first, so
 that the money it pays the enterprises for the day's meal is already in the
-money supply that the FX recompute prices against. Then the recompute resets
-each bank's period windows, and autosend redistributes the day's stock.
+money supply that the FX recompute prices against. Then autosend
+redistributes the day's stock.
 
 The ticks are called by main.py: _run_due_economy_ticks, which decides what is
 due by comparing a UTC period marker with the last one stored in bot_settings —
@@ -30,8 +30,7 @@ from economy.production import _dedup_owners, run_autosend
 from economy.trade import recompute_value
 
 def run_daily_tick():
-    """Consumption, then the FX recompute (resetting the activity windows),
-    then autosend. Consumption runs first so the money it pays the enterprises
+    """Consumption, then the FX recompute, then autosend. Consumption runs first so the money it pays the enterprises
     is already in the supply the recompute prices against. The old value is
     kept in prev_value so the economic log channels can show the day-over-day
     change. Returns the summary plus the FX moves."""
@@ -41,7 +40,6 @@ def run_daily_tick():
         value = recompute_value(bank)
         db.set_bank_prev_value(bank["code"], bank["value"])
         db.set_bank_value(bank["code"], value)
-        db.reset_bank_periods(bank["code"])
         fx.append({"code": bank["code"], "old": bank["value"], "new": value})
     sent = run_autosend()
     return {"sent": sent, "fx": fx, "consumption": eaten}
@@ -135,10 +133,14 @@ def run_enterprise_salaries(period):
     """Pay the salaries of every enterprise on the given schedule ('weekly' or
     'monthly') out of its account. Payment stops when the account runs dry (an
     enterprise cannot go into debt for payroll); the sales period resets after
-    the payout either way."""
+    the payout either way. A frozen enterprise (economy/switches.py) pays
+    nothing and keeps its sales period until it works again."""
+    from economy.switches import enterprise_refusal
     paid = 0
     for ent in db.get_all_enterprises():
         if (ent["salary_period"] or "monthly") != period:
+            continue
+        if enterprise_refusal(ent):
             continue
         bank_code = ent["salary_bank"]
         if not bank_code or not db.get_bank(bank_code):

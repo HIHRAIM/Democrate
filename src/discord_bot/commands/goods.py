@@ -30,7 +30,7 @@ import stats
 from message_relay import clean_display_name
 from utils import (
     DEFAULT_EMBED_COLOR, category_label, get_chat_lang, good_display_name,
-    is_admin, localized,
+    is_admin, localized, parse_emoji,
 )
 
 from discord_bot.client import _chat_key, bot
@@ -104,9 +104,12 @@ async def create_good_cmd(interaction: discord.Interaction, name: str, base_valu
     if base is None or energy_cost <= 0:
         await _ereply(interaction, "create_good_bad", lang)
         return
+    found = economy.new_good_refusal(bank["code"], owner, ("discord", interaction.guild_id))
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     nm = clean_display_name(name, max_len=40)
-    parts = (emoji or "").strip().split()
-    em = parts[0][:16] if parts else ""
+    em = parse_emoji(emoji)
     gcode = db.create_good(bank["code"], nm, base, energy_cost, em, owner=owner, category=cat)
     await _ereply(interaction, "create_good_created", lang, ephemeral=False, name=nm, code=gcode,
                   value=economy.format_money(base, bank), energy=economy.format_energy(energy_cost),
@@ -154,6 +157,10 @@ async def craft_cmd(interaction: discord.Interaction, good_code: str, enterprise
         "discord", interaction.user.id, interaction.guild_id, enterprise)
     if err:
         await _ereply(interaction, err, lang)
+        return
+    found = economy.production_refusal(good, owner, server, ("discord", interaction.guild_id))
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
         return
     worker = db.canonical_user("discord", interaction.user.id)
     notify = ("discord", str(interaction.channel_id))
@@ -235,6 +242,12 @@ async def _offer_sale(interaction, lang, seller, buyer, good, qty, price, bank, 
     Nothing moves until the answer: goods and money change hands inside the
     accept callback, which is also where the sale can still fail on funds — the
     buyer's balance is only asked about when they have said yes."""
+    here = ("discord", interaction.guild_id)
+    found = economy.deal_refusal((seller, buyer), good, bank["code"] if bank else None,
+                                 price, here, here)
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     channel = interaction.channel
     emoji = f"{good['emoji']} " if good["emoji"] else ""
     name = good_display_name(good, lang)
@@ -252,6 +265,8 @@ async def _offer_sale(interaction, lang, seller, buyer, good, qty, price, bank, 
             taxes = economy.taxes_line(info.get("taxes"), bank, lang) if bank else ""
             if taxes:
                 text += "\n" + taxes
+        elif status == "off":
+            text = economy.refusal_text(info["refusal"], lang)
         else:
             text = localized(f"sell_{status}", lang, name=name)
         await channel.send(embed=_econ_embed(text))
@@ -341,6 +356,11 @@ async def autocraft_cmd(interaction: discord.Interaction, good_code: str, action
         return
     worker = db.canonical_user("discord", interaction.user.id)
     on = action.strip().lower() in ("on", "enable", "1", "true", "yes")
+    found = on and economy.production_refusal(good, owner, server,
+                                              ("discord", interaction.guild_id))
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     others, limit = economy.autocraft_slots(owner, good["code"])
     if on and others >= limit:
         await _ereply(interaction, "autocraft_too_many", lang, limit=limit)

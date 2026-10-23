@@ -27,7 +27,7 @@ import economy
 from message_relay import clean_display_name
 from utils import (
     DEFAULT_EMBED_COLOR, format_stored_user, get_chat_lang, good_display_name,
-    is_admin, localized, rate_limit_ok, send_service_event,
+    dialog_end, is_admin, localized, rate_limit_ok, send_service_event,
 )
 
 from discord_bot.client import _chat_key, bot, is_server_admin
@@ -97,6 +97,11 @@ async def add_enterprise_cmd(interaction: discord.Interaction):
     if not db.is_setup(str(interaction.guild_id)):
         await _ereply(interaction, "chat_not_setup", lang)
         return
+    here = ("discord", interaction.guild_id)
+    found = economy.econ_refusal(here, "enterprises", here)
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     if not rate_limit_ok(f"addent|discord|{interaction.user.id}", 3, 86400):
         await _ereply(interaction, "rate_limited", lang)
         return
@@ -121,7 +126,7 @@ async def add_enterprise_cmd(interaction: discord.Interaction):
     for _ in range(5):
         msg = await _wait_message(interaction.channel_id, interaction.user.id)
         if msg is None:
-            await interaction.channel.send(embed=_econ_embed(localized("dialog_timeout", lang)))
+            await interaction.channel.send(embed=_econ_embed(dialog_end(lang)))
             return
         if (msg.content or "").strip() == "-":
             break
@@ -414,6 +419,10 @@ async def ent_join_cmd(interaction: discord.Interaction, code: str):
     if db.is_enterprise_worker(ent["code"], "discord", interaction.user.id):
         await _ereply(interaction, "ent_join_already", lang)
         return
+    found = economy.enterprise_refusal(ent, ("discord", interaction.guild_id))
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     requester_id = interaction.user.id
     requester_name = str(interaction.user)
     channel = interaction.channel
@@ -642,6 +651,10 @@ async def _run_export(interaction, lang, source, target, good, qty, price, bank)
     """Offer a one-off export between two enterprises. A leader of the receiving
     enterprise must always accept — free or priced — before the shipment leaves.
     Once accepted, the cargo travels and arrives after its transit time."""
+    found = _export_refusal(interaction, source, target, good, price, bank)
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
+        return
     channel = interaction.channel
     emoji = f"{good['emoji']} " if good["emoji"] else ""
     name = good_display_name(good, lang)
@@ -659,6 +672,8 @@ async def _run_export(interaction, lang, source, target, good, qty, price, bank)
                              source=_ent_line(source), target=_ent_line(target),
                              eta=_fmt_eta(info["duration"]),
                              distance=_distance_label(info["distance"], lang))
+        elif status == "off":
+            text = economy.refusal_text(info["refusal"], lang)
         else:
             text = localized(f"export_{status}", lang)
         await channel.send(embed=_econ_embed(text))
@@ -671,6 +686,13 @@ async def _run_export(interaction, lang, source, target, good, qty, price, bank)
         localized("export_offer", lang, source=_ent_line(source), target=_ent_line(target),
                   qty=qty, emoji=emoji, name=name, price=price_disp)),
         view=_EntConsentView(lang, target["code"], on_accept, on_decline))
+
+def _export_refusal(interaction, source, target, good, price, bank):
+    """Why an export between two enterprises may not be offered — a part of
+    the economy switched off (economy/switches.py) — or None."""
+    return economy.deal_refusal(
+        (db.enterprise_owner(source["code"]), db.enterprise_owner(target["code"])),
+        good, bank["code"] if bank else None, price, None, ("discord", interaction.guild_id))
 
 def _resolve_export_args(lang, target_query, price_s, currency, source):
     """(target, price, bank, error_key_or_None) shared by /enterprise export and /enterprise autoexport."""
@@ -758,6 +780,10 @@ async def auto_export_cmd(interaction: discord.Interaction, good_code: str, qty:
     tgt, price_minor, bank, err = _resolve_export_args(lang, target, price, currency, source)
     if err:
         await _ereply(interaction, err, lang)
+        return
+    found = _export_refusal(interaction, source, tgt, good, price_minor, bank)
+    if found:
+        await _ereply(interaction, found[0], lang, **found[1])
         return
     channel = interaction.channel
     emoji = f"{good['emoji']} " if good["emoji"] else ""

@@ -32,10 +32,19 @@ phrases only, `{key: text}`, read once at import through this file's own
 directory — so this module must stay directly in `src/` — and editable in the
 control panel as a raw file. Such a language is not one the bot answers in.
 
+**A community's birthday is shown only once its administrators add it**
+(/server birthday — that is their consent). It joins the wiki birthday post
+of every Discord community of its union, a line in the union's language
+with the community's invitation under it when one was given, and it joins
+the calendar. A community in its first year is skipped, as a wiki is.
+
 **The calendar** (`calendar_events`, `calendar_lines`) lists what comes
 round in the coming month, a page at a time: the founding days of
-unions (✨) and of wikis (📚), each with the flag of its language, and the
-birthdays of people (👤) by the name they go by. Its controls — which scope, which kinds, which page —
+unions (✨), of the communities that added theirs (the logo of their
+platform, `server_mark`) and of wikis (📚), each with the flag of its
+language, and the birthdays of people (👤) by the name they go by. A kind's
+place in CALENDAR_KINDS is its bit in a Telegram button's state, so new
+kinds are appended there; CALENDAR_ORDER is the order readers see. Its controls — which scope, which kinds, which page —
 travel in the button itself on Telegram (`calendar_state`), so a calendar
 there keeps working across a restart; Discord keeps them in an ordinary
 view that lasts as long as a dialog.
@@ -53,7 +62,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import db
 from utils import (
-    LANG_ORDER, format_date, language_flag, language_name, localized,
+    LANG_ORDER, format_date, get_chat_lang, language_flag, language_name, localized,
     plural_category, utc_from_epoch,
 )
 
@@ -237,6 +246,19 @@ def wiki_summary(row, lang):
                      language=language_name(code) if code else "?",
                      staff=len(db.get_wiki_staff(row["id"])))
 
+def _anniversary(ts, local_date, now):
+    """(years, past) when something founded at `ts` has its anniversary on
+    `local_date` — `past` once the founding moment has come round — or None,
+    also in its first year."""
+    founded = utc_from_epoch(ts)
+    d = occurrence(founded.day, founded.month, local_date.year)
+    years = local_date.year - founded.year
+    if d != local_date or years <= 0:
+        return None
+    moment = datetime(d.year, d.month, d.day, founded.hour, founded.minute,
+                      founded.second, tzinfo=timezone.utc)
+    return years, moment <= now
+
 def wiki_anniversaries(wiki_rows, local_date, now=None):
     """The wikis among `wiki_rows` whose anniversary is `local_date`, as
     dicts with row, years and past. A wiki in its first year is skipped."""
@@ -244,19 +266,62 @@ def wiki_anniversaries(wiki_rows, local_date, now=None):
     out = []
     for row in wiki_rows:
         ts = db.wiki_founded(row)
-        if ts is None:
-            continue
-        founded = utc_from_epoch(ts)
-        if occurrence(founded.day, founded.month, local_date.year) != local_date:
-            continue
-        years = local_date.year - founded.year
-        if years <= 0:
-            continue
-        d = occurrence(founded.day, founded.month, local_date.year)
-        moment = datetime(d.year, d.month, d.day, founded.hour, founded.minute,
-                          founded.second, tzinfo=timezone.utc)
-        out.append({"row": row, "years": years, "past": moment <= now})
+        found = _anniversary(ts, local_date, now) if ts is not None else None
+        if found:
+            out.append({"row": row, "years": found[0], "past": found[1]})
     return out
+
+def community_name(row):
+    """A community's stored name, or its id when none is stored."""
+    return row["title"] or str(row["server_id"])
+
+def server_anniversaries(rows, local_date, now=None):
+    """The communities among `rows` (db.community_birthdays) whose founding
+    day is `local_date`, as dicts with row, years and past."""
+    now = now or datetime.now(timezone.utc)
+    out = []
+    for row in rows:
+        found = _anniversary(row["founded_at"], local_date, now)
+        if found:
+            out.append({"row": row, "years": found[0], "past": found[1]})
+    return out
+
+def server_greeting(entries, lang):
+    """The lines a wiki birthday post gives the communities whose founding
+    day it is: a sentence each in `lang`, with the invitation their
+    administrators gave on a line of its own under it."""
+    lines = []
+    for entry in sorted(entries, key=lambda e: (not e["past"], community_name(e["row"]).lower())):
+        row, years = entry["row"], entry["years"]
+        what = localized(f"server_bday_what_{row['platform']}", lang, name=community_name(row))
+        tense = "past" if entry["past"] else "future"
+        lines.append(localized(f"server_bday_{tense}_{plural_category(lang, years)}", lang,
+                               what=what, n=years))
+        if row["invite_url"]:
+            lines.append(row["invite_url"])
+    return "\n".join(lines)
+
+_INVITE_RE = re.compile(
+    r"^(?:https?://)?(?:www\.)?("
+    r"discord\.gg/[A-Za-z0-9-]+"
+    r"|discord(?:app)?\.com/invite/[A-Za-z0-9-]+"
+    r"|t(?:elegram)?\.me/(?:\+|joinchat/)?[A-Za-z0-9_-]+"
+    r")/?$")
+
+def parse_invite(text):
+    """An invitation link to a Discord server or a Telegram group, as an
+    https URL, or None for anything else — the birthday post is not a place
+    for links to other sites."""
+    m = _INVITE_RE.match((text or "").strip())
+    return f"https://{m.group(1)}" if m else None
+
+def community_birthday_text(key, founded_at, invite_url, lang):
+    """`key` with a community's founding date, and its invitation on a line
+    of its own when there is one."""
+    text = localized(key, lang, date=format_date(founded_at, lang))
+    if invite_url:
+        text += "\n" + localized("server_birthday_invite", lang, url=invite_url)
+    return text
 
 def _join(items, lang):
     """'a', 'a and b', 'a, b and c' in a language."""
@@ -296,8 +361,24 @@ def wiki_greeting(entries, union_language):
     lines.extend(e["row"]["main_url"] for e in entries if e["row"]["main_url"])
     return "\n".join(lines)
 
-CALENDAR_KINDS = ("union", "wiki", "person")
-CALENDAR_EMOJI = {"union": "✨", "wiki": "📚", "person": "👤"}
+CALENDAR_KINDS = ("union", "wiki", "person", "server")
+CALENDAR_ORDER = ("union", "server", "wiki", "person")
+CALENDAR_EMOJI = {"union": "✨", "wiki": "📚", "person": "👤", "server": ""}
+SERVER_MARK = "💬"
+
+def server_mark(server_platform, reader_platform):
+    """What marks a community in the calendar: its platform's logo
+    (config.DISCORD_EMOJI / TELEGRAM_EMOJI) for a reader on Discord, the one
+    place that can draw it, and SERVER_MARK elsewhere or when the logo is
+    not configured. It is part of the event's label, which is why the kind
+    has no emoji of its own."""
+    import config
+    if reader_platform == "discord":
+        logo = getattr(config, "DISCORD_EMOJI" if server_platform == "discord"
+                       else "TELEGRAM_EMOJI", None)
+        if logo:
+            return logo
+    return SERVER_MARK
 CALENDAR_CHARS = 3800
 
 def add_months(day, months):
@@ -331,12 +412,13 @@ def _flag(code):
     """The flag a language is marked with (utils.language_flag)."""
     return language_flag(code)
 
-def calendar_events(union_code, kinds, people):
+def calendar_events(union_code, kinds, people, platform=None):
     """What a calendar can show, as (month, day, kind, label) tuples: the
     founding days of the unions — the one named, or every union when
-    `union_code` is None — and of their wikis, plus `people`, given by the
-    caller as (day, month, name) because who is a member is a platform's
-    question."""
+    `union_code` is None — of the communities that added theirs and of the
+    wikis, plus `people`, given by the caller as (day, month, name) because
+    who is a member is a platform's question. `platform` is where the
+    calendar is read, which decides how a community is marked."""
     events = []
     if "union" in kinds:
         codes = [union_code] if union_code else db.get_union_codes()
@@ -353,6 +435,12 @@ def calendar_events(union_code, kinds, people):
             if ts is not None:
                 d = utc_from_epoch(ts)
                 events.append((d.month, d.day, "wiki", f"{_flag(wiki_base_lang(row))} {row['name']}"))
+    if "server" in kinds:
+        for row in db.community_birthdays(union_code):
+            d = utc_from_epoch(row["founded_at"])
+            mark = server_mark(row["platform"], platform)
+            flag = _flag(get_chat_lang(str(row["server_id"])))
+            events.append((d.month, d.day, "server", f"{mark}{flag} {community_name(row)}"))
     if "person" in kinds:
         events.extend((month, day, "person", name) for day, month, name in people)
     return events
@@ -368,7 +456,7 @@ def calendar_lines(events, page, lang, today=None):
             when = occurrence(day, month, year)
             if start <= when < end:
                 dated.append((when, kind, label))
-    dated.sort(key=lambda item: (item[0], CALENDAR_KINDS.index(item[1]), item[2].lower()))
+    dated.sort(key=lambda item: (item[0], CALENDAR_ORDER.index(item[1]), item[2].lower()))
     lines, size = [], 0
     for when, kind, label in dated:
         gap = " " if kind == "person" else ""
@@ -386,10 +474,10 @@ def calendar_lines(events, page, lang, today=None):
 def calendar_state(text):
     """A calendar's controls packed into a short string for a button:
     'l' or 'g' (this community or everything), the shown kinds as a bit
-    mask, and the page — 'l7:0'. Returns (scope, kinds, page)."""
+    mask, and the page — 'l15:0'. Returns (scope, kinds, page)."""
     try:
-        head, page = (text or "l7:0").split(":")
-        mask = int(head[1:] or 7)
+        head, page = (text or "l15:0").split(":")
+        mask = int(head[1:] or 15)
         scope = "g" if head[:1] == "g" else "l"
         return scope, {k for i, k in enumerate(CALENDAR_KINDS) if mask & (1 << i)}, int(page)
     except ValueError:

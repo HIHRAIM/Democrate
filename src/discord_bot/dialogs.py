@@ -32,7 +32,7 @@ import discord
 from discord import ui, ButtonStyle
 
 import db
-from utils import DEFAULT_EMBED_COLOR, is_admin, localized
+from utils import DIALOGS, DEFAULT_EMBED_COLOR, dialog_end, is_admin, localized
 
 from discord_bot.client import bot
 
@@ -41,14 +41,35 @@ USER_REF_RE = re.compile(r"^<@!?(\d+)>$|^(\d{5,25})$")
 DIALOG_TIMEOUT = 30 * 60
 
 async def _wait_message(channel_id, user_id, timeout=DIALOG_TIMEOUT):
-    """Wait up to 30 minutes for the next message of `user_id` in `channel_id`."""
+    """Wait up to 30 minutes for the next message of `user_id` in `channel_id`.
+
+    Returns None on timeout, and at once when a newer dialog of the same
+    person in the same channel has replaced this one (utils.DIALOGS) —
+    `wait_for` hands a message to every waiter, so without the claim one reply
+    answered every open dialog."""
+    key = ("discord", channel_id, user_id)
+    if not DIALOGS.claim(key):
+        return None
+    me = asyncio.current_task()
+
     def check(m):
-        """Accept only the awaited person's next message in this very channel."""
-        return m.author.id == user_id and m.channel.id == channel_id
+        """Accept only the awaited person's next message in this very
+        channel, and only while this dialog is still theirs there."""
+        return (m.author.id == user_id and m.channel.id == channel_id
+                and DIALOGS.owns(key, me))
+    wait = asyncio.ensure_future(bot.wait_for("message", check=check, timeout=timeout))
+    DIALOGS.watch(key, wait)
     try:
-        return await bot.wait_for("message", check=check, timeout=timeout)
+        await asyncio.sleep(0)
+        return await wait
     except asyncio.TimeoutError:
         return None
+    except asyncio.CancelledError:
+        if asyncio.current_task().cancelling():
+            raise
+        return None
+    finally:
+        DIALOGS.release(key, wait)
 
 async def _say(interaction: discord.Interaction, content=None, **kwargs):
     """First reply goes through the interaction, later ones to the channel.
@@ -100,7 +121,7 @@ async def _dialog_text(interaction, lang, prompt, *, validator=None, error_key=N
     for _ in range(attempts):
         msg = await _wait_message(interaction.channel_id, interaction.user.id)
         if msg is None:
-            await interaction.channel.send(**_wrap(localized("dialog_timeout", lang)))
+            await interaction.channel.send(**_wrap(dialog_end(lang)))
             return None
         value = (msg.content or "").strip()
         if validator is None:
@@ -136,7 +157,7 @@ async def _dialog_logo(interaction, lang, prompt, attempts=5):
     for _ in range(attempts):
         msg = await _wait_message(interaction.channel_id, interaction.user.id)
         if msg is None:
-            await interaction.channel.send(localized("dialog_timeout", lang))
+            await interaction.channel.send(dialog_end(lang))
             return None
         logo = await _extract_logo(msg)
         if logo:
@@ -239,15 +260,23 @@ class _ChoiceSelect(ui.View):
 async def _wait_message_or_view(channel_id, user_id, view, stop_event=None,
                                 timeout=DIALOG_TIMEOUT):
     """Race a typed answer against a component answer, and optionally against a
-    stop signal. Returns ('message', msg), ('choice', value), ('stop', None) or
-    ('timeout', None).
+    stop signal. Returns ('message', msg), ('choice', value), ('stop', None),
+    ('timeout', None) or ('replaced', None) — a newer dialog of the same person
+    in the same channel took over (utils.DIALOGS).
 
     The shape every dialog that can be answered two ways needs: the component is
     what works where the bot cannot read messages, the typed reply is what
     people are used to, and whichever arrives first wins."""
+    key = ("discord", channel_id, user_id)
+    if not DIALOGS.claim(key):
+        return "replaced", None
+    me = asyncio.current_task()
+
     def check(m):
-        """Accept only the awaited person's next message in this very channel."""
-        return m.author.id == user_id and m.channel.id == channel_id
+        """Accept only the awaited person's next message in this very
+        channel, and only while this dialog is still theirs there."""
+        return (m.author.id == user_id and m.channel.id == channel_id
+                and DIALOGS.owns(key, me))
 
     tasks = {
         "message": asyncio.ensure_future(bot.wait_for("message", check=check)),
@@ -255,10 +284,17 @@ async def _wait_message_or_view(channel_id, user_id, view, stop_event=None,
     }
     if stop_event is not None:
         tasks["stop"] = asyncio.ensure_future(stop_event.wait())
-    done, pending = await asyncio.wait(set(tasks.values()), timeout=timeout,
-                                       return_when=asyncio.FIRST_COMPLETED)
+    DIALOGS.watch(key, tasks["message"])
+    try:
+        await asyncio.sleep(0)
+        done, pending = await asyncio.wait(set(tasks.values()), timeout=timeout,
+                                           return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        DIALOGS.release(key, tasks["message"])
     for task in pending:
         task.cancel()
+    if tasks["message"] in done and tasks["message"].cancelled():
+        return "replaced", None
     for kind in ("stop", "choice", "message"):
         task = tasks.get(kind)
         if task is None or task not in done:

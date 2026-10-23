@@ -4,13 +4,16 @@ A bank's leaders may choose one channel (Discord) or group/topic (Telegram)
 in /bank edit; this module decides what goes there. Only administrative
 operations do: fines (`fine`), emissions (`emit`), the monthly wages and
 party dues paid in the currency (`wages`, `dues`), changes of the
-conversion fee and the bank tax (`fee`, `tax`), and changes of leadership
+conversion fee and the bank tax (`fee`, `tax`), the parts of the economy
+switched off or on for the currency (`econ_off`, `econ_on`), and changes of leadership
 (`leader_added`, `leader_transfer`). Ordinary payments, sales and earnings
 never do — they are the members' own business, and PRIVACY.md promises
 that balances are not published.
 
 `record` only queues the event (db/audit.py), with its values already
-formatted, and only when the bank has a channel; main.py: audit_loop posts
+formatted — except `part`, a part's code (economy/switches.py), which is
+named in the channel's language when posted — and only when the bank has a
+channel; main.py: audit_loop posts
 it in the channel's language as `audit_<event>`. The channel is stored as
 'guild:channel' on Discord — the guild is what the channel's language is
 resolved through — and as 'chat:topic' on Telegram.
@@ -20,7 +23,8 @@ platform (stats.py: post_to_channel).
 """
 import db
 
-EVENTS = ("fine", "emit", "wages", "dues", "fee", "tax", "leader_added", "leader_transfer")
+EVENTS = ("fine", "emit", "wages", "dues", "fee", "tax", "econ_off", "econ_on",
+          "leader_added", "leader_transfer")
 
 def record(bank_code, event, **fields):
     """Queue an administrative event of a bank for its audit channel. Does
@@ -53,8 +57,12 @@ async def flush():
             row = {"platform": platform, "server_id": server, "channel_key": key}
             target = key
         lang = stats.channel_lang(row)
+        fields = dict(item["fields"])
+        if "part" in fields:
+            from economy.switches import Part
+            fields["part"] = Part(fields["part"])
         text = localized(f"audit_{item['event']}", lang,
-                         bank=f"{bank['currency_name']} [{bank['code']}]", **item["fields"])
+                         bank=f"{bank['currency_name']} [{bank['code']}]", **fields)
         try:
             await stats.post_to_channel(platform, target, localized("audit_title", lang), [text])
             db.delete_audit(item["id"])

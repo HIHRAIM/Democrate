@@ -101,11 +101,12 @@ def leaderboard(kind, viewer_platform, platform, server_id, lang, code=None):
 
     return None, None
 
-def fx_lines(union_code, lang):
-    """One line per bank of the union: the published value and its change since
-    yesterday's recompute."""
+def fx_lines(banks, lang):
+    """One line per bank given: the published value, its change since
+    yesterday's recompute, and how many people earned it and with how many
+    messages on the day that just ended — what moved it."""
     lines = []
-    for bank in db.get_banks_in_union(union_code):
+    for bank in banks:
         old, new = bank["prev_value"], bank["value"]
         if old:
             pct = (new - old) / old * 100.0
@@ -114,9 +115,12 @@ def fx_lines(union_code, lang):
         else:
             change = "➡️"
         emoji = f"{bank['emoji']} " if bank["emoji"] else ""
+        people, messages = economy.yesterday_activity(bank["code"])
         lines.append(localized("fx_log_line", lang, emoji=emoji,
                                name=bank["currency_name"], code=bank["code"],
-                               value=f"{new:.4f}", change=change))
+                               value=f"{new:.4f}", change=change)
+                     + " · " + localized("fx_log_activity", lang, people=people,
+                                         messages=messages))
     return lines
 
 def _percent(x):
@@ -543,18 +547,30 @@ def union_economy_lines(code, lang):
         lines.append("")
     return lines[:-1] if lines else lines
 
-def community_profile(platform, server_id, lang, earn_keys=None):
-    """The public profile of one server or group, as data both halves
-    render: a dict with title and sections — the community itself, its
-    economy, its taxes. `earn_keys` are the channel keys of this community's
-    earning bindings on Discord, where a key is a bare channel id the half
-    has to recognise; on Telegram a key carries the group id and is found
-    here."""
-    from utils import format_tz_offset, language_name, get_chat_lang
-    chat = db.get_chat(server_id)
-    union = chat["union_code"] if chat else None
-    central = [b for b in db.get_all_banks()
-               if (b["central_chat"] or "").split(":", 1)[0] == str(server_id)]
+def _birthday_row(platform, server_id, lang):
+    """The profile's birthday row — the founding date, and the invitation
+    beside it — when the community's administrators added one."""
+    from utils import format_date
+    row = db.get_community(platform, server_id)
+    if not row or row["founded_at"] is None:
+        return []
+    value = format_date(row["founded_at"], lang)
+    if row["invite_url"]:
+        value += f" · {row['invite_url']}"
+    return [(localized("server_profile_birthday", lang), value)]
+
+def _central_banks(server_id):
+    """The banks whose central server is this server or group."""
+    return [b for b in db.get_all_banks()
+            if (b["central_chat"] or "").split(":", 1)[0] == str(server_id)]
+
+def community_currencies(platform, server_id, earn_keys=None):
+    """The codes of the currencies used in one server or group: the banks
+    centred on it and the currencies its channels earn — what /server info
+    calls the currencies in use and what its daily currency post shows.
+    `earn_keys` are the community's channel keys on Discord, where an
+    earning binding is keyed by a bare channel id the half has to
+    recognise; on Telegram a key carries the group id and is found here."""
     if platform == "telegram":
         keys = [r["chan_key"] for r in db.cur.execute(
             "SELECT chan_key FROM earn_channels WHERE platform='telegram' AND chan_key LIKE ?",
@@ -564,7 +580,18 @@ def community_profile(platform, server_id, lang, earn_keys=None):
     earning = {r["bank_code"] for r in db.cur.execute(
         f"SELECT bank_code FROM earn_channels WHERE platform=? AND chan_key IN"
         f" ({','.join('?' for _ in keys) or 'NULL'})", (platform, *keys)).fetchall()}
-    currencies = sorted({b["code"] for b in central} | earning)
+    return sorted({b["code"] for b in _central_banks(server_id)} | earning)
+
+def community_profile(platform, server_id, lang, earn_keys=None):
+    """The public profile of one server or group, as data both halves
+    render: a dict with title and sections — the community itself, its
+    economy (with the parts of it switched off here), its taxes.
+    `earn_keys` are as in `community_currencies`."""
+    from utils import format_tz_offset, language_name, get_chat_lang
+    chat = db.get_chat(server_id)
+    union = chat["union_code"] if chat else None
+    central = _central_banks(server_id)
+    currencies = community_currencies(platform, server_id, earn_keys)
     label = lambda key: localized(f"server_profile_{key}", lang)
     code = get_chat_lang(str(server_id))
     sections = [
@@ -572,13 +599,14 @@ def community_profile(platform, server_id, lang, earn_keys=None):
             (label("union"), f"{db.get_union_name(union, lang)} [{union}]" if union else "—"),
             (label("lang"), f"{localized('lang_flag', code)} {language_name(code)}"),
             (label("tz"), format_tz_offset(db.community_tz(platform, server_id))),
-        ]),
+        ] + _birthday_row(platform, server_id, lang)),
         (label("section_economy"), [
             (label("banks"), str(len(central))),
             (label("currencies"), ", ".join(currencies) or "—"),
             (label("accounts"), str(sum(db.bank_account_count(b["code"]) for b in central))),
             (label("enterprises"), str(len(db.get_server_enterprises(platform, str(server_id))))),
-        ]),
+        ] + [(label("econ_off"), off) for off in
+             [economy.parts_text(economy.community_off(platform, server_id), lang)] if off]),
         (label("section_taxes"), [
             (label("tax"), economy.format_percent(db.community_tax(platform, server_id))),
         ] + [(localized("server_profile_bank_tax", lang, code=c),

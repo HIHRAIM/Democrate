@@ -137,7 +137,7 @@ async def _run_quiz_tg(message: Message, quiz_id):
             await _edit_quiz_msg(chat_id, msg_id,
                                  _quiz_question_text_tg(quiz_id, lang, qindex, orders[qindex], allow_prev, n))
             outcome, reply = await _wait_user_message_or_stop(chat_id, user_id, session["stop"])
-            if outcome == "stop":
+            if outcome in ("stop", "replaced"):
                 db.save_quiz_progress("telegram", user_id, quiz_id, lang, qindex,
                                       json.dumps(orders),
                                       json.dumps(answers, ensure_ascii=False))

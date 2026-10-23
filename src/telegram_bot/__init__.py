@@ -214,7 +214,7 @@ from telegram_bot.commands.enterprises import (
 )
 from telegram_bot.commands.wikis import add_wiki_tg, remove_wiki_tg, wiki_founded_tg
 from telegram_bot.commands.birthdays import birthday_channel_tg, birthday_tg, calendar_tg
-from telegram_bot.commands.servers import edit_server_tg, server_tg
+from telegram_bot.commands.servers import edit_server_tg, server_birthday_tg, server_tg
 from telegram_bot.olympiad import (
     editcontest_tg,
     olympiad_tg,

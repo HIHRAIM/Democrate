@@ -296,6 +296,8 @@ async def handle_econ_consent(query: CallbackQuery):
                         target=f"{tgt['name']} [{tgt['code']}]" if tgt else pend["ent"],
                         eta=_fmt_eta(info["duration"]),
                         distance=localized(f"transport_{info['distance']}", lang))
+                elif status == "off":
+                    text = economy.refusal_text(info["refusal"], lang)
                 else:
                     text = localized(f"export_{status}", lang)
         else:
@@ -322,6 +324,8 @@ async def handle_econ_consent(query: CallbackQuery):
                     taxes = economy.taxes_line(info.get("taxes"), bank, lang) if bank else ""
                     if taxes:
                         text += "\n" + taxes
+                elif status == "off":
+                    text = economy.refusal_text(info["refusal"], lang)
                 else:
                     text = localized(f"sell_{status}", lang,
                                      name=good_display_name(good, lang))

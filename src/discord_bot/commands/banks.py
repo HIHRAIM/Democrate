@@ -23,7 +23,7 @@ import stats
 from message_relay import clean_display_name
 from utils import (
     DEFAULT_EMBED_COLOR, LANG_ORDER, format_stored_user, get_chat_lang, is_admin,
-    language_name, localized, send_service_event,
+    language_name, localized, parse_emoji, send_service_event,
 )
 
 from discord_bot.client import (
@@ -103,8 +103,7 @@ async def create_bank_cmd(interaction: discord.Interaction):
                                    as_embed=True)
     if emoji_msg is None:
         return
-    parts = (emoji_msg.content or "").strip().split()
-    emoji = parts[0][:16] if parts else ""
+    emoji = parse_emoji(emoji_msg.content)
 
     db.create_bank(code, union, chat["chat_id"], currency_name, emoji,
                    "discord", interaction.user.id, str(interaction.user))
@@ -116,7 +115,8 @@ async def create_bank_cmd(interaction: discord.Interaction):
 
 def _build_bank_embed(bank, lang):
     """The bank card: currency, central server, leaders, published value and
-    its day-over-day change, money supply, outstanding debt and account count.
+    its day-over-day change, money supply, outstanding debt, account count
+    and the parts of the economy switched off for the currency.
 
     The central server is named, not numbered: `chat_display_name` asks Discord
     for the server's own name and falls back on what `/server setup` remembered, so a
@@ -148,6 +148,9 @@ def _build_bank_embed(bank, lang):
     if bank["tax_percent"]:
         embed.add_field(name=localized("bank_field_tax", lang),
                         value=economy.format_percent(bank["tax_percent"]), inline=True)
+    off = economy.parts_text(economy.bank_off(bank["code"]), lang)
+    if off:
+        embed.add_field(name=localized("bank_field_econ_off", lang), value=off, inline=False)
     return embed
 
 @bank_group.command(name="info", description="information about a bank and its currency")
@@ -244,7 +247,7 @@ async def bank_transfer_cmd(interaction: discord.Interaction, code: str, user: s
     await _bank_leadership_cmd(interaction, code, user, transfer=True)
 
 _EDIT_BANK_OPTIONS = ("name", "emoji", "code", "central", "fee", "add_leader",
-                      "transfer", "delete", "tax", "audit", "forms")
+                      "transfer", "delete", "tax", "audit", "forms", "econ")
 
 def _forms_lang(value):
     """One of the six language codes, or None so the dialog asks again."""
@@ -284,8 +287,10 @@ async def edit_bank_cmd(interaction: discord.Interaction, option: int = None,
                         code: str = None):
     """Manage a bank through a numbered menu: currency name, emoji, code,
     central server, conversion fees, leaders, deletion, bank tax, audit
-    channel, and the forms of the currency's name in each language
-    (economy/names.py), asked as one comma-separated answer per language.
+    channel, the forms of the currency's name in each language
+    (economy/names.py), asked as one comma-separated answer per language,
+    and the parts of the economy switched off for the currency everywhere
+    (economy/switches.py), toggled one at a time by number.
 
     Renaming the code rewrites every reference in one transaction — it is a
     primary key, not a label. Without an option number the menu is shown
@@ -321,8 +326,7 @@ async def edit_bank_cmd(interaction: discord.Interaction, option: int = None,
                                  as_embed=True)
         if msg is None:
             return
-        parts = (msg.content or "").strip().split()
-        db.update_bank_field(bank["code"], "emoji", parts[0][:16] if parts else "")
+        db.update_bank_field(bank["code"], "emoji", parse_emoji(msg.content))
         await channel.send(embed=_econ_embed(localized("edit_bank_done", lang)))
     elif action == "code":
         new_code = await _dialog_text(interaction, lang, localized("edit_bank_ask_code", lang),
@@ -379,6 +383,19 @@ async def edit_bank_cmd(interaction: discord.Interaction, option: int = None,
             "edit_bank_tax_set", lang, percent=economy.format_percent(rate))))
         economy.record_audit(bank["code"], "tax", percent=economy.format_percent(rate),
                              by=str(interaction.user))
+    elif action == "econ":
+        off = economy.bank_off(bank["code"])
+        label = f"{bank['currency_name']} [{bank['code']}]"
+        part = await _numbered_choice(
+            interaction, lang, localized("econ_menu_bank", lang, bank=label),
+            list(economy.ECON_BANK_PARTS), lambda p: economy.part_line(p, off, lang))
+        if part is None:
+            return
+        economy.set_bank_part(bank["code"], part, part not in off)
+        await channel.send(embed=_econ_embed(
+            economy.switched_text(part, part not in off, lang, bank=label)))
+        economy.record_audit(bank["code"], "econ_on" if part in off else "econ_off",
+                             part=part, by=str(interaction.user))
     elif action == "forms":
         filled = ", ".join(f"{localized('lang_flag', l)} {l}"
                            for l in db.currency_form_langs(bank["code"])) or "—"

@@ -127,7 +127,7 @@ async def _calendar_people(chat_id, scope, start, end):
 
 async def calendar_message(chat, lang, state):
     """One page of the calendar as (HTML text, keyboard) for `chat`, from a
-    packed state ('l7:0' — see celebrations.calendar_state). Outside a group
+    packed state ('l15:0' — see celebrations.calendar_state). Outside a group
     bound to a union the scope is the whole bot. The buttons carry the next
     state, so telegram_bot/callbacks.py: handle_calendar needs nothing
     else."""
@@ -138,7 +138,7 @@ async def calendar_message(chat, lang, state):
     start, end = celebrations.calendar_window(page)
     people = await _calendar_people(chat.id, scope, start, end) if "person" in kinds else []
     events = celebrations.calendar_events(bound["union_code"] if scope == "l" else None,
-                                          kinds, people)
+                                          kinds, people, "telegram")
     title, lines = celebrations.calendar_lines(events, page, lang)
     text = f"<b>{escape_html(title)}</b>\n\n" + "\n".join(escape_html(l) for l in lines)
     if scope == "g":
@@ -150,7 +150,7 @@ async def calendar_message(chat, lang, state):
         return InlineKeyboardButton(text=label, callback_data="cal:" + state)
 
     toggles = [button(("✅ " if k in kinds else "▫️ ") + localized(f"calendar_btn_{k}", lang),
-                      scope, kinds ^ {k}, page) for k in celebrations.CALENDAR_KINDS]
+                      scope, kinds ^ {k}, page) for k in celebrations.CALENDAR_ORDER]
     other = "g" if scope == "l" else "l"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [button("◀", scope, kinds, page - 1), button("▶", scope, kinds, page + 1)],
@@ -166,5 +166,6 @@ async def calendar_tg(message: Message):
     birthdays, with buttons to turn the page, hide a kind of event, or see
     the whole bot (everyone)."""
     lang = get_chat_lang(_chat_key(message))
-    text, keyboard = await calendar_message(message.chat, lang, "l7:0")
+    text, keyboard = await calendar_message(
+        message.chat, lang, celebrations.pack_calendar_state("l", celebrations.CALENDAR_KINDS, 0))
     await message.reply(text, parse_mode="HTML", reply_markup=keyboard)

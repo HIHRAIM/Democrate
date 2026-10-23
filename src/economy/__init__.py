@@ -19,7 +19,7 @@ submodule's docstring — with the interface unchanged: everything is re-importe
 here, so call sites keep saying ``economy.craft_cost(...)``.
 
 The import order at the bottom is the dependency order, from the arithmetic
-outwards: money → names → activity → production → trade → logistics → tasks →
+outwards: money → names → switches → activity → production → trade → logistics → tasks →
 consumption → taxes → audit → emission → payroll. `taxes` and `audit` import only `db`
 at module level (activity, trade and logistics reach for them at the call
 site), and payroll records its runs for the audit channels. `payroll` comes
@@ -65,6 +65,26 @@ from economy.names import (
     forms_sample,
     parse_currency_forms,
 )
+from economy.switches import (
+    BANK_PARTS as ECON_BANK_PARTS,
+    PARTS as ECON_PARTS,
+    bank_off,
+    community_off,
+    convert_refusal,
+    deal_refusal,
+    enterprise_refusal,
+    good_refusal,
+    goods_refusal,
+    new_good_refusal,
+    part_line,
+    parts_text,
+    production_refusal,
+    refusal as econ_refusal,
+    refusal_text,
+    set_bank_part,
+    set_community_part,
+    switched_text,
+)
 from economy.activity import (
     earn_from_message,
     message_activity,
@@ -87,6 +107,7 @@ from economy.production import (
     start_production,
 )
 from economy.trade import (
+    activity_by_day,
     asking_price,
     can_manual_peg,
     convert,
@@ -96,7 +117,9 @@ from economy.trade import (
     parse_convert_fee_input,
     rate,
     recompute_value,
+    reprice_all,
     sell,
+    yesterday_activity,
 )
 from economy.logistics import (
     arrive_shipment,

@@ -115,9 +115,13 @@ async def convert_tg(message: Message):
         await message.reply(localized("bank_not_found", lang))
         return
     owner = db.canonical_user("telegram", message.from_user.id)
-    status, info = economy.convert(owner, fb["code"], tb["code"], minor)
+    status, info = economy.convert(owner, fb["code"], tb["code"], minor,
+                                   place=("telegram", message.chat.id))
     keymap = {"same": "convert_same", "not_convertible": "convert_not_convertible",
               "too_small": "convert_too_small", "no_funds": "convert_no_funds"}
+    if status == "off":
+        await message.reply(economy.refusal_text(info["refusal"], lang))
+        return
     if status != "ok":
         await message.reply(localized(keymap.get(status, "convert_not_convertible"), lang))
         return

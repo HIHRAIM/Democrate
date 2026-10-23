@@ -421,13 +421,19 @@ def _migrate_core():
     the bare id at somebody. `unions` learns its own language (NULL reads as
     English), logo and logo type, all set from /union edit. A community's
     settings learn the tax it charges on payments, sales and message
-    earnings (/server edit). A birthday learns the name its owner had when
+    earnings and the parts of the economy it switched off, as comma-separated
+    codes (/server edit, economy/switches.py), and its founding day (a UTC
+    timestamp) and invitation link once its administrators add them
+    (/server birthday). A birthday learns the name its owner had when
     they set it, which is what /calendar shows outside their community."""
     with _db_lock:
         _ensure_column("unions", "lang", "TEXT")
         _ensure_column("unions", "logo", "BLOB")
         _ensure_column("unions", "logo_mime", "TEXT")
         _ensure_column("community_settings", "tax_percent", "REAL NOT NULL DEFAULT 0")
+        _ensure_column("community_settings", "econ_off", "TEXT")
+        _ensure_column("community_settings", "founded_at", "INTEGER")
+        _ensure_column("community_settings", "invite_url", "TEXT")
         _ensure_column("birthdays", "display_name", "TEXT")
         _ensure_column("chat_settings", "updated_at", "INTEGER")
         _ensure_column("chat_settings", "is_dm", "INTEGER DEFAULT 0")

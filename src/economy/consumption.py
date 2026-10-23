@@ -36,6 +36,7 @@ from datetime import date, timedelta
 
 import db
 from economy.money import _cat_cfg, _cfg, _minor, mastery_level, unit_value
+from economy.switches import enterprise_refusal, good_refusal, home
 from economy.tasks import prev_month
 
 PROVISION_LEVELS = (
@@ -69,15 +70,19 @@ def _category_sources(enterprises, cat):
 
     Split in two because the preference between them is a rule and not a
     ranking: a category is fed from market goods first and falls back on base
-    goods only for what they could not cover."""
+    goods only for what they could not cover. A frozen enterprise sells
+    nothing, and an own good the community or its currency switched off is
+    not bought (economy/switches.py)."""
     market, base = [], []
     for ent in enterprises:
-        if ent["neutral"]:
+        if ent["neutral"] or enterprise_refusal(ent):
             continue
         owner = db.enterprise_owner(ent["code"])
         for row in db.enterprise_category_stock(ent["code"], cat):
             good = db.get_good(row["good_code"])
             if not good or int(row["qty"]) <= 0:
+                continue
+            if good_refusal(good, [home(ent)]):
                 continue
             entry = {"owner": owner, "good": good, "left": int(row["qty"])}
             (base if db.is_base_good(good["code"]) else market).append(entry)

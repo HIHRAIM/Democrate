@@ -46,7 +46,8 @@ HELP_SECTIONS = [
     ]),
     ("section_admins", [
         "cmd_lang", "cmd_locallang", "cmd_find_with", "cmd_find_without",
-        "cmd_setlogs", "cmd_settasks", "cmd_edit_server", "cmd_birthday_channel",
+        "cmd_setlogs", "cmd_settasks", "cmd_edit_server", "cmd_server_birthday",
+        "cmd_birthday_channel",
         "cmd_birthday_role",
     ]),
     ("section_sponsors", [

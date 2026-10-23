@@ -70,6 +70,7 @@ async def retention_loop():
             db.cleanup_old_server_consumption()
             db.cleanup_old_neutral_activity()
             db.cleanup_old_earn_stats()
+            db.cleanup_old_bank_days()
             db.cleanup_old_server_tasks()
             db.cleanup_old_shipments()
             db.cleanup_old_dm_langs()
@@ -91,16 +92,36 @@ async def olympiad_loop():
             logger.exception("Olympiad expiry check failed")
         await asyncio.sleep(60)
 
+def _discord_channel_keys(server_id):
+    """The ids of a Discord server's channels and threads, which its earning
+    bindings are keyed by — empty when the bot cannot see the server."""
+    guild = discord_bot.get_guild(int(server_id))
+    if guild is None:
+        return []
+    return [c.id for c in guild.channels] + [t.id for t in guild.threads]
+
 async def _broadcast_fx_update():
-    """After the daily FX recompute: post each union's new currency values to
-    every server that configured an economic log channel with /server logs."""
+    """After the daily FX recompute: post the new currency values to every
+    server that configured an economic log channel with /server logs.
+
+    The union's central community — the one bound to it first
+    (db.union_central_chat) — hears every currency of the union. Any other
+    community hears only the currencies used there (stats.
+    community_currencies: the banks centred on it and the currencies its
+    channels earn), and nothing on a day it uses none."""
     for row in db.all_chat_channels("logs"):
         try:
             chat = db.get_chat(row["server_id"])
             if not chat:
                 continue
+            banks = db.get_banks_in_union(chat["union_code"])
+            if str(row["server_id"]) != db.union_central_chat(chat["union_code"]):
+                keys = (_discord_channel_keys(row["server_id"])
+                        if row["platform"] == "discord" else None)
+                used = set(stats.community_currencies(row["platform"], row["server_id"], keys))
+                banks = [b for b in banks if b["code"] in used]
             lang = stats.channel_lang(row)
-            lines = stats.fx_lines(chat["union_code"], lang)
+            lines = stats.fx_lines(banks, lang)
             if not lines:
                 continue
             await stats.post_to_channel(row["platform"], row["channel_key"],
@@ -442,7 +463,12 @@ async def main():
     stop notice is in a finally, so an orderly shutdown says so; it goes out
     before either client is closed, because it is sent through both of them.
     Closing them is last, and each on its own, so that a half which is already
-    gone cannot keep the other one open."""
+    gone cannot keep the other one open.
+
+    Every currency is repriced first (economy.reprice_all), here rather than
+    beside db.init at import, so that `python -c "import main"` — the check
+    after every change — never writes a value into the live database."""
+    economy.reprice_all()
     tasks = [
         asyncio.create_task(tg_main(), name="telegram"),
         asyncio.create_task(discord_bot.start(DISCORD_TOKEN), name="discord"),

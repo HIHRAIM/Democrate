@@ -305,6 +305,17 @@ def init_economy():
         PRIMARY KEY (bank_code, lang)
     );
 
+    -- What one currency's economy did on one UTC day: the value of the priced
+    -- goods produced in it (minor units) and the energy its messages earned.
+    -- economy/trade.py: recompute_value fades each day by a thirtieth a day;
+    -- it replaces the banks.period_* counters, which nothing writes any more.
+    -- Written by db/banks.py, kept 180 days by the retention sweep.
+    CREATE TABLE IF NOT EXISTS bank_days (
+        bank_code TEXT NOT NULL, day TEXT NOT NULL,
+        goods_value INTEGER NOT NULL DEFAULT 0, energy INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (bank_code, day)
+    );
+
     -- What each earning channel produced per UTC day: counted messages and
     -- the currency minted for them after tax. No text, no authors. Read by
     -- /bank earn-info for the last seven days; retention removes rows after
@@ -384,7 +395,9 @@ def _migrate_economy():
     continuous 24/7 autoproduction (fractional units carry over between hourly
     runs; a worker may run it for an enterprise), banks remember the previous
     published value for the FX change log, the tax its leaders charge on
-    payments and sales in the currency, and where its audit channel is; an
+    payments and sales in the currency, where its audit channel is and which
+    parts of the economy its leaders switched off for the currency
+    (economy/switches.py); an
     earning channel remembers who switched it on and when. An
     enterprise learns whether it is
     a community's neutral producer, and whether its name is still the one the
@@ -404,6 +417,7 @@ def _migrate_economy():
         _ensure_column("banks", "tax_percent", "REAL NOT NULL DEFAULT 0")
         _ensure_column("banks", "audit_platform", "TEXT")
         _ensure_column("banks", "audit_channel", "TEXT")
+        _ensure_column("banks", "econ_off", "TEXT")
         _ensure_column("enterprises", "neutral", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column("enterprises", "auto_name", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column("server_consumption", "neutral_units", "REAL NOT NULL DEFAULT 0")
